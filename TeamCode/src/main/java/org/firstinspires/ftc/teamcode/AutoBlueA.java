@@ -182,13 +182,11 @@ public class AutoBlueA extends LinearOpMode {
     public void feederPosition(int feederPos, long time) throws InterruptedException {
         feeder.setPosition(feederPos);
         sleep(time);
-        feeder.setPosition(0);
-        sleep(time);
     }
 
     public void runOpMode() throws InterruptedException {
         //##############Init##############
-        feeder = hardwareMap.servo.get("f");
+        feeder = hardwareMap.servo.get("feeder");
         catapult = hardwareMap.dcMotor.get("catapult");
         paddle = hardwareMap.dcMotor.get("paddle");
         lDrive1 = hardwareMap.dcMotor.get("lDrive1");
@@ -203,17 +201,22 @@ public class AutoBlueA extends LinearOpMode {
         rDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         waitForStart();
+        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // The code that runs the robot is here.
-        launch(1, 1);
-        paddleMotor(1, 2000);
-        paddleMotor(0.3, 500);
-        paddleMotor(1, 1600);
-        feederPosition(45, 1000);
-        launch(1, 1);
-        moveMotors(-1, -1, 300);
-        gyroTurn(296, .3, -1);
-        moveMotors(1, 1, 1200);
+
+        moveMotors(0.5, 0.5, 400);
+        sleep(3000);
+        gyroTurn(122, .3, 1);
+        sleep(3000);
+        launch(0.6, 1);
+        sleep(3000);
+        gyroTurn(55, .4, -1);
+        sleep(3000);
+        moveMotors(0.5, 0.4, 1300);
 
     }
 }
