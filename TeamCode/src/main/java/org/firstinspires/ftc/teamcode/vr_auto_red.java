@@ -214,7 +214,7 @@ public class vr_auto_red extends LinearOpMode {
         sleep(500);
         /*gyroTurn(55, .3, 1);          note: currently unnecessary*/
         /*moveMotors(-.4, -.4, 400);    note: currently unnecessary*/
-        gyroTurn(55, .3, 1);
+        gyroTurn(60, .3, 1);
         sleep(500);
         launch(0.6);
         sleep(500);
