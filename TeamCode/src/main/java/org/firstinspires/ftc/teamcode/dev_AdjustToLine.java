@@ -71,26 +71,17 @@ public class dev_AdjustToLine extends LinearOpMode {
         }
     }
 
-    public boolean rODFoundLine() {
-        if(rODSensor.getRawLightDetected() > 0.21) {
-            return true;
-        } else {
-            return false;
-        }
+    public boolean rODFoundLine() { // checks right OD sensor for light greater than 0.21
+        return rODSensor.getRawLightDetected() > 0.21;
     }
 
-    public boolean lODFoundLine() {
-        if(lODSensor.getRawLightDetected() > 0.21) {
-            return true;
-        } else {
-            return false;
-        }
+    public boolean lODFoundLine() { // checks left OD sensor for light greater than 0.21
+        return lODSensor.getRawLightDetected() > 0.21;
     }
 
     public void runOpMode() throws InterruptedException {
 
         driveToLine();
-
     }
 
 }
