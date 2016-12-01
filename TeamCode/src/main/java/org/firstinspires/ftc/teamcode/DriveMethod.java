@@ -2,21 +2,22 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 //import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.util.Range;
 
-@Autonomous(name="Drive", group="Methods")
+@Autonomous(name="Drive Method", group="Methods")
 //@Disabled
 public class DriveMethod extends LinearOpMode {
 
     DcMotor lDrive1;
     DcMotor lDrive2;
     DcMotor rDrive1;
-    DcMotor rDrive2;
 
     GyroSensor gyroSensor;
+    DcMotor rDrive2;
     ModernRoboticsI2cGyro gyro;
 
     // Function to set up the Gyro
@@ -56,7 +57,7 @@ public class DriveMethod extends LinearOpMode {
 
         double oldSpeed;
         double speed = 0;
-        double minSpeed = 0.1;
+        double minSpeed = 0.3;
         double acceleration = 0.01;
         double leftSpeed;
         double rightSpeed;
@@ -73,7 +74,8 @@ public class DriveMethod extends LinearOpMode {
         double heading = gyro.getIntegratedZValue();
 
         while (rDrive1.getCurrentPosition()<(rDrive1.getTargetPosition()-5)){
-            oldSpeed = speed;
+            
+            /*oldSpeed = speed;
 
             // Accelerate during first third of the distance
             if ((rDrive1.getCurrentPosition()-startPosition)<(0.33*COUNTS)){
@@ -114,8 +116,10 @@ public class DriveMethod extends LinearOpMode {
             }
 
             // Adjust motor speeds to keep the robot on the initial heading
-            leftSpeed = speed + ((gyro.getIntegratedZValue()-heading)/100);
-            rightSpeed = speed - ((gyro.getIntegratedZValue()-heading)/100);
+            leftSpeed = speed + ((gyro.getIntegratedZValue()-heading)/30);
+            rightSpeed = speed - ((gyro.getIntegratedZValue()-heading)/30);*/
+            leftSpeed = maxSpeed + ((gyro.getIntegratedZValue()-heading)/10);
+            rightSpeed = maxSpeed - ((gyro.getIntegratedZValue()-heading)/10);
 
             leftSpeed = Range.clip(leftSpeed, -1, 1);
             rightSpeed = Range.clip(rightSpeed, -1, 1);
@@ -173,8 +177,8 @@ public class DriveMethod extends LinearOpMode {
 
         waitForStart();
 
-        distance = 80;
-        maxSpeed = 1;
+        distance = 90;
+        maxSpeed = .6;
         drive(distance, maxSpeed);
     }
 }
