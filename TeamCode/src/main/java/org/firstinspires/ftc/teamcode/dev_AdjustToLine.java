@@ -1,24 +1,29 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
+@Autonomous(name="hehexdev_stuff", group="LinearOpMode")
 public class dev_AdjustToLine extends LinearOpMode {
 
-    Servo feeder;
-    Servo lButtonPush;
-    Servo rButtonPush;
-    DcMotor catapult1;
-    DcMotor catapult2;
-    DcMotor paddle;
+    DcMotor sweeper;
+    Servo lButton;
+    Servo rButton;
+    Servo hopper;
+    DcMotor catapult;
     DcMotor lDrive1;
     DcMotor lDrive2;
     DcMotor rDrive1;
     DcMotor rDrive2;
+    ColorSensor color;
     GyroSensor gyroSensor;
+    TouchSensor touch;
     OpticalDistanceSensor rODSensor;
     OpticalDistanceSensor lODSensor;
 
@@ -28,6 +33,7 @@ public class dev_AdjustToLine extends LinearOpMode {
     double MAX_SPEED = 1;
 
     public void driveToLine() throws InterruptedException { // this code has no parameters.
+
         lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -81,7 +87,31 @@ public class dev_AdjustToLine extends LinearOpMode {
 
     public void runOpMode() throws InterruptedException {
 
+        rDrive1 = hardwareMap.dcMotor.get("rDrive1");
+        rDrive2 = hardwareMap.dcMotor.get("rDrive2");
+        lDrive1 = hardwareMap.dcMotor.get("lDrive1");
+        lDrive2 = hardwareMap.dcMotor.get("lDrive2");
+        sweeper = hardwareMap.dcMotor.get("sweeper");
+        catapult = hardwareMap.dcMotor.get("catapult");
+        lButton = hardwareMap.servo.get("lButton");
+        rButton = hardwareMap.servo.get("rButton");
+        hopper = hardwareMap.servo.get("hopper");
+        touch = hardwareMap.touchSensor.get("t");
+        color = hardwareMap.colorSensor.get("color");
+        rODSensor = hardwareMap.opticalDistanceSensor.get("rOD");
+        lODSensor = hardwareMap.opticalDistanceSensor.get("lOD");
+        lDrive2.setDirection(DcMotor.Direction.REVERSE);
+        rDrive1.setDirection(DcMotor.Direction.REVERSE);
+        lDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        waitForStart();
+        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         driveToLine();
     }
-
 }
