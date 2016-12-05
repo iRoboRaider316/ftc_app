@@ -29,7 +29,7 @@ public class dev_AdjustToLine extends LinearOpMode {
 
     boolean ODCondition;
 
-    double MIN_SPEED = 0.3;
+    double MIN_SPEED = 0.2;
     double MAX_SPEED = 1;
 
     public void driveToLine() throws InterruptedException { // this code has no parameters.
@@ -39,6 +39,7 @@ public class dev_AdjustToLine extends LinearOpMode {
         rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rODSensor.enableLed(true);
+        lODSensor.enableLed(true);
         while(!ODCondition) {
             if(rODFoundLine()) {
                 if(lODFoundLine()) {
@@ -77,12 +78,12 @@ public class dev_AdjustToLine extends LinearOpMode {
         }
     }
 
-    public boolean rODFoundLine() { // checks right OD sensor for light greater than 0.21
-        return rODSensor.getRawLightDetected() > 0.21;
+    public boolean rODFoundLine() { // checks right OD sensor for light greater than 0.11
+        return rODSensor.getRawLightDetected() > 0.11;
     }
 
-    public boolean lODFoundLine() { // checks left OD sensor for light greater than 0.21
-        return lODSensor.getRawLightDetected() > 0.21;
+    public boolean lODFoundLine() { // checks left OD sensor for light greater than 0.11
+        return lODSensor.getRawLightDetected() > 0.11;
     }
 
     public void runOpMode() throws InterruptedException {
@@ -101,11 +102,12 @@ public class dev_AdjustToLine extends LinearOpMode {
         rODSensor = hardwareMap.opticalDistanceSensor.get("rOD");
         lODSensor = hardwareMap.opticalDistanceSensor.get("lOD");
         lDrive2.setDirection(DcMotor.Direction.REVERSE);
-        rDrive1.setDirection(DcMotor.Direction.REVERSE);
+        lDrive1.setDirection(DcMotor.Direction.REVERSE);
         lDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        ODCondition = false;
         waitForStart();
         lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
