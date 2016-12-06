@@ -6,10 +6,14 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
+import com.qualcomm.robotcore.hardware.I2cAddr;
+import com.qualcomm.robotcore.hardware.I2cDevice;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
-@Autonomous(name="cf_auto_red", group="LinearOpMode")
+@Autonomous(name="dev_to_wall", group="LinearOpMode")
 
 
 public class cf_lineup extends LinearOpMode {
@@ -25,6 +29,63 @@ public class cf_lineup extends LinearOpMode {
     Servo rButton;
     TouchSensor touch;
     GyroSensor gyroSensor;
+    byte[] range1Cache;
+    I2cDevice RANGE1;
+    I2cDeviceSynch RANGE1Reader;
+
+    I2cAddr RANGE1ADDRESS = new I2cAddr(0x14); //Default I2C address for MR Range (7-bit)
+    public static final int RANGE1_REG_START = 0x04; //Register to start reading
+    public static final int RANGE1_READ_LENGTH = 2; //Number of byte to read
+
+
+    public void lineUp() throws InterruptedException {
+
+
+
+        RANGE1 = hardwareMap.i2cDevice.get("range");
+        RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
+        RANGE1Reader.engage();
+        range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+        if ( (range1Cache[0] & 0xFF) > 48.269) {
+            telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
+            telemetry.update();
+            rDrive1.setPower(0.4);
+            rDrive2.setPower(0.4);
+
+            sleep(600);
+
+            rDrive1.setPower(0);
+            rDrive2.setPower(0);
+
+            while((range1Cache[0] & 0xFF) > 48.269) {
+                range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+                rDrive1.setPower(-0.3);
+                rDrive2.setPower(-0.3);
+                lDrive1.setPower(0.3);
+                lDrive2.setPower(0.3);
+                telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
+                telemetry.update();
+            }
+            rDrive1.setPower(0);
+            rDrive2.setPower(0);
+            lDrive1.setPower(0);
+            lDrive2.setPower(0);
+
+            sleep(100);
+
+            telemetry.addData("Ultra Sonic", "NOICE");
+            //insert drive to line code here
+        }
+        else if ((range1Cache[0] & 0xFF) <= 48.269){
+            telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
+            telemetry.update();
+            sleep(1000);
+            //insert button push code here
+        }
+        telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
+        telemetry.update();
+    }
+
 
 
     private void setUpGyro() throws InterruptedException {
@@ -168,27 +229,13 @@ public class cf_lineup extends LinearOpMode {
         return (result);
     }
 
-    public void lineup() throws InterruptedException{
-        if ( < 19){
-            rDrive1.setPower(-0.5);
-            rDrive2.setPower(-0.5);
-            sleep(800);
-            rDrive1.setPower(-0);
-            rDrive2.setPower(-0);
 
-            while ( < 19){// wating to learn about the values
-                rDrive1.setPower(-0.5);
-                rDrive2.setPower(-0.5);
-                lDrive1.setPower(-0.5);
-                lDrive2.setPower(-0.5);
-            }
 
-            gyroTurn(0, 0.5, 0);
 
             //insert drive to line code here
 
-        }
-    }
+
+
 
 
     public void runOpMode() throws InterruptedException {
@@ -207,6 +254,7 @@ public class cf_lineup extends LinearOpMode {
 
 
         waitForStart();
+        lineUp();
 
 
     }
