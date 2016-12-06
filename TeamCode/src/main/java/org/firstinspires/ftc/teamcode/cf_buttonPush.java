@@ -18,5 +18,14 @@ public class cf_buttonPush extends LinearOpMode{
         sleep(1000);
     }
 
-    public void runOpMode() {}
+    public void runOpMode() throws InterruptedException {
+
+        lHand = hardwareMap.servo.get("lButton");
+        rHand = hardwareMap.servo.get("lButton");
+
+        waitForStart();
+
+        lButtonPush();
+        rButtonPush();
+    }
 }
