@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Autonomous(name="vr_auto_red", group="LinearOpMode")
-//@Disabled
+@Disabled
 
 public class vr_auto_red extends LinearOpMode {
     Servo feeder;

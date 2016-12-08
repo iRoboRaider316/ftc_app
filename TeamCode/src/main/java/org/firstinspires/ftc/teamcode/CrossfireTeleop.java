@@ -1,23 +1,30 @@
 package org.firstinspires.ftc.teamcode;
-//import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
-@TeleOp(name="CrossFireTeleOp", group="TeleOp")
-//@Disabled
-public class CrossfireTeleop extends OpMode{
+import com.qualcomm.robotcore.hardware.TouchSensor;
+
+
+@TeleOp(name="Cross Fire TeleOp", group="TeleOp")
+
+public class crossFireTeleOp extends OpMode{
+    ColorSensor color;
     DcMotor rDrive1;
     DcMotor rDrive2;
     DcMotor lDrive1;
     DcMotor lDrive2;
     DcMotor catapult;
     DcMotor sweeper;
-    DcMotor lift1;
-    DcMotor lift2;
     Servo lButton;
     Servo rButton;
     Servo hopper;
+    TouchSensor touch;
+
+
     public void init() {
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
@@ -25,65 +32,74 @@ public class CrossfireTeleop extends OpMode{
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
         sweeper = hardwareMap.dcMotor.get("sweeper");
         catapult = hardwareMap.dcMotor.get("catapult");
-        lift1 = hardwareMap.dcMotor.get("lift1");
-        lift2 = hardwareMap.dcMotor.get("lift2");
         lButton = hardwareMap.servo.get("lButton");
         rButton = hardwareMap.servo.get("rButton");
         hopper = hardwareMap.servo.get("hopper");
+        touch = hardwareMap.touchSensor.get("t");
+        color = hardwareMap.colorSensor.get("color");
         rDrive1.setDirection(DcMotor.Direction.REVERSE);
         rDrive2.setDirection(DcMotor.Direction.REVERSE);
+
+
     }
+
+
     public void loop() {
+
         float rStick1 = gamepad1.left_stick_y;
         float lStick1 = gamepad1.right_stick_y;
-        //float lStick2 = gamepad2.left_stick_y;
+        float lStick2 = gamepad2.left_stick_y;
         float rStick2 = gamepad2.right_stick_y;
         boolean up = gamepad2.dpad_up;
         boolean left = gamepad2.dpad_left;
         boolean down = gamepad2.dpad_down;
         boolean y = gamepad2.y;
-        //boolean x = gamepad2.x;
+        boolean x = gamepad2.x;
         boolean a = gamepad2.a;
         boolean b = gamepad2.b;
         boolean rBumper1 = gamepad1.right_bumper;
         boolean lBumper1 = gamepad1.left_bumper;
-        //boolean rBumper2 = gamepad2.right_bumper;
-        //boolean lBumper2 = gamepad2.left_bumper;
+        boolean rBumper2 = gamepad2.right_bumper;
+        boolean lBumper2 = gamepad2.left_bumper;
         float leftPower;
         float rightPower;
         float lTrigger2 = gamepad2.left_trigger;
         float rTrigger2 = gamepad2.right_trigger;
 
-        ///OPERATOR CODE\\\
-        rButton.setPosition(rTrigger2);
+            ///OPERATOR CODE\\\
+
+        rButton.setPosition(rTrigger2 * -1);
         lButton.setPosition(lTrigger2);
 
-        // Set collection to on, off, or reversed
-        if (up)
+        if (up){
             sweeper.setPower(-1);
-        else if (down)
+        }
+        else if (down){
             sweeper.setPower(1);
-        else if (left)
+        }
+        else if (left){
             sweeper.setPower(0);
-
-        // Manual catapult controls
-        if (y)
-            catapult.setPower(1);
-        else if (a)
+        }
+        if (y){
+        catapult.setPower(1);
+        }
+        else if (a){
             catapult.setPower(-1);
-        else
+        }
+        else {
             catapult.setPower(0);
-
-        // Manual catapult loading
-        if (b)
+        }
+        if (b){
             hopper.setPosition(.5);
-        else
+        }
+        else {
             hopper.setPosition(.8);
+        }
 
-        lift1.setPower (-rStick2);
-        lift2.setPower (-rStick2);
 
-        ///DRIVER CODE\\\
+
+            ///DRIVER CODE\\\
+
         // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
         if (lBumper1) {
             leftPower = ((rStick1 * Math.abs(rStick1))/2);
@@ -102,8 +118,7 @@ public class CrossfireTeleop extends OpMode{
         rDrive1.setPower(rightPower);
         rDrive2.setPower(rightPower);
 
-        telemetry.addData("Hopper position", hopper.getPortNumber());
-        telemetry.addData("rButton position", rButton.getPosition());
-        telemetry.addData("lButton position", lButton.getPortNumber());
     }
+
+//Jims says: Gyro + rive function needs to be super exact
 }

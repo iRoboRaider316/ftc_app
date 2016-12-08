@@ -58,17 +58,17 @@ import com.qualcomm.robotcore.hardware.LightSensor;
  */
 
 @Autonomous(name="Pushbot: Auto Drive To Line", group="Pushbot")
-@Disabled
+
 public class PushbotAutoDriveToLine_Linear extends LinearOpMode {
 
     /* Declare OpMode members. */
-    HardwarePushbot         robot   = new HardwarePushbot();   // Use a Pushbot's hardware
+   // HardwarePushbot         robot   = new HardwarePushbot();   // Use a Pushbot's hardware
                                                                // could also use HardwarePushbotMatrix class.
     LightSensor             lightSensor;      // Primary LEGO Light sensor,
     // OpticalDistanceSensor   lightSensor;   // Alternative MR ODS sensor
-
-    static final double     WHITE_THRESHOLD = 0.2;  // spans between 0.1 - 0.5 from dark to light
-    static final double     APPROACH_SPEED  = 0.5;
+////
+   // static final double     WHITE_THRESHOLD = 0.2;  // spans between 0.1 - 0.5 from dark to light
+  //  static final double     APPROACH_SPEED  = 0.5;
 
     @Override
     public void runOpMode() {
@@ -76,15 +76,15 @@ public class PushbotAutoDriveToLine_Linear extends LinearOpMode {
         /* Initialize the drive system variables.
          * The init() method of the hardware class does all the work here
          */
-        robot.init(hardwareMap);
+      //  robot.init(hardwareMap);
 
         // If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
         // robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         // robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // get a reference to our Light Sensor object.
-        lightSensor = hardwareMap.lightSensor.get("sensor_light");                // Primary LEGO Light Sensor
-        //  lightSensor = hardwareMap.opticalDistanceSensor.get("sensor_ods");  // Alternative MR ODS sensor.
+       // lightSensor = hardwareMap.lightSensor.get("sensor_light");                // Primary LEGO Light Sensor
+          lightSensor = hardwareMap.opticalDistanceSensor.get("sensor_ods");  // Alternative MR ODS sensor.
 
         // turn on LED of light sensor.
         lightSensor.enableLed(true);
@@ -104,19 +104,17 @@ public class PushbotAutoDriveToLine_Linear extends LinearOpMode {
         }
 
         // Start the robot moving forward, and then begin looking for a white line.
-        robot.leftMotor.setPower(APPROACH_SPEED);
-        robot.rightMotor.setPower(APPROACH_SPEED);
+       // robot.leftMotor.setPower(APPROACH_SPEED);
+       // robot.rightMotor.setPower(APPROACH_SPEED);
 
         // run until the white line is seen OR the driver presses STOP;
-        while (opModeIsActive() && (lightSensor.getLightDetected() < WHITE_THRESHOLD)) {
+        while (opModeIsActive()) {
 
             // Display the light level while we are looking for the line
             telemetry.addData("Light Level",  lightSensor.getLightDetected());
             telemetry.update();
         }
 
-        // Stop all motors
-        robot.leftMotor.setPower(0);
-        robot.rightMotor.setPower(0);
+     
     }
 }
