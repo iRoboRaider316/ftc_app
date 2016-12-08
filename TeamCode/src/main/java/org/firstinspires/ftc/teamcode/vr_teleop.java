@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name="vr_teleop", group="Opmode")
-//@Disabled
+@Disabled
 
 public class vr_teleop extends OpMode {
     DcMotor lDrive1;

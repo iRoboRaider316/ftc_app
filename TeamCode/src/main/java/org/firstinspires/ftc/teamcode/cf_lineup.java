@@ -46,23 +46,23 @@ public class cf_lineup extends LinearOpMode {
         RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         RANGE1Reader.engage();
         range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        if ( (range1Cache[0] & 0xFF) > 48.269) {
+        if ( (range1Cache[0] & 0xFF) > 15.24) {
             telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
             telemetry.update();
-            rDrive1.setPower(0.4);
-            rDrive2.setPower(0.4);
+            rDrive1.setPower(0.-2);
+            rDrive2.setPower(0.-2);
 
-            sleep(600);
+            sleep(200);
 
             rDrive1.setPower(0);
             rDrive2.setPower(0);
 
-            while((range1Cache[0] & 0xFF) > 48.269) {
+            while((range1Cache[0] & 0xFF) > 15.24) {
                 range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
                 rDrive1.setPower(-0.3);
                 rDrive2.setPower(-0.3);
-                lDrive1.setPower(0.3);
-                lDrive2.setPower(0.3);
+                lDrive1.setPower(-0.3);
+                lDrive2.setPower(-0.3);
                 telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
                 telemetry.update();
             }
@@ -251,10 +251,13 @@ public class cf_lineup extends LinearOpMode {
         hopper = hardwareMap.servo.get("hopper");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
+        lDrive1.setDirection(DcMotor.Direction.REVERSE);
+        lDrive2.setDirection(DcMotor.Direction.REVERSE);
 
-
+        setUpGyro();
         waitForStart();
         lineUp();
+        gyroTurn(0, 0.3, -1);
 
 
     }

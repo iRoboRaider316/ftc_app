@@ -177,8 +177,8 @@ public class DriveMethod extends LinearOpMode {
 
         waitForStart();
 
-        distance = 90;
-        maxSpeed = .6;
+        distance = 180;
+        maxSpeed = .3;
         drive(distance, maxSpeed);
     }
 }
