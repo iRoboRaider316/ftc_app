@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @TeleOp(name="CrossFireTeleOp", group="TeleOp")
 //@Disabled
-public class CrossfireTeleop extends LinearOpMode {
+public class CrossfireTeleop extends OpMode {
     private DcMotor rDrive1;
     private DcMotor rDrive2;
     private DcMotor lDrive1;
@@ -24,7 +24,7 @@ public class CrossfireTeleop extends LinearOpMode {
     private TouchSensor touch;
 
     // Function to reset the catapult to the launch position
-    private void launchPosition() throws InterruptedException{
+    /*private void launchPosition() throws InterruptedException{
         while (!touch.isPressed() && opModeIsActive()){
             catapult.setPower(0.5);
         }
@@ -47,9 +47,10 @@ public class CrossfireTeleop extends LinearOpMode {
         catapult.setPower(1);
         Thread.sleep(800);
         catapult.setPower(0);
-    }
+    }*/
 
-    public void runOpMode() throws InterruptedException{
+    @Override
+    public void init(){
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
         lDrive1 = hardwareMap.dcMotor.get("lDrive1");
@@ -64,10 +65,9 @@ public class CrossfireTeleop extends LinearOpMode {
         rDrive1.setDirection(DcMotor.Direction.REVERSE);
         rDrive2.setDirection(DcMotor.Direction.REVERSE);
         touch = hardwareMap.touchSensor.get("t");
+    }
 
-        waitForStart();
-
-        while (opModeIsActive()) {
+        public void loop() {
             float rStick1 = gamepad1.left_stick_y;
             float lStick1 = gamepad1.right_stick_y;
             //float lStick2 = gamepad2.left_stick_y;
@@ -114,13 +114,13 @@ public class CrossfireTeleop extends LinearOpMode {
             else
                 hopper.setPosition(.8);
 
-            if (rBumper2) {
+            /*if (rBumper2) {
                 try {
                     fire();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-            }
+            }*/
 
             lift1.setPower(-rStick2);
             lift2.setPower(-rStick2);
@@ -147,4 +147,3 @@ public class CrossfireTeleop extends LinearOpMode {
             telemetry.addData("lButton position", lButton.getPortNumber());
         }
         }
-}
