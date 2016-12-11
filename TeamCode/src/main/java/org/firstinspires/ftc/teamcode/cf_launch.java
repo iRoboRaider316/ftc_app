@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @Autonomous(name="cf_auto_red", group="LinearOpMode")
-
+@Disabled
 
 public class cf_launch extends LinearOpMode {
     ColorSensor color;

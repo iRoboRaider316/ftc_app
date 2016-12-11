@@ -1,93 +1,28 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
-import com.qualcomm.robotcore.hardware.I2cAddr;
-import com.qualcomm.robotcore.hardware.I2cDevice;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.TouchSensor;
 
-@Autonomous(name="dev_to_wall", group="LinearOpMode")
+@Autonomous(name="AutoBlueB", group="LinearOpMode")
 
+public class vr_AutoBlueB extends LinearOpMode {
 
-public class cf_lineup extends LinearOpMode {
-    ColorSensor color;
-    Servo hopper;
+    Servo feeder;
     DcMotor catapult;
-    DcMotor sweeper;
+    DcMotor paddle;
     DcMotor lDrive1;
     DcMotor lDrive2;
     DcMotor rDrive1;
     DcMotor rDrive2;
-    Servo lButton;
-    Servo rButton;
-    TouchSensor touch;
     GyroSensor gyroSensor;
-    byte[] range1Cache;
-    I2cDevice RANGE1;
-    I2cDeviceSynch RANGE1Reader;
 
-    I2cAddr RANGE1ADDRESS = new I2cAddr(0x14); //Default I2C address for MR Range (7-bit)
-    public static final int RANGE1_REG_START = 0x04; //Register to start reading
-    public static final int RANGE1_READ_LENGTH = 2; //Number of byte to read
-
-
-    public void lineUp() throws InterruptedException {
-
-
-
-        RANGE1 = hardwareMap.i2cDevice.get("range");
-        RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
-        RANGE1Reader.engage();
-        range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        if ( (range1Cache[0] & 0xFF) > 48.269) {
-            telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
-            telemetry.update();
-            rDrive1.setPower(0.4);
-            rDrive2.setPower(0.4);
-
-            sleep(600);
-
-            rDrive1.setPower(0);
-            rDrive2.setPower(0);
-
-            while((range1Cache[0] & 0xFF) > 48.269) {
-                range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-                rDrive1.setPower(-0.3);
-                rDrive2.setPower(-0.3);
-                lDrive1.setPower(0.3);
-                lDrive2.setPower(0.3);
-                telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
-                telemetry.update();
-            }
-            rDrive1.setPower(0);
-            rDrive2.setPower(0);
-            lDrive1.setPower(0);
-            lDrive2.setPower(0);
-
-            sleep(100);
-
-            telemetry.addData("Ultra Sonic", "NOICE");
-            //insert drive to line code here
-        }
-        else if ((range1Cache[0] & 0xFF) <= 48.269){
-            telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
-            telemetry.update();
-            sleep(1000);
-            //insert button push code here
-        }
-        telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
-        telemetry.update();
-    }
-
-
-
+    // Function to set up the Gyro
+    // Function called in the init
+    // Calibrates and does other preparations for the gyro sensor before autonomous
+    // Needs nothing passed to it
     private void setUpGyro() throws InterruptedException {
         // setup the Gyro
         // write some device information (connection info, name and type)
@@ -102,6 +37,7 @@ public class cf_lineup extends LinearOpMode {
         }
         // End of setting up Gyro
     }
+
     public void moveMotors(double left, double right, long time) throws InterruptedException {
         rDrive1.setPower(right);        // moves forward at certain power...
         rDrive2.setPower(right);
@@ -114,6 +50,7 @@ public class cf_lineup extends LinearOpMode {
         lDrive2.setPower(0);
         sleep(500);                     // ...and waits a half second.
     }
+
     // Function to use the gyro to do a spinning turn in place.
     // It points the robot at an absolute heading, not a relative turn.  0 will point robot to same
     // direction we were at the start of program.
@@ -124,6 +61,7 @@ public class cf_lineup extends LinearOpMode {
     // Returns:
     // heading = the new heading the gyro reports
     public void gyroTurn(int targetHeading, double maxSpeed, int direction) {
+
         int startHeading = gyroSensor.getHeading();
         int deceleration;
         int currentHeading;
@@ -229,33 +167,54 @@ public class cf_lineup extends LinearOpMode {
         return (result);
     }
 
+    public void launch(double power, long time) throws InterruptedException{ //input time as seconds
+        catapult.setPower(power);
+        sleep(time*1000);
+        catapult.setPower(0);
+    }
 
+    public void paddleMotor(double power, long time) throws InterruptedException{
+        paddle.setPower(power);
+        sleep(time);
+        paddle.setPower(0);
+    }
 
-
-            //insert drive to line code here
-
-
-
-
+    public void feederPosition(int feederPos, long time) throws InterruptedException {
+        feeder.setPosition(feederPos);
+        sleep(time);
+        feeder.setPosition(0);
+        sleep(time);
+    }
 
     public void runOpMode() throws InterruptedException {
         //##############Init##############
-        rDrive1 = hardwareMap.dcMotor.get("rDrive1");
-        rDrive2 = hardwareMap.dcMotor.get("rDrive2");
+        feeder = hardwareMap.servo.get("f");
+        catapult = hardwareMap.dcMotor.get("catapult");
+        paddle = hardwareMap.dcMotor.get("paddle");
         lDrive1 = hardwareMap.dcMotor.get("lDrive1");
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
-        sweeper = hardwareMap.dcMotor.get("sweeper");
-        catapult = hardwareMap.dcMotor.get("catapult");
-        lButton = hardwareMap.servo.get("lButton");
-        rButton = hardwareMap.servo.get("rButton");
-        hopper = hardwareMap.servo.get("hopper");
-        touch = hardwareMap.touchSensor.get("t");
-        color = hardwareMap.colorSensor.get("color");
-
-
+        rDrive1 = hardwareMap.dcMotor.get("rDrive1");
+        rDrive2 = hardwareMap.dcMotor.get("rDrive2");
+        lDrive2.setDirection(DcMotor.Direction.REVERSE);
+        rDrive1.setDirection(DcMotor.Direction.REVERSE);
+        setUpGyro();
+        lDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         waitForStart();
-        lineUp();
 
+        // The code that runs the robot is here.
+        paddleMotor(1, 2000);
+        paddleMotor(0.3, 500);
+        paddleMotor(1, 1600);
+        moveMotors(0.8, 0.8, 300);
+        gyroTurn(145, .3, 1);
+        launch(1, 1);
+        feederPosition(45, 1000);
+        launch(1, 1);
+        gyroTurn(55, .3, -1);
+        moveMotors(1, 1, 1200);
 
     }
 }
