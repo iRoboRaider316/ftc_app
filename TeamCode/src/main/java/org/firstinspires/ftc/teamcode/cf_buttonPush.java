@@ -5,8 +5,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+
 @Autonomous(name="cf_button_push", group="LinearOpMode")
-public class cf_buttonPush extends LinearOpMode{
+
+public class cf_buttonPush extends LinearOpMode {
 
     Servo lHand;
     Servo rHand;
