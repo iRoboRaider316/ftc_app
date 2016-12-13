@@ -6,9 +6,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Autonomous(name="AutoBlueB", group="LinearOpMode")
+@Autonomous(name="AutoRedB", group="LinearOpMode")
 
-public class AutoBlueB extends LinearOpMode {
+public class vr_AutoRedB extends LinearOpMode {
 
     Servo feeder;
     DcMotor catapult;
@@ -209,11 +209,11 @@ public class AutoBlueB extends LinearOpMode {
         paddleMotor(0.3, 500);
         paddleMotor(1, 1600);
         moveMotors(0.8, 0.8, 300);
-        gyroTurn(145, .3, 1);
+        gyroTurn(55, .3, 1);
         launch(1, 1);
         feederPosition(45, 1000);
         launch(1, 1);
-        gyroTurn(55, .3, -1);
+        gyroTurn(296, .3, -1);
         moveMotors(1, 1, 1200);
 
     }
