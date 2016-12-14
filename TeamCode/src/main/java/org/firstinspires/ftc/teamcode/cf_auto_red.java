@@ -27,7 +27,7 @@ public class cf_auto_red extends LinearOpMode {
     private DcMotor rDrive1;
     private DcMotor rDrive2;
     private Servo lButton;
-    //private Servo rButton;
+    private Servo rButton;
     private Servo hopper;
 
     private TouchSensor touch;
@@ -305,29 +305,6 @@ public class cf_auto_red extends LinearOpMode {
     }
 
     private void driveBackward(long time, double maxSpeed) throws InterruptedException {
-        double leftSpeed;
-        double rightSpeed;
-        double error;
-        double heading = gyroSensor.getHeading();
-        /*// Calculate distance from original heading and divide by 40
-        error = ((gyroSensor.getHeading()-heading)/60);
-        // Deal with wraparound from 359 to 0
-        if (error >180)
-            error = ((gyroSensor.getHeading()-heading-360)/60);
-        else if(error <-180)
-            error = ((gyroSensor.getHeading()-heading+360)/60);
-
-        leftSpeed = -maxSpeed+error;
-        rightSpeed = -maxSpeed-error;
-
-        leftSpeed = Range.clip(leftSpeed, -1, 1);
-        rightSpeed = Range.clip(rightSpeed, -1, 1);
-
-        lDrive1.setPower(leftSpeed);
-        lDrive2.setPower(leftSpeed);
-        rDrive1.setPower(rightSpeed);
-        rDrive2.setPower(rightSpeed);
-
         rDrive1.setPower(-maxSpeed);
         rDrive2.setPower(-maxSpeed);
         lDrive1.setPower(-maxSpeed-.1);
@@ -337,7 +314,6 @@ public class cf_auto_red extends LinearOpMode {
         rDrive2.setPower(0);
         lDrive1.setPower(0);
         lDrive2.setPower(0);
-        sleep(700);
     }
 
     // This is the driveToLine method.
@@ -438,18 +414,17 @@ public class cf_auto_red extends LinearOpMode {
         I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         RANGE1Reader.engage();
         byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+
         if ( (range1Cache[0] & 0xFF) > 13) {
             telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
             telemetry.update();
             rDrive1.setPower(-0.5);
             rDrive2.setPower(-0.5);
-
             sleep(400);
-
             rDrive1.setPower(0);
             rDrive2.setPower(0);
 
-            while((range1Cache[0] & 0xFF) > 13) {
+            while((range1Cache[0] & 0xFF) > 13&&opModeIsActive()) {
                 range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
                 rDrive1.setPower(-0.5);
                 rDrive2.setPower(-0.5);
@@ -463,21 +438,62 @@ public class cf_auto_red extends LinearOpMode {
             lDrive1.setPower(0);
             lDrive2.setPower(0);
 
-            sleep(100);
-
             telemetry.addData("Ultra Sonic", "NOICE");
-            gyroTurn(45,.4,-1);
-            driveToLine();
-        }
-        else if ((range1Cache[0] & 0xFF) <= 11){
-            telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
-            telemetry.update();
-            sleep(1000);
             gyroTurn(45,.4,-1);
             rDrive1.setPower(-0.4);
             rDrive2.setPower(-0.4);
             lDrive1.setPower(-0.4);
             lDrive2.setPower(-0.4);
+            sleep(200);
+            rDrive1.setPower(0);
+            rDrive2.setPower(0);
+            lDrive1.setPower(0);
+            lDrive2.setPower(0);
+            driveToLine();
+        }
+        else if ( (range1Cache[0] & 0xFF) < 9) {
+            telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
+            telemetry.update();
+            rDrive1.setPower(0.5);
+            rDrive2.setPower(0.5);
+            sleep(400);
+            rDrive1.setPower(0);
+            rDrive2.setPower(0);
+
+            while((range1Cache[0] & 0xFF) < 9&&opModeIsActive()) {
+                range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+                rDrive1.setPower(-0.4);
+                rDrive2.setPower(-0.4);
+                lDrive1.setPower(-0.5);
+                lDrive2.setPower(-0.5);
+                telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
+                telemetry.update();
+            }
+            rDrive1.setPower(0);
+            rDrive2.setPower(0);
+            lDrive1.setPower(0);
+            lDrive2.setPower(0);
+
+            telemetry.addData("Ultra Sonic", "NOICE");
+            gyroTurn(45,.4,1);
+            rDrive1.setPower(-0.4);
+            rDrive2.setPower(-0.4);
+            lDrive1.setPower(-0.4);
+            lDrive2.setPower(-0.4);
+            sleep(200);
+            rDrive1.setPower(0);
+            rDrive2.setPower(0);
+            lDrive1.setPower(0);
+            lDrive2.setPower(0);
+            driveToLine();
+        }
+        else {
+            telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
+            telemetry.update();
+            rDrive1.setPower(-0.4);
+            rDrive2.setPower(-0.4);
+            lDrive1.setPower(-0.5);
+            lDrive2.setPower(-0.5);
             sleep(200);
             rDrive1.setPower(0);
             rDrive2.setPower(0);
@@ -527,7 +543,7 @@ public class cf_auto_red extends LinearOpMode {
         //sweeper = hardwareMap.dcMotor.get("sweeper");
         catapult = hardwareMap.dcMotor.get("catapult");
         lButton = hardwareMap.servo.get("lButton");
-        //rButton = hardwareMap.servo.get("rButton");
+        rButton = hardwareMap.servo.get("rButton");
         hopper = hardwareMap.servo.get("hopper");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
@@ -536,6 +552,7 @@ public class cf_auto_red extends LinearOpMode {
         lODSensor = hardwareMap.opticalDistanceSensor.get("lOD");
         hopper.setPosition(.8);
         lButton.setPosition(0);
+        rButton.setPosition(1);
         setUpGyro();
 
         double distance;
@@ -556,7 +573,6 @@ public class cf_auto_red extends LinearOpMode {
         idle();
 
         waitForStart();
-
         // Drive forward
         distance = 10;
         maxSpeed = 1;
@@ -597,7 +613,7 @@ public class cf_auto_red extends LinearOpMode {
         driveBackward(time, maxSpeed);
         // Adjust the robot's distance from the wall
         lineUp();
-        time = 300;
+        time = 250;
         maxSpeed = .4;
         driveBackward(time,maxSpeed);
         // Detect beacon color and push the button for red
@@ -615,6 +631,12 @@ public class cf_auto_red extends LinearOpMode {
         drive(distance, maxSpeed, direction);
         // Detect beacon color and push the button for red
         recognizeColor();
+        targetHeading = 35;
+        maxSpeed = .5;
+        direction = -1;
+        gyroTurn(targetHeading, maxSpeed, direction);
+        // Drive backward onto the ramp
+        driveBackward(1000,.9);
 
     }
 }
