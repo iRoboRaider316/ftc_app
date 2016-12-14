@@ -9,15 +9,14 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="Drive Method", group="Methods")
-//@Disabled
-public class DriveMethod extends LinearOpMode {
+@Disabled
+public class cf_drive_method extends LinearOpMode {
 
     DcMotor lDrive1;
     DcMotor lDrive2;
     DcMotor rDrive1;
-
-    GyroSensor gyroSensor;
     DcMotor rDrive2;
+    GyroSensor gyroSensor;
     ModernRoboticsI2cGyro gyro;
 
     // Function to set up the Gyro
@@ -41,24 +40,24 @@ public class DriveMethod extends LinearOpMode {
         // End of setting up Gyro
     }
 
-    /* This is the Drive Method
-    It will take in two static values: distance and maxSpeed.
-    It will then calculate the encoder counts to drive and drive the distance at the specified power,
-    accelerating to max speed for the first third of the distance, maintaining that speed for the second third,
-    and decelerating to a minimum speed for the last third.
-    If the robot deviates from the initial gyro heading, it will correct itself proportionally to the error.*/
+    // This is the Drive Method
+    // It will take in two static values: distance and maxSpeed.
+    // It will then calculate the encoder counts to drive and drive the distance at the specified power,
+    // accelerating to max speed for the first third of the distance, maintaining that speed for the second third,
+    // and decelerating to a minimum speed for the last third.
+    // If the robot deviates from the initial gyro heading, it will correct itself proportionally to the error.
     public void drive(double distance, double maxSpeed) {
         int ENCODER_CPR = 1120; // Encoder counts per Rev
         double gearRatio = 1.75; // [Gear Ratio]:1
         double circumference = 13.10; // Wheel circumference
         double ROTATIONS = distance / (circumference * gearRatio); // Number of rotations to drive
         double COUNTS = ENCODER_CPR * ROTATIONS; // Number of encoder counts to drive
-        double startPosition = rDrive1.getCurrentPosition();
+        //double startPosition = rDrive1.getCurrentPosition();
 
-        double oldSpeed;
+        //double oldSpeed;
         double speed = 0;
-        double minSpeed = 0.3;
-        double acceleration = 0.01;
+        //double minSpeed = 0.3;
+        //double acceleration = 0.01;
         double leftSpeed;
         double rightSpeed;
 
@@ -69,57 +68,12 @@ public class DriveMethod extends LinearOpMode {
         lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        gyro.resetZAxisIntegrator();
-
-        double heading = gyro.getIntegratedZValue();
+        double heading = gyroSensor.getHeading();
 
         while (rDrive1.getCurrentPosition()<(rDrive1.getTargetPosition()-5)){
-            
-            /*oldSpeed = speed;
 
-            // Accelerate during first third of the distance
-            if ((rDrive1.getCurrentPosition()-startPosition)<(0.33*COUNTS)){
-                // Calculate the speed we should be moving at
-                // Set a minimum power for the motors to make sure they move
-                if (speed < minSpeed)
-                    speed = minSpeed;
-                    // Don't exceed the maximum speed requested
-                else if (speed > maxSpeed)
-                    speed = maxSpeed;
-                    // accelerate
-                else
-                    speed = oldSpeed + acceleration;
-            }
-
-            // Maintain top speed during second third of the total distance
-            else if ((rDrive1.getCurrentPosition()-startPosition)<(0.33*COUNTS)
-                    && ((rDrive1.getCurrentPosition()-startPosition)<(0.66*COUNTS))){
-                speed = maxSpeed;
-            }
-
-            // Decelerate to a minimum speed during the last third of the total distance
-            else if ((rDrive1.getCurrentPosition()-startPosition)>(0.66*COUNTS)){
-                // Calculate the speed we should be moving at
-                // Set a minimum power for the motors to make sure they move
-                if (speed < minSpeed)
-                    speed = minSpeed;
-                    // Don't exceed the maximum speed requested
-                else if (speed > maxSpeed)
-                    speed = maxSpeed;
-                    // Decelerate
-                else
-                    speed = oldSpeed - acceleration;
-            }
-            // Default speed in case of encoder error
-            else {
-                speed = minSpeed;
-            }
-
-            // Adjust motor speeds to keep the robot on the initial heading
-            leftSpeed = speed + ((gyro.getIntegratedZValue()-heading)/30);
-            rightSpeed = speed - ((gyro.getIntegratedZValue()-heading)/30);*/
-            leftSpeed = maxSpeed + ((gyro.getIntegratedZValue()-heading)/10);
-            rightSpeed = maxSpeed - ((gyro.getIntegratedZValue()-heading)/10);
+            leftSpeed = maxSpeed-((gyroSensor.getHeading()-heading)/10);
+            rightSpeed = maxSpeed+((gyroSensor.getHeading()-heading)/10);
 
             leftSpeed = Range.clip(leftSpeed, -1, 1);
             rightSpeed = Range.clip(rightSpeed, -1, 1);
@@ -146,7 +100,6 @@ public class DriveMethod extends LinearOpMode {
         lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
-
 
     @Override
     public void runOpMode() throws InterruptedException {

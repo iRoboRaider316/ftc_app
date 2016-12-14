@@ -10,13 +10,15 @@ import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDevice;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="dev_to_wall", group="LinearOpMode")
+@Disabled
 
-
-public class cf_lineup extends LinearOpMode {
+public class cf_lineup_method extends LinearOpMode {
     ColorSensor color;
     Servo hopper;
     DcMotor catapult;
@@ -32,37 +34,38 @@ public class cf_lineup extends LinearOpMode {
     byte[] range1Cache;
     I2cDevice RANGE1;
     I2cDeviceSynch RANGE1Reader;
+    private OpticalDistanceSensor rODSensor;
+    private OpticalDistanceSensor lODSensor;
 
     I2cAddr RANGE1ADDRESS = new I2cAddr(0x14); //Default I2C address for MR Range (7-bit)
     public static final int RANGE1_REG_START = 0x04; //Register to start reading
     public static final int RANGE1_READ_LENGTH = 2; //Number of byte to read
 
 
+    // Function to line the robot up a certain distance from the wall using the range function
     public void lineUp() throws InterruptedException {
 
-
-
-        RANGE1 = hardwareMap.i2cDevice.get("range");
-        RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
+        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
+        I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         RANGE1Reader.engage();
-        range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        if ( (range1Cache[0] & 0xFF) > 15.24) {
+        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+        if ( (range1Cache[0] & 0xFF) > 11) {
             telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
             telemetry.update();
-            rDrive1.setPower(0.-2);
-            rDrive2.setPower(0.-2);
+            rDrive1.setPower(-0.4);
+            rDrive2.setPower(-0.4);
 
-            sleep(200);
+            sleep(400);
 
             rDrive1.setPower(0);
             rDrive2.setPower(0);
 
-            while((range1Cache[0] & 0xFF) > 15.24) {
+            while((range1Cache[0] & 0xFF) > 11) {
                 range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-                rDrive1.setPower(-0.3);
-                rDrive2.setPower(-0.3);
-                lDrive1.setPower(-0.3);
-                lDrive2.setPower(-0.3);
+                rDrive1.setPower(-0.4);
+                rDrive2.setPower(-0.4);
+                lDrive1.setPower(-0.4);
+                lDrive2.setPower(-0.4);
                 telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
                 telemetry.update();
             }
@@ -74,19 +77,17 @@ public class cf_lineup extends LinearOpMode {
             sleep(100);
 
             telemetry.addData("Ultra Sonic", "NOICE");
-            //insert drive to line code here
+            gyroTurn(44,.3,-1);
+            //driveToLine();
         }
-        else if ((range1Cache[0] & 0xFF) <= 48.269){
+        else if ((range1Cache[0] & 0xFF) <= 11){
             telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
             telemetry.update();
             sleep(1000);
-            //insert button push code here
         }
         telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
         telemetry.update();
     }
-
-
 
     private void setUpGyro() throws InterruptedException {
         // setup the Gyro
@@ -102,27 +103,7 @@ public class cf_lineup extends LinearOpMode {
         }
         // End of setting up Gyro
     }
-    public void moveMotors(double left, double right, long time) throws InterruptedException {
-        rDrive1.setPower(right);        // moves forward at certain power...
-        rDrive2.setPower(right);
-        lDrive1.setPower(left);
-        lDrive2.setPower(left);
-        sleep(time);               // ...until it's been running for a certain time(milliseconds have been multiplied by 1000 so that the result values are in seconds).
-        rDrive1.setPower(0);            // at that point, the robot stops...
-        rDrive2.setPower(0);
-        lDrive1.setPower(0);
-        lDrive2.setPower(0);
-        sleep(500);                     // ...and waits a half second.
-    }
-    // Function to use the gyro to do a spinning turn in place.
-    // It points the robot at an absolute heading, not a relative turn.  0 will point robot to same
-    // direction we were at the start of program.
-    // Pass:
-    // targetHeading = the new heading we want to point robot at,
-    // maxSpeed = the max speed the motor can run in the range of 0 to 1
-    // direction = the direction we will turn, 1 is clockwise, -1 is counter-clockwise
-    // Returns:
-    // heading = the new heading the gyro reports
+
     public void gyroTurn(int targetHeading, double maxSpeed, int direction) {
         int startHeading = gyroSensor.getHeading();
         int deceleration;
@@ -229,14 +210,38 @@ public class cf_lineup extends LinearOpMode {
         return (result);
     }
 
+    public void driveToLine() {
+        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        double leftSpeed;
+        double rightSpeed;
 
+        double heading = gyroSensor.getHeading();
 
+        rODSensor.enableLed(true);
+        lODSensor.enableLed(true);
+        while(rODSensor.getRawLightDetected()<0.21&&lODSensor.getRawLightDetected()<0.21&&opModeIsActive()){
+            telemetry.addData("rLight", rODSensor.getRawLightDetected());
+            telemetry.addData("lLight", lODSensor.getRawLightDetected());
+            telemetry.update();
 
-            //insert drive to line code here
+            leftSpeed = 0.5 - ((gyroSensor.getHeading()-heading)/40);
+            rightSpeed = 0.5 + ((gyroSensor.getHeading()-heading)/40);
+            leftSpeed = Range.clip(leftSpeed, -1, 1);
+            rightSpeed = Range.clip(rightSpeed, -1, 1);
 
-
-
-
+            lDrive1.setPower(leftSpeed);
+            lDrive2.setPower(leftSpeed);
+            rDrive1.setPower(rightSpeed);
+            rDrive2.setPower(rightSpeed);
+        }
+        lDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive1.setPower(0);
+        rDrive2.setPower(0);
+    }
 
     public void runOpMode() throws InterruptedException {
         //##############Init##############
@@ -251,13 +256,12 @@ public class cf_lineup extends LinearOpMode {
         hopper = hardwareMap.servo.get("hopper");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
-        lDrive1.setDirection(DcMotor.Direction.REVERSE);
-        lDrive2.setDirection(DcMotor.Direction.REVERSE);
+        rODSensor = hardwareMap.opticalDistanceSensor.get("rOD");
+        lODSensor = hardwareMap.opticalDistanceSensor.get("lOD");
 
-        setUpGyro();
+
         waitForStart();
         lineUp();
-        gyroTurn(0, 0.3, -1);
 
 
     }

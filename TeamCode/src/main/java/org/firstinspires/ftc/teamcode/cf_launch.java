@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -9,10 +8,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
-import com.qualcomm.robotcore.util.Range;
 
-@Autonomous(name="cf_launch", group="LinearOpMode")
-
+@Autonomous(name="cf_auto_red", group="LinearOpMode")
+@Disabled
 
 public class cf_launch extends LinearOpMode {
     ColorSensor color;
@@ -26,11 +24,6 @@ public class cf_launch extends LinearOpMode {
     Servo lButton;
     Servo rButton;
     TouchSensor touch;
-    GyroSensor gyroSensor;
-    ModernRoboticsI2cGyro gyro;
-
-
-
 
     public void launchPosition() throws InterruptedException{
 
@@ -79,7 +72,6 @@ public class cf_launch extends LinearOpMode {
         hopper = hardwareMap.servo.get("hopper");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
-
 
 
         waitForStart();

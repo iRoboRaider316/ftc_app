@@ -1,36 +1,28 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
-import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.TouchSensor;
 
-@Autonomous(name="hehexdev_stuff", group="LinearOpMode")
-@Disabled
-public class dev_AdjustToLine extends LinearOpMode {
+@Autonomous(name="AutoRedA", group="LinearOpMode")
 
-    DcMotor sweeper;
-    Servo lButton;
-    Servo rButton;
-    Servo hopper;
+public class vr_AutoRedA extends LinearOpMode {
+
+    Servo feeder;
     DcMotor catapult;
+    DcMotor paddle;
     DcMotor lDrive1;
     DcMotor lDrive2;
     DcMotor rDrive1;
     DcMotor rDrive2;
-    ColorSensor color;
     GyroSensor gyroSensor;
-    TouchSensor touch;
-    OpticalDistanceSensor rODSensor;
-    OpticalDistanceSensor lODSensor;
 
-    double MAX_SPEED = 1;
-
+    // Function to set up the Gyro
+    // Function called in the init
+    // Calibrates and does other preparations for the gyro sensor before autonomous
+    // Needs nothing passed to it
     private void setUpGyro() throws InterruptedException {
         // setup the Gyro
         // write some device information (connection info, name and type)
@@ -51,13 +43,14 @@ public class dev_AdjustToLine extends LinearOpMode {
         rDrive2.setPower(right);
         lDrive1.setPower(left);
         lDrive2.setPower(left);
-        sleep(time);               // ...until it's been running for a certain time.
+        sleep(time);               // ...until it's been running for a certain time(milliseconds have been multiplied by 1000 so that the result values are in seconds).
         rDrive1.setPower(0);            // at that point, the robot stops...
         rDrive2.setPower(0);
         lDrive1.setPower(0);
         lDrive2.setPower(0);
         sleep(500);                     // ...and waits a half second.
     }
+
     // Function to use the gyro to do a spinning turn in place.
     // It points the robot at an absolute heading, not a relative turn.  0 will point robot to same
     // direction we were at the start of program.
@@ -67,8 +60,8 @@ public class dev_AdjustToLine extends LinearOpMode {
     // direction = the direction we will turn, 1 is clockwise, -1 is counter-clockwise
     // Returns:
     // heading = the new heading the gyro reports
-
     public void gyroTurn(int targetHeading, double maxSpeed, int direction) {
+
         int startHeading = gyroSensor.getHeading();
         int deceleration;
         int currentHeading;
@@ -174,75 +167,54 @@ public class dev_AdjustToLine extends LinearOpMode {
         return (result);
     }
 
-    public void driveToLine() throws InterruptedException { // this code has no parameters.
-        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rODSensor.enableLed(true);
-        lODSensor.enableLed(true);
-        if(lODFoundLine()) {
-            moveMotors(0.4, 0.4, 600);
-            gyroTurn(45, 0.4, 1);
-            while(!lODFoundLine()) {
-                rDrive1.setPower(-0.4);
-                rDrive2.setPower(-0.4);
-                lDrive1.setPower(-0.4);
-                lDrive2.setPower(-0.4);
-            }
-        } else if(rODFoundLine()) {
-            while(!lODFoundLine()) {
-                lDrive1.setPower(0.4);
-                lDrive2.setPower(0.4);
-                rDrive1.setPower(0.4);
-                rDrive2.setPower(0.4);
-            }
-            gyroTurn(45, 0.4, 1);
-            while(!lODFoundLine()) {
-                rDrive1.setPower(-0.4);
-                rDrive2.setPower(-0.4);
-                lDrive1.setPower(-0.4);
-                lDrive2.setPower(-0.4);
-            }
-        }
+    public void launch(double power, long time) throws InterruptedException{ //input time as seconds
+        catapult.setPower(power);
+        sleep(time*1000);
+        catapult.setPower(0);
     }
 
-    public boolean rODFoundLine() { // checks right OD sensor for light greater than 0.11
-        return rODSensor.getLightDetected() >= 0.08;
+    public void paddleMotor(double power, long time) throws InterruptedException{
+        paddle.setPower(power);
+        sleep(time);
+        paddle.setPower(0);
     }
 
-    public boolean lODFoundLine() { // checks left OD sensor for light greater than 0.11
-        return lODSensor.getLightDetected() >= 0.08;
+    public void feederPosition(int feederPos, long time) throws InterruptedException {
+        feeder.setPosition(feederPos);
+        sleep(time);
+        feeder.setPosition(0);
+        sleep(time);
     }
 
     public void runOpMode() throws InterruptedException {
-
-        rDrive1 = hardwareMap.dcMotor.get("rDrive1");
-        rDrive2 = hardwareMap.dcMotor.get("rDrive2");
+        //##############Init##############
+        feeder = hardwareMap.servo.get("f");
+        catapult = hardwareMap.dcMotor.get("catapult");
+        paddle = hardwareMap.dcMotor.get("paddle");
         lDrive1 = hardwareMap.dcMotor.get("lDrive1");
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
-        sweeper = hardwareMap.dcMotor.get("sweeper");
-        catapult = hardwareMap.dcMotor.get("catapult");
-        lButton = hardwareMap.servo.get("lButton");
-        rButton = hardwareMap.servo.get("rButton");
-        hopper = hardwareMap.servo.get("hopper");
-        touch = hardwareMap.touchSensor.get("t");
-        color = hardwareMap.colorSensor.get("color");
-        rODSensor = hardwareMap.opticalDistanceSensor.get("rOD");
-        lODSensor = hardwareMap.opticalDistanceSensor.get("lOD");
+        rDrive1 = hardwareMap.dcMotor.get("rDrive1");
+        rDrive2 = hardwareMap.dcMotor.get("rDrive2");
         lDrive2.setDirection(DcMotor.Direction.REVERSE);
-        lDrive1.setDirection(DcMotor.Direction.REVERSE);
+        rDrive1.setDirection(DcMotor.Direction.REVERSE);
         setUpGyro();
         lDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         waitForStart();
-        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        driveToLine();
+        // The code that runs the robot is here.
+        launch(1, 1);
+        paddleMotor(1, 2000);
+        paddleMotor(0.3, 500);
+        paddleMotor(1, 1600);
+        feederPosition(45, 1000);
+        launch(1, 1);
+        moveMotors(-1, -1, 300);
+        gyroTurn(320, .3, -1);
+        moveMotors(1, 1, 500);
+        gyroTurn(240, .3, -1);
+        moveMotors(1, 1, 1000);
     }
 }
