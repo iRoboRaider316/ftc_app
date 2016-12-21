@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -8,8 +10,10 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="hehexdev_stuff", group="LinearOpMode")
+@Disabled
 public class dev_AdjustToLine extends LinearOpMode {
 
     DcMotor sweeper;
@@ -26,8 +30,10 @@ public class dev_AdjustToLine extends LinearOpMode {
     TouchSensor touch;
     OpticalDistanceSensor rODSensor;
     OpticalDistanceSensor lODSensor;
+    ModernRoboticsI2cGyro gyro;
 
     double MAX_SPEED = 1;
+    double MIN_SPEED = 0.4;
 
     private void setUpGyro() throws InterruptedException {
         // setup the Gyro
@@ -172,7 +178,63 @@ public class dev_AdjustToLine extends LinearOpMode {
         return (result);
     }
 
-    public void driveToLine() throws InterruptedException { // this code has no parameters.
+    public void drive(double distance, double maxSpeed) {
+        int ENCODER_CPR = 1120; // Encoder counts per Rev
+        double gearRatio = 1.75; // [Gear Ratio]:1
+        double circumference = 13.10; // Wheel circumference
+        double ROTATIONS = distance / (circumference * gearRatio); // Number of rotations to drive
+        double COUNTS = ENCODER_CPR * ROTATIONS; // Number of encoder counts to drive
+        //double startPosition = rDrive1.getCurrentPosition();
+
+        //double oldSpeed;
+        double speed = 0;
+        //double minSpeed = 0.3;
+        //double acceleration = 0.01;
+        double leftSpeed;
+        double rightSpeed;
+
+        rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
+
+        rDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        double heading = gyroSensor.getHeading();
+
+        while (rDrive1.getCurrentPosition()<(rDrive1.getTargetPosition()-5)){
+
+            leftSpeed = maxSpeed-((gyroSensor.getHeading()-heading)/10);
+            rightSpeed = maxSpeed+((gyroSensor.getHeading()-heading)/10);
+
+            leftSpeed = Range.clip(leftSpeed, -1, 1);
+            rightSpeed = Range.clip(rightSpeed, -1, 1);
+
+            lDrive1.setPower(leftSpeed);
+            rDrive1.setPower(rightSpeed);
+            lDrive2.setPower(leftSpeed);
+            rDrive2.setPower(rightSpeed);
+
+            telemetry.addData("1. speed", speed);
+            telemetry.addData("2. leftSpeed", leftSpeed);
+            telemetry.addData("3. rightSpeed", rightSpeed);
+            telemetry.addData("4. IntegratedZValue", gyro.getIntegratedZValue());
+            updateTelemetry(telemetry);
+        }
+
+        lDrive1.setPower(0);
+        rDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive2.setPower(0);
+
+        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+
+    public void AdjustToLine() throws InterruptedException { // this code has no parameters.
         lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -180,37 +242,37 @@ public class dev_AdjustToLine extends LinearOpMode {
         rODSensor.enableLed(true);
         lODSensor.enableLed(true);
         if(lODFoundLine()) {
-            moveMotors(0.4, 0.4, 600);
-            gyroTurn(45, 0.4, 1);
+            moveMotors(MIN_SPEED, MIN_SPEED, 600);
+            gyroTurn(45, MIN_SPEED, 1);
             while(!lODFoundLine()) {
-                rDrive1.setPower(-0.4);
-                rDrive2.setPower(-0.4);
-                lDrive1.setPower(-0.4);
-                lDrive2.setPower(-0.4);
+                rDrive1.setPower(-MIN_SPEED);
+                rDrive2.setPower(-MIN_SPEED);
+                lDrive1.setPower(-MIN_SPEED);
+                lDrive2.setPower(-MIN_SPEED);
             }
         } else if(rODFoundLine()) {
             while(!lODFoundLine()) {
-                lDrive1.setPower(0.4);
-                lDrive2.setPower(0.4);
-                rDrive1.setPower(0.4);
-                rDrive2.setPower(0.4);
+                lDrive1.setPower(MIN_SPEED);
+                lDrive2.setPower(MIN_SPEED);
+                rDrive1.setPower(MIN_SPEED);
+                rDrive2.setPower(MIN_SPEED);
             }
-            gyroTurn(45, 0.4, 1);
+            gyroTurn(45, MIN_SPEED, 1);
             while(!lODFoundLine()) {
-                rDrive1.setPower(-0.4);
-                rDrive2.setPower(-0.4);
-                lDrive1.setPower(-0.4);
-                lDrive2.setPower(-0.4);
+                rDrive1.setPower(-MIN_SPEED);
+                rDrive2.setPower(-MIN_SPEED);
+                lDrive1.setPower(-MIN_SPEED);
+                lDrive2.setPower(-MIN_SPEED);
             }
         }
     }
 
     public boolean rODFoundLine() { // checks right OD sensor for light greater than 0.11
-        return rODSensor.getLightDetected() >= 0.08;
+        return rODSensor.getLightDetected() >= 0.11;
     }
 
     public boolean lODFoundLine() { // checks left OD sensor for light greater than 0.11
-        return lODSensor.getLightDetected() >= 0.08;
+        return lODSensor.getLightDetected() >= 0.11;
     }
 
     public void runOpMode() throws InterruptedException {
@@ -241,6 +303,6 @@ public class dev_AdjustToLine extends LinearOpMode {
         rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        driveToLine();
+        AdjustToLine();
     }
 }
