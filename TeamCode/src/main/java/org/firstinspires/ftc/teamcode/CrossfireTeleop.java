@@ -18,8 +18,7 @@ public class CrossfireTeleop extends OpMode {
     private DcMotor sweeper;
     private DcMotor lift1;
     private DcMotor lift2;
-    private Servo lButton;
-    private Servo rButton;
+    private DcMotor Button;
     private Servo hopper;
     private TouchSensor touch;
 
@@ -59,8 +58,7 @@ public class CrossfireTeleop extends OpMode {
         catapult = hardwareMap.dcMotor.get("catapult");
         lift1 = hardwareMap.dcMotor.get("lift1");
         lift2 = hardwareMap.dcMotor.get("lift2");
-        lButton = hardwareMap.servo.get("lButton");
-        rButton = hardwareMap.servo.get("rButton");
+        Button = hardwareMap.dcMotor.get("Button");
         hopper = hardwareMap.servo.get("hopper");
         rDrive1.setDirection(DcMotor.Direction.REVERSE);
         rDrive2.setDirection(DcMotor.Direction.REVERSE);
@@ -89,8 +87,7 @@ public class CrossfireTeleop extends OpMode {
             float rTrigger2 = gamepad2.right_trigger;
 
             ///OPERATOR CODE\\\
-            rButton.setPosition(rTrigger2);
-            lButton.setPosition(lTrigger2);
+            Button.setPower(rTrigger2);
 
             // Set collection to on, off, or reversed
             if (up)
@@ -143,7 +140,6 @@ public class CrossfireTeleop extends OpMode {
             rDrive2.setPower(rightPower);
 
             telemetry.addData("Hopper position", hopper.getPortNumber());
-            telemetry.addData("rButton position", rButton.getPosition());
-            telemetry.addData("lButton position", lButton.getPortNumber());
+            telemetry.addData("Button power", Button.getPower());
         }
         }
