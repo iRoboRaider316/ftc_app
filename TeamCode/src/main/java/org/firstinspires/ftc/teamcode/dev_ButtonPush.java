@@ -1,23 +1,25 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
+@Autonomous(name="ButtonPush",group="LinearOpMode")
 
 public class dev_ButtonPush extends LinearOpMode{
 
-    Servo lHand;
-    Servo rHand;
+    DcMotor Hand;
 
-    public void lButtonPush() throws InterruptedException {
-        lHand.setPosition(0.5);
-        sleep(1000);
+    public void ButtonPush(double power, long time) throws InterruptedException {
+        Hand.setPower(power);
+        sleep(time);
     }
 
-    public void rButtonPush() throws InterruptedException {
-        rHand.setPosition(0.5);
-        sleep(1000);
+    public void runOpMode() throws InterruptedException {
+        Hand = hardwareMap.dcMotor.get("Hand");
+        waitForStart();
+        ButtonPush(0.9, 1000);
+        ButtonPush(-0.9, 1000);
     }
-
-    public void runOpMode() {}
 }
 
