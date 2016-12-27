@@ -10,8 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 public class cf_buttonPush extends LinearOpMode {
 
-    Servo lHand;
-    Servo rHand;
+    Servo Hand;
     DcMotor lDrive1;
     DcMotor lDrive2;
     DcMotor rDrive1;
@@ -24,7 +23,7 @@ public class cf_buttonPush extends LinearOpMode {
         //if the beacon is red
         if (color.red() > color.blue()){
             //insert code here
-            lButtonPush();
+            ButtonPush();
             telemetry.addData("Color is red",color.red());
             sleep(1000);
         }
@@ -40,27 +39,22 @@ public class cf_buttonPush extends LinearOpMode {
             lDrive1.setPower(0);
             lDrive2.setPower(0);
             sleep(500);
-            lButtonPush();
+            ButtonPush();
             telemetry.addData("Color is blue", color.blue());
             sleep(1000);
         }
 
     }
 
-    public void lButtonPush() throws InterruptedException {
-        lHand.setPosition(0.5);
+    public void ButtonPush() throws InterruptedException {
+        Hand.setPosition(1);
         sleep(1000);
     }
 
-    public void rButtonPush() throws InterruptedException {
-        rHand.setPosition(0.5);
-        sleep(1000);
-    }
 
     public void runOpMode() throws InterruptedException {
         color = hardwareMap.colorSensor.get("color");
-        lHand = hardwareMap.servo.get("lButton");
-        rHand = hardwareMap.servo.get("lButton");
+        Hand = hardwareMap.servo.get("button");
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
         lDrive1 = hardwareMap.dcMotor.get("lDrive1");
