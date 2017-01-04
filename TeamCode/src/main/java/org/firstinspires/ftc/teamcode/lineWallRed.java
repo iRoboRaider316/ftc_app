@@ -19,9 +19,9 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-@Autonomous(name="lineUpWithWall", group="LinearOpMode")
+@Autonomous(name="lineUpWithWall2", group="LinearOpMode")
 
-public class lineUpWithWall extends LinearOpMode {
+public class lineWallRed extends LinearOpMode {
 
     private DcMotor catapult;
     //private DcMotor sweeper;
@@ -66,41 +66,38 @@ public class lineUpWithWall extends LinearOpMode {
 
 
         sleep(300);
+        //turn from wall
+        lDrive1.setPower(-0.3);
+        rDrive1.setPower(0.3);
+        lDrive2.setPower(-0.3);
+        rDrive2.setPower(0.3);
 
+        //keep turning until the snesors are == one another (+-5 range of error)
+        while (!( (range1Cache) [0]  - (range2Cache [0]) <= 5)) {
+            range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+            range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+            telemetry.addData("Range value:", (range1Cache[0] & 0xFF) );
+            telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF) );
+            telemetry.update();
+        }
+        //Stop once the sensors are equal to one another within a range of 5
+        lDrive1.setPower(0);
+        rDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive2.setPower(0);
+        sleep(100);
         //if the robot is too far from the wall
-        if ((range2Cache [0] >= range1Cache [0])) {
+        if ((range1Cache [0] >= range2Cache [0])) {
             //turn while the robot is too far from the wall (+-1 error)
             lDrive1.setPower(-0.30);
             rDrive1.setPower(0.30);
             lDrive2.setPower(-0.20);
             rDrive2.setPower(0.2);
-            while (!((range1Cache)[0] - (range2Cache[0]) <= 1)) {
+            while(!( (range1Cache) [0]  - (range2Cache [0]) <= 1)){
                 range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
                 range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-                telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
-                telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
-                telemetry.update();
-            }
-            //Stop driving robot once the sensors are close enough
-            lDrive1.setPower(0);
-            rDrive1.setPower(0);
-            lDrive2.setPower(0);
-            rDrive2.setPower(0);
-
-
-
-        }
-       else if ((range2Cache[0] <= range1Cache[0])) {
-            //turn while the robot is too far from the wall (+-1 error)
-            lDrive1.setPower(0.30);
-            rDrive1.setPower(-0.30);
-            lDrive2.setPower(0.20);
-            rDrive2.setPower(-0.2);
-            while (!((range2Cache)[0] - (range1Cache[0]) <= 1)) {
-                range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-                range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-                telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
-                telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
+                telemetry.addData("Range value:", (range1Cache[0] & 0xFF) );
+                telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF) );
                 telemetry.update();
             }
             //Stop driving robot once the sensors are close enough
@@ -110,6 +107,9 @@ public class lineUpWithWall extends LinearOpMode {
             rDrive2.setPower(0);
 
         }
+
+
+
     }
     private void driveToWall() throws InterruptedException {
         //prepare first range sensor
@@ -127,17 +127,21 @@ public class lineUpWithWall extends LinearOpMode {
 
 
         //drive to wall
-        lDrive1.setPower(0.3);
-        rDrive1.setPower(0.3);
-        lDrive2.setPower(0.3);
-        rDrive2.setPower(0.3);
-        while((range1Cache[0] & 0xFF) > 15) {
+        lDrive1.setPower(-0.3);
+        rDrive1.setPower(-0.3);
+        lDrive2.setPower(-0.3);
+        rDrive2.setPower(-0.3);
+        while((range2Cache[0] & 0xFF) > 15) {
             range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
             range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
             telemetry.addData("Range value:", (range1Cache[0] & 0xFF) );
             telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF) );
             telemetry.update();
         }
+        telemetry.addData("Range end value:", (range1Cache[0] & 0xFF) );
+        telemetry.addData("Range2 end value:", (range2Cache[0] & 0xFF) );
+        telemetry.update();
+        sleep(1000);
         //stop at wall
         lDrive1.setPower(0);
         rDrive1.setPower(0);
@@ -386,11 +390,10 @@ public class lineUpWithWall extends LinearOpMode {
         color = hardwareMap.colorSensor.get("color");
         setUpGyro();
         waitForStart();
-        //Run the function
 
         driveToWall();
-        gyroTurn(3, 0.5, -1);
-        lineUpWithWall();
+       // gyroTurn(0, 0.5, 1);
+       // lineUpWithWall();
 
     }
 }
