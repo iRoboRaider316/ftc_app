@@ -19,9 +19,9 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-@Autonomous(name="cf_auto_blue_MOqual", group="LinearOpMode")
+@Autonomous(name="driveToWallRed", group="LinearOpMode")
 
-public class cf_auto_blue_MOqual extends LinearOpMode {
+public class driveToWallRed extends LinearOpMode {
 
     private DcMotor catapult;
     //private DcMotor sweeper;
@@ -123,6 +123,7 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
         //prepare second range sensor
         I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
+        RANGE2Reader.engage();
         byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         RANGE2Reader.engage();
 
@@ -133,7 +134,9 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
         rDrive1.setPower(0.3);
         lDrive2.setPower(0.3);
         rDrive2.setPower(0.3);
-        while((range1Cache[0] & 0xFF) > 15) {
+        while(opModeIsActive()) {
+            RANGE2Reader.engage();
+            RANGE1Reader.engage();
             range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
             range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
             telemetry.addData("Range value:", (range1Cache[0] & 0xFF) );
@@ -635,27 +638,8 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
         waitForStart();
 
         driveToWall();
-        gyroTurn(3, 0.5, -1);
-        lineUpWithWall();
 
-        // Remember that the current heading is parallel to the wall
-        parallel = gyroSensor.getHeading();
-        // Drive forward to the white line
-        driveToLine(parallel);
-        // Drive backward 1 in to accomidate for overshooting
-        distance = 1;
-        maxSpeed = .4;
-        direction = -1;
-        drive(distance, maxSpeed, direction, parallel);
-        // Detect the beacon color and push the correct button
-        direction = 1;
-        recognizeColorBlue(direction);
-        // Drive backward to the second line
-        driveBackwardToLine(parallel);
-        // Detect the beacon color and push the correct button
-        recognizeColorBlue(-1);
-        // Drive back to the first line
-        driveToLine(parallel);
+
 
     }
 }
