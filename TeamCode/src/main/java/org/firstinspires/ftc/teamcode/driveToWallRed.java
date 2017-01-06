@@ -53,6 +53,7 @@ public class driveToWallRed extends LinearOpMode {
     private static final int RANGE2_REG_START = 0x04; //Register to start reading
     private static final int RANGE2_READ_LENGTH = 2; //Number of byte to read
     private ModernRoboticsI2cRangeSensor rangeSensor2;
+
     private void lineUpWithWall() throws InterruptedException {
         //prepare first range sensor
         I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");

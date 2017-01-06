@@ -126,10 +126,10 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
 
 
         //drive to wall
-        lDrive1.setPower(0.3);
-        rDrive1.setPower(0.3);
-        lDrive2.setPower(0.3);
-        rDrive2.setPower(0.3);
+        lDrive1.setPower(0.25);
+        rDrive1.setPower(0.25);
+        lDrive2.setPower(0.25);
+        rDrive2.setPower(0.25);
         while((range1Cache[0] & 0xFF) > 14) {
             range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
             range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
@@ -231,7 +231,7 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
         idle();
 
         // Calls turnCompeted function to determine if we need to keep turning
-        while ((!turnCompleted(gyroSensor.getHeading(), targetHeading, 5, direction) && opModeIsActive())) {
+        while ((!turnCompleted(gyroSensor.getHeading(), targetHeading, 3, direction) && opModeIsActive())) {
 
             // Move speed management to separate function
 
@@ -636,8 +636,18 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
         rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         idle();
 
+        while (!isStarted())
+        {
+            telemetry.addData("Heading", gyroSensor.getHeading());
+            updateTelemetry(telemetry);
+        }
         waitForStart();
 
+        distance = 50;
+        maxSpeed = .7;
+        direction = 1;
+        heading = 20;
+        drive(distance, maxSpeed, direction, heading);
         driveToWall();
         gyroTurn(0, 0.4, -1);
         //lineUpWithWall();
@@ -663,12 +673,12 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
         // Detect the beacon color and push the correct button
         recognizeColorBlue(-1);
         // Turn to face vortex
-        targetHeading = 290;
+        targetHeading = 285;
         maxSpeed = .4;
         direction = -1;
         gyroTurn(targetHeading, maxSpeed, direction);
         // Drive backward 1 in
-        distance = 1;
+        distance = 2;
         maxSpeed = .4;
         direction = -1;
         heading = gyroSensor.getHeading();
