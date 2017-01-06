@@ -65,56 +65,56 @@ public class CrossfireTeleop extends OpMode {
         //touch = hardwareMap.touchSensor.get("t");
     }
 
-        public void loop() {
-            float rStick1 = gamepad1.left_stick_y;
-            float lStick1 = gamepad1.right_stick_y;
-            float lStick2 = gamepad2.left_stick_y;
-            float rStick2 = gamepad2.right_stick_y;
-            boolean up = gamepad2.dpad_up;
-            boolean left = gamepad2.dpad_left;
-            boolean down = gamepad2.dpad_down;
-            boolean y = gamepad2.y;
-            //boolean x = gamepad2.x;
-            boolean a = gamepad2.a;
-            boolean b = gamepad2.b;
-            boolean rBumper1 = gamepad1.right_bumper;
-            boolean lBumper1 = gamepad1.left_bumper;
-            //boolean rBumper2 = gamepad2.right_bumper;
-            //boolean lBumper2 = gamepad2.left_bumper;
-            float leftPower;
-            float rightPower;
-            //float lTrigger2 = gamepad2.left_trigger;
-            //float rTrigger2 = gamepad2.right_trigger;
+    public void loop() {
+        float rStick1 = gamepad1.left_stick_y;
+        float lStick1 = gamepad1.right_stick_y;
+        float lStick2 = gamepad2.left_stick_y;
+        float rStick2 = gamepad2.right_stick_y;
+        boolean up = gamepad2.dpad_up;
+        boolean left = gamepad2.dpad_left;
+        boolean down = gamepad2.dpad_down;
+        boolean y = gamepad2.y;
+        //boolean x = gamepad2.x;
+        boolean a = gamepad2.a;
+        boolean b = gamepad2.b;
+        boolean rBumper1 = gamepad1.right_bumper;
+        boolean lBumper1 = gamepad1.left_bumper;
+        //boolean rBumper2 = gamepad2.right_bumper;
+        //boolean lBumper2 = gamepad2.left_bumper;
+        float leftPower;
+        float rightPower;
+        //float lTrigger2 = gamepad2.left_trigger;
+        //float rTrigger2 = gamepad2.right_trigger;
 
-            ///OPERATOR CODE\\\
-            if (lStick2 > .5)
-                button.setPosition(0);
-            else if(lStick2 < -.5)
-                button.setPosition(1);
-            else
-                button.setPosition(.5);
+        ///OPERATOR CODE\\\
+        if (lStick2 > .5)
+            button.setPosition(0);
+        else if(lStick2 < -.5)
+            button.setPosition(1);
+        else
+            button.setPosition(.5);
 
-            // Set collection to on, off, or reversed
-            if (up)
-                sweeper.setPower(-1);
-            else if (down)
-                sweeper.setPower(1);
-            else if (left)
-                sweeper.setPower(0);
+        // Set collection to on, off, or reversed
+        if (up)
+            sweeper.setPower(-1);
+        else if (down)
+            sweeper.setPower(1);
+        else if (left)
+            sweeper.setPower(0);
 
-            // Manual catapult controls
-            if (y)
-                catapult.setPower(1);
-            else if (a)
-                catapult.setPower(-1);
-            else
-                catapult.setPower(0);
+        // Manual catapult controls
+        if (y)
+            catapult.setPower(1);
+        else if (a)
+            catapult.setPower(-1);
+        else
+            catapult.setPower(0);
 
-            // Manual catapult loading
-            if (b)
-                hopper.setPosition(.5);
-            else
-                hopper.setPosition(.8);
+        // Manual catapult loading
+        if (b)
+            hopper.setPosition(.5);
+        else
+            hopper.setPosition(.8);
 
             /*if (rBumper2) {
                 try {
@@ -124,28 +124,28 @@ public class CrossfireTeleop extends OpMode {
                 }
             }*/
 
-            lift1.setPower(rStick2);
-            lift2.setPower(rStick2);
+        lift1.setPower(rStick2);
+        lift2.setPower(rStick2);
 
-            ///DRIVER CODE\\\
-            // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
-            if (lBumper1) {
-                leftPower = ((rStick1 * Math.abs(rStick1)) / 2);
-                rightPower = ((lStick1 * Math.abs(lStick1)) / 2);
-            } else if (rBumper1) {
-                leftPower = ((rStick1 * Math.abs(rStick1)) / 4);
-                rightPower = ((lStick1 * Math.abs(lStick1)) / 4);
-            } else {
-                leftPower = (rStick1 * Math.abs(rStick1));
-                rightPower = (lStick1 * Math.abs(lStick1));
-            }
-            lDrive1.setPower(leftPower);
-            lDrive2.setPower(leftPower);
-            rDrive1.setPower(rightPower);
-            rDrive2.setPower(rightPower);
-
-            telemetry.addData("Hopper position", hopper.getPortNumber());
-            telemetry.addData("rButton position", button.getPosition());
-            telemetry.addData("lButton position", button.getPortNumber());
+        ///DRIVER CODE\\\
+        // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
+        if (lBumper1) {
+            leftPower = ((rStick1 * Math.abs(rStick1)) / 2);
+            rightPower = ((lStick1 * Math.abs(lStick1)) / 2);
+        } else if (rBumper1) {
+            leftPower = ((rStick1 * Math.abs(rStick1)) / 4);
+            rightPower = ((lStick1 * Math.abs(lStick1)) / 4);
+        } else {
+            leftPower = (rStick1 * Math.abs(rStick1));
+            rightPower = (lStick1 * Math.abs(lStick1));
         }
+        lDrive1.setPower(leftPower);
+        lDrive2.setPower(leftPower);
+        rDrive1.setPower(rightPower);
+        rDrive2.setPower(rightPower);
+
+        telemetry.addData("Hopper position", hopper.getPortNumber());
+        telemetry.addData("rButton position", button.getPosition());
+        telemetry.addData("lButton position", button.getPortNumber());
     }
+}
