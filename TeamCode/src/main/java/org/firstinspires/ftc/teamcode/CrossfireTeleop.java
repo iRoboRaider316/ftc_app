@@ -18,17 +18,13 @@ public class CrossfireTeleop extends OpMode {
     private DcMotor sweeper;
     private DcMotor lift1;
     private DcMotor lift2;
-<<<<<<< HEAD
     private Servo belt;
     private Servo hopper;
     //private TouchSensor touch;
 
     int drive=0;
-=======
-    private Servo button;
-    private Servo hopper;
-    //private TouchSensor touch;
->>>>>>> origin/beta_plus
+    float leftPower;
+    float rightPower;
 
     // Function to reset the catapult to the launch position
     /*private void launchPosition() throws InterruptedException{
@@ -66,11 +62,7 @@ public class CrossfireTeleop extends OpMode {
         catapult = hardwareMap.dcMotor.get("catapult");
         lift1 = hardwareMap.dcMotor.get("lift1");
         lift2 = hardwareMap.dcMotor.get("lift2");
-<<<<<<< HEAD
         belt = hardwareMap.servo.get("belt");
-=======
-        button = hardwareMap.servo.get("button");
->>>>>>> origin/beta_plus
         hopper = hardwareMap.servo.get("hopper");
         rDrive1.setDirection(DcMotor.Direction.REVERSE);
         rDrive2.setDirection(DcMotor.Direction.REVERSE);
@@ -100,19 +92,11 @@ public class CrossfireTeleop extends OpMode {
 
         ///OPERATOR CODE\\\
         if (lStick2 > .5)
-<<<<<<< HEAD
             belt.setPosition(0);
         else if(lStick2 < -.5)
             belt.setPosition(1);
         else
             belt.setPosition(.5);
-=======
-            button.setPosition(0);
-        else if(lStick2 < -.5)
-            button.setPosition(1);
-        else
-            button.setPosition(.5);
->>>>>>> origin/beta_plus
 
         // Set collection to on, off, or reversed
         if (up)
@@ -139,7 +123,6 @@ public class CrossfireTeleop extends OpMode {
         lift1.setPower(rStick2);
         lift2.setPower(rStick2);
 
-<<<<<<< HEAD
         ///DRIVER CODE\\\
         // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
 
@@ -165,33 +148,11 @@ public class CrossfireTeleop extends OpMode {
             default:
                 leftPower = (gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
                 rightPower = (gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
-=======
-        lift1.setPower(rStick2);
-        lift2.setPower(rStick2);
-
-        ///DRIVER CODE\\\
-        // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
-        if (lBumper1) {
-            leftPower = ((rStick1 * Math.abs(rStick1)) / 2);
-            rightPower = ((lStick1 * Math.abs(lStick1)) / 2);
-        } else if (rBumper1) {
-            leftPower = ((rStick1 * Math.abs(rStick1)) / 4);
-            rightPower = ((lStick1 * Math.abs(lStick1)) / 4);
-        } else {
-            leftPower = (rStick1 * Math.abs(rStick1));
-            rightPower = (lStick1 * Math.abs(lStick1));
->>>>>>> origin/beta_plus
         }
         lDrive1.setPower(leftPower);
         lDrive2.setPower(leftPower);
         rDrive1.setPower(rightPower);
         rDrive2.setPower(rightPower);
 
-<<<<<<< HEAD
-=======
-        telemetry.addData("Hopper position", hopper.getPortNumber());
-        telemetry.addData("rButton position", button.getPosition());
-        telemetry.addData("lButton position", button.getPortNumber());
->>>>>>> origin/beta_plus
     }
 }

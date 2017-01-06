@@ -41,7 +41,7 @@ public class cf_auto_red_MOqual extends LinearOpMode {
     private OpticalDistanceSensor bODSensor;
 
     I2cAddr RANGE1ADDRESS = new I2cAddr(0x14); //Default I2C address for MR Range (7-bit)
-    I2cAddr RANGE2ADDRESS = new I2cAddr(0x04);
+    I2cAddr RANGE2ADDRESS = new I2cAddr(0x18);
 
 
     //private I2cAddr RANGE1ADDRESS = new I2cAddr(0x28); //Default I2C address for MR Range (7-bit)
