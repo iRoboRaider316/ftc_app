@@ -546,15 +546,12 @@ public class cf_auto_red extends LinearOpMode {
 
         //sweeper = hardwareMap.dcMotor.get("sweeper");
         catapult = hardwareMap.dcMotor.get("catapult");
-        lButton = hardwareMap.servo.get("lButton");
-        rButton = hardwareMap.servo.get("rButton");
+        lButton = hardwareMap.servo.get("Button");
         hopper = hardwareMap.servo.get("hopper");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
-        rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range");
-
-        rODSensor = hardwareMap.opticalDistanceSensor.get("rOD");
-        lODSensor = hardwareMap.opticalDistanceSensor.get("lOD");
+        rODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
+        lODSensor = hardwareMap.opticalDistanceSensor.get("fOD");
         hopper.setPosition(.8);
         lButton.setPosition(0);
         rButton.setPosition(1);
@@ -591,51 +588,51 @@ public class cf_auto_red extends LinearOpMode {
         // Fire balls
         fire();
         // Turn to hit cap ball
-        targetHeading = 350;
-        maxSpeed = .5;
-        direction = -1;
-        gyroTurn(targetHeading, maxSpeed, direction);
+//        targetHeading = 350;
+//        maxSpeed = .5;
+//        direction = -1;
+//        gyroTurn(targetHeading, maxSpeed, direction);
         // Drive forward
-        distance = 89;
+        distance = 64;
         maxSpeed = 1;
         drive(distance, maxSpeed);
-        // Turn towards line
-        targetHeading = 50;
-        maxSpeed = .5;
-        direction = 1;
-        gyroTurn(targetHeading, maxSpeed, direction);
-        // Drive until the robot detects the line
-        driveToLine();
-        // Drive backward
-        time = 400;
-        maxSpeed = .4;
-        driveBackward(time, maxSpeed);
-        // Adjust the robot's distance from the wall
-        lineUp();
-        time = 150;
-        maxSpeed = .3;
-        driveBackward(time,maxSpeed);
-        // Detect beacon color and push the button for red
-        recognizeColor();
-        // Drive backward past the line
-        time = 1000;
-        maxSpeed = .4;
-        driveBackward(time, maxSpeed);
-        // Drive backward until we hit the second line
-        driveBackwardToLine();
-        // Drive forward
-        distance = 1;
-        maxSpeed = 1;
-        drive(distance, maxSpeed);
-        sleep(200);
-        // Detect beacon color and push the button for red
-        recognizeColor();
-        targetHeading = 30;
-        maxSpeed = .4;
-        direction = -1;
-        gyroTurn(targetHeading, maxSpeed, direction);
-        // Drive backward onto the ramp
-        driveBackward(800,.9);
+//        // Turn towards line
+//        targetHeading = 50;
+//        maxSpeed = .5;
+//        direction = 1;
+//        gyroTurn(targetHeading, maxSpeed, direction);
+//        // Drive until the robot detects the line
+//        driveToLine();
+//        // Drive backward
+//        time = 400;
+//        maxSpeed = .4;
+//        driveBackward(time, maxSpeed);
+//        // Adjust the robot's distance from the wall
+//        lineUp();
+//        time = 150;
+//        maxSpeed = .3;
+//        driveBackward(time,maxSpeed);
+//        // Detect beacon color and push the button for red
+//        recognizeColor();
+//        // Drive backward past the line
+//        time = 1000;
+//        maxSpeed = .4;
+//        driveBackward(time, maxSpeed);
+//        // Drive backward until we hit the second line
+//        driveBackwardToLine();
+//        // Drive forward
+//        distance = 1;
+//        maxSpeed = 1;
+//        drive(distance, maxSpeed);
+//        sleep(200);
+//        // Detect beacon color and push the button for red
+//        recognizeColor();
+//        targetHeading = 30;
+//        maxSpeed = .4;
+//        direction = -1;
+//        gyroTurn(targetHeading, maxSpeed, direction);
+//        // Drive backward onto the ramp
+//        driveBackward(800,.9);
 
 
     }
