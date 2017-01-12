@@ -19,9 +19,9 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-@Autonomous(name="cf_auto_blue", group="LinearOpMode")
+@Autonomous(name="cf_button_push_blue", group="LinearOpMode")
 
-public class cf_auto_blue extends LinearOpMode {
+public class cf_button_push_blue extends LinearOpMode {
 
     private DcMotor catapult;
     //private DcMotor sweeper;

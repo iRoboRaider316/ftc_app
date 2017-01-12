@@ -41,7 +41,7 @@ public class cf_auto_red_MOqual extends LinearOpMode {
     private OpticalDistanceSensor bODSensor;
 
     I2cAddr RANGE1ADDRESS = new I2cAddr(0x14); //Default I2C address for MR Range (7-bit)
-    I2cAddr RANGE2ADDRESS = new I2cAddr(0x04);
+    I2cAddr RANGE2ADDRESS = new I2cAddr(0x18);
 
 
     //private I2cAddr RANGE1ADDRESS = new I2cAddr(0x28); //Default I2C address for MR Range (7-bit)
@@ -130,11 +130,11 @@ public class cf_auto_red_MOqual extends LinearOpMode {
 
 
         //drive to wall
-        lDrive1.setPower(0.3);
-        rDrive1.setPower(0.3);
-        lDrive2.setPower(0.3);
-        rDrive2.setPower(0.3);
-        while(opModeIsActive()) {
+        lDrive1.setPower(-0.3);
+        rDrive1.setPower(-0.3);
+        lDrive2.setPower(-0.3);
+        rDrive2.setPower(-0.3);
+        while((range2Cache[0] & 0xFF) > 15) {
             RANGE2Reader.engage();
             RANGE1Reader.engage();
             range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
@@ -636,28 +636,31 @@ public class cf_auto_red_MOqual extends LinearOpMode {
         idle();
 
         waitForStart();
-        drive(12, 0.3, 1, 0);
+//        drive(12, 0.3, 1, 0);
+//        fire();
+        driveToWall();
+        gyroTurn(0, 0.5, 1);
+        sleep(100);
+        //lineUpWithWall();
+
+        // Remember that the current heading is parallel to the wall
+        parallel = gyroSensor.getHeading();
+        // Drive forward to the white line
+        driveBackwardToLine(parallel);
+        // Drive backward 1 in to accomidate for overshooting
+        distance = 3;
+        maxSpeed = .4;
+        direction = -1;
+        drive(distance, maxSpeed, direction, parallel);
+        // Detect the beacon color and push the correct button
+        direction = 1;
+        recognizeColorRed(direction);
+        // Drive backward to the second line
+        driveToLine(parallel);
+        // Detect the beacon color and push the correct button
+        recognizeColorRed(-1);
+        gyroTurn(270, 0.4, -1);
         fire();
-//        driveToWall();
-//        gyroTurn(3, 0.5, -1);
-//        lineUpWithWall();
-//
-//        // Remember that the current heading is parallel to the wall
-//        parallel = gyroSensor.getHeading();
-//        // Drive forward to the white line
-//        driveToLine(parallel);
-//        // Drive backward 1 in to accomidate for overshooting
-//        distance = 1;
-//        maxSpeed = .4;
-//        direction = -1;
-//        drive(distance, maxSpeed, direction, parallel);
-//        // Detect the beacon color and push the correct button
-//        direction = 1;
-//        recognizeColorBlue(direction);
-//        // Drive backward to the second line
-//        driveBackwardToLine(parallel);
-//        // Detect the beacon color and push the correct button
-//        recognizeColorBlue(-1);
 
     }
 }
