@@ -17,8 +17,7 @@ import com.qualcomm.robotcore.util.Range;
 public class dev_AdjustToLine extends LinearOpMode {
 
     DcMotor sweeper;
-    Servo lButton;
-    Servo rButton;
+    Servo Button;
     Servo hopper;
     DcMotor catapult;
     DcMotor lDrive1;
@@ -283,8 +282,7 @@ public class dev_AdjustToLine extends LinearOpMode {
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
         sweeper = hardwareMap.dcMotor.get("sweeper");
         catapult = hardwareMap.dcMotor.get("catapult");
-        lButton = hardwareMap.servo.get("lButton");
-        rButton = hardwareMap.servo.get("rButton");
+        Button = hardwareMap.servo.get("lButton");
         hopper = hardwareMap.servo.get("hopper");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");

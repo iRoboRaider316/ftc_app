@@ -4,7 +4,6 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 //import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -18,11 +17,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+@Autonomous(name="cf_auto_red_SIUC", group="LinearOpMode")
 
-@Autonomous(name="cf_auto_blue", group="LinearOpMode")
-@Disabled
-public class cf_auto_blue extends LinearOpMode {
+public class cf_auto_red_SIUC extends LinearOpMode {
 
     private DcMotor catapult;
     //private DcMotor sweeper;
@@ -30,20 +27,127 @@ public class cf_auto_blue extends LinearOpMode {
     private DcMotor lDrive2;
     private DcMotor rDrive1;
     private DcMotor rDrive2;
-    private Servo lButton;
-    private Servo rButton;
+    private Servo button;
     private Servo hopper;
+    private Servo belt;
 
     private TouchSensor touch;
     private GyroSensor gyroSensor;
     private ModernRoboticsI2cGyro gyro;
     private ColorSensor color;
-    private OpticalDistanceSensor rODSensor;
-    private OpticalDistanceSensor lODSensor;
-    private I2cAddr RANGE1ADDRESS = new I2cAddr(0x14); //Default I2C address for MR Range (7-bit)
+    private OpticalDistanceSensor fODSensor;
+    private OpticalDistanceSensor bODSensor;
+
+    I2cAddr RANGE1ADDRESS = new I2cAddr(0x14); //Default I2C address for MR Range (7-bit)
+    I2cAddr RANGE2ADDRESS = new I2cAddr(0x18);
+
+
+    //private I2cAddr RANGE1ADDRESS = new I2cAddr(0x28); //Default I2C address for MR Range (7-bit)
     private static final int RANGE1_REG_START = 0x04; //Register to start reading
     private static final int RANGE1_READ_LENGTH = 2; //Number of byte to read
-    private ModernRoboticsI2cRangeSensor rangeSensor;
+    //2nd range
+    private static final int RANGE2_REG_START = 0x04; //Register to start reading
+    private static final int RANGE2_READ_LENGTH = 2; //Number of byte to read
+
+    private void lineUpWithWall() throws InterruptedException {
+        //prepare first range sensor
+        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
+        I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
+        RANGE1Reader.engage();
+        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+        RANGE1Reader.engage();
+        //prepare second range sensor
+        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
+        I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
+        byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+        RANGE2Reader.engage();
+
+
+        sleep(300);
+
+        //if the robot is too far from the wall
+        if ((range2Cache [0] >= range1Cache [0])) {
+            //turn while the robot is too far from the wall (+-1 error)
+            lDrive1.setPower(-0.30);
+            rDrive1.setPower(0.30);
+            lDrive2.setPower(-0.20);
+            rDrive2.setPower(0.2);
+            while (!((range2Cache)[0] - (range1Cache[0]) == 0) && !((range2Cache)[0] - (range1Cache[0]) == 0) ) {
+                range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+                range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+                telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
+                telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
+                telemetry.update();
+            }
+            //Stop driving robot once the sensors are close enough
+            lDrive1.setPower(0);
+            rDrive1.setPower(0);
+            lDrive2.setPower(0);
+            rDrive2.setPower(0);
+
+
+
+        }
+        else if ((range2Cache[0] <= range1Cache[0])) {
+            //turn while the robot is too far from the wall (+-1 error)
+            lDrive1.setPower(0.30);
+            rDrive1.setPower(-0.30);
+            lDrive2.setPower(0.20);
+            rDrive2.setPower(-0.2);
+            while (!((range2Cache)[0] - (range1Cache[0]) == 0) && !((range2Cache)[0] - (range1Cache[0]) == 0) ) {
+                range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+                range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+                telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
+                telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
+                telemetry.update();
+            }
+            //Stop driving robot once the sensors are close enough
+            lDrive1.setPower(0);
+            rDrive1.setPower(0);
+            lDrive2.setPower(0);
+            rDrive2.setPower(0);
+
+        }
+    }
+
+    private void driveToWall() throws InterruptedException {
+        //prepare first range sensor
+        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
+        I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
+        RANGE1Reader.engage();
+        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+        RANGE1Reader.engage();
+        //prepare second range sensor
+        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
+        I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
+        byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+        RANGE2Reader.engage();
+
+
+
+        //drive to wall
+        lDrive1.setPower(-0.25);
+        rDrive1.setPower(-0.25);
+        lDrive2.setPower(-0.25);
+        rDrive2.setPower(-0.25);
+        while((range2Cache[0] & 0xFF) > 14) {
+            range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+            range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+            telemetry.addData("Range1 value:", (range1Cache[0] & 0xFF) );
+            telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF) );
+            telemetry.update();
+        }
+        telemetry.addData("Range1 end value:", (range1Cache[0] & 0xFF) );
+        telemetry.addData("Range2 end value:", (range2Cache[0] & 0xFF) );
+        telemetry.update();
+
+        //stop at wall
+        lDrive1.setPower(0);
+        rDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive2.setPower(0);
+        sleep(3000);
+    }
 
     // Function to set up the Gyro
     // Function called in the init
@@ -127,7 +231,7 @@ public class cf_auto_blue extends LinearOpMode {
         idle();
 
         // Calls turnCompeted function to determine if we need to keep turning
-        while ((!turnCompleted(gyroSensor.getHeading(), targetHeading, 5, direction) && opModeIsActive())) {
+        while ((!turnCompleted(gyroSensor.getHeading(), targetHeading, 3, direction) && opModeIsActive())) {
 
             // Move speed management to separate function
 
@@ -243,7 +347,7 @@ public class cf_auto_blue extends LinearOpMode {
     // accelerating to max speed for the first third of the distance, maintaining that speed for the second third,
     // and decelerating to a minimum speed for the last third.
     // If the robot deviates from the initial gyro heading, it will correct itself proportionally to the error.
-    private void drive(double distance, double maxSpeed) {
+    private void drive(double distance, double maxSpeed, int direction, double heading) throws InterruptedException {
         int ENCODER_CPR = 1120; // Encoder counts per Rev
         double gearRatio = 1.75; // [Gear Ratio]:1
         double circumference = 13.10; // Wheel circumference
@@ -259,71 +363,106 @@ public class cf_auto_blue extends LinearOpMode {
         double rightSpeed;
         double error;
 
-        rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
+        rDrive1.setTargetPosition(rDrive1.getCurrentPosition() - (int) COUNTS);
 
         rDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        double heading = gyroSensor.getHeading();
+        sleep(500);
 
-        while (Math.abs(rDrive1.getCurrentPosition())<Math.abs(rDrive1.getTargetPosition()-5)){
+        if (direction == 1) {
+            while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5)) {
 
-            // Calculate distance from original heading and divide by 10
-            error = (gyroSensor.getHeading()-heading);
-            // Deal with wraparound from 359 to 0
-            if (error >180)
-                error = ((gyroSensor.getHeading()-heading-360)/20);
-            else if(error <-180)
-                error = ((gyroSensor.getHeading()-heading+360)/20);
-            else
-                error = ((gyroSensor.getHeading()-heading)/20);
+                // Calculate distance from original heading and divide by 10
+                error = (gyroSensor.getHeading() - heading);
+                // Deal with wraparound from 359 to 0
+                if (error > 180)
+                    error = ((gyroSensor.getHeading() - heading - 360) / 20);
+                else if (error < -180)
+                    error = ((gyroSensor.getHeading() - heading + 360) / 20);
+                else
+                    error = ((gyroSensor.getHeading() - heading) / 20);
 
-            leftSpeed = maxSpeed-error;
-            rightSpeed = maxSpeed+error;
+                leftSpeed = maxSpeed - error;
+                rightSpeed = maxSpeed + error;
 
-            leftSpeed = Range.clip(leftSpeed, -1, 1);
-            rightSpeed = Range.clip(rightSpeed, -1, 1);
+                leftSpeed = Range.clip(leftSpeed, -1, 1);
+                rightSpeed = Range.clip(rightSpeed, -1, 1);
 
-            lDrive1.setPower(leftSpeed);
-            rDrive1.setPower(rightSpeed);
-            lDrive2.setPower(leftSpeed);
-            rDrive2.setPower(rightSpeed);
+                lDrive1.setPower(leftSpeed);
+                rDrive1.setPower(rightSpeed);
+                lDrive2.setPower(leftSpeed);
+                rDrive2.setPower(rightSpeed);
 
-            telemetry.addData("1. speed", speed);
-            telemetry.addData("2. leftSpeed", leftSpeed);
-            telemetry.addData("3. rightSpeed", rightSpeed);
-            telemetry.addData("4. IntegratedZValue", gyro.getIntegratedZValue());
-            updateTelemetry(telemetry);
+                telemetry.addData("1. speed", speed);
+                telemetry.addData("2. leftSpeed", leftSpeed);
+                telemetry.addData("3. rightSpeed", rightSpeed);
+                telemetry.addData("4. IntegratedZValue", gyro.getIntegratedZValue());
+                updateTelemetry(telemetry);
+            }
+
+            lDrive1.setPower(0);
+            rDrive1.setPower(0);
+            lDrive2.setPower(0);
+            rDrive2.setPower(0);
+
+            lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        } else if (direction == -1) {
+            while (rDrive1.getCurrentPosition() > (rDrive1.getTargetPosition() + 5) && opModeIsActive()) {
+
+                // Calculate distance from original heading and divide by 10
+                error = (gyroSensor.getHeading() - heading);
+                // Deal with wraparound from 359 to 0
+                if (error > 180)
+                    error = ((gyroSensor.getHeading() - heading - 360) / 30);
+                else if (error < -180)
+                    error = ((gyroSensor.getHeading() - heading + 360) / 30);
+                else
+                    error = ((gyroSensor.getHeading() - heading) / 30);
+
+                leftSpeed = maxSpeed + error;
+                rightSpeed = maxSpeed - error;
+
+                leftSpeed = Range.clip(leftSpeed, -1, 1);
+                rightSpeed = Range.clip(rightSpeed, -1, 1);
+
+                lDrive1.setPower(-leftSpeed);
+                rDrive1.setPower(-rightSpeed);
+                lDrive2.setPower(-leftSpeed);
+                rDrive2.setPower(-rightSpeed);
+
+                telemetry.addData("1. speed", speed);
+                telemetry.addData("2. leftSpeed", leftSpeed);
+                telemetry.addData("3. rightSpeed", rightSpeed);
+                telemetry.addData("4. Heading", gyroSensor.getHeading());
+                updateTelemetry(telemetry);
+            }
+
+            lDrive1.setPower(0);
+            rDrive1.setPower(0);
+            lDrive2.setPower(0);
+            rDrive2.setPower(0);
+
+            lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
-
-        lDrive1.setPower(0);
-        rDrive1.setPower(0);
-        lDrive2.setPower(0);
-        rDrive2.setPower(0);
-
-        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-    }
-
-    private void driveBackward(long time, double maxSpeed) throws InterruptedException {
-        rDrive1.setPower(-maxSpeed);
-        rDrive2.setPower(-maxSpeed);
-        lDrive1.setPower(-maxSpeed);
-        lDrive2.setPower(-maxSpeed);
-        sleep(time);
-        rDrive1.setPower(0);
-        rDrive2.setPower(0);
-        lDrive1.setPower(0);
-        lDrive2.setPower(0);
+        else {
+            telemetry.addLine("Invalid direction");
+            telemetry.update();
+            sleep(10000);
+        }
     }
 
     // This is the driveToLine method.
     // When called, the robot drives forward until the optical distance sensor detects a white line on the mat.
-    private void driveToLine() {
+    private void driveToLine(double heading) {
         lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -332,13 +471,9 @@ public class cf_auto_blue extends LinearOpMode {
         double rightSpeed;
         double error;
 
-        double heading = gyroSensor.getHeading();
-
-        rODSensor.enableLed(true);
-        lODSensor.enableLed(true);
-        while(rODSensor.getRawLightDetected()<0.21&&lODSensor.getRawLightDetected()<0.21&&opModeIsActive()){
-            telemetry.addData("rLight", rODSensor.getRawLightDetected());
-            telemetry.addData("lLight", lODSensor.getRawLightDetected());
+        fODSensor.enableLed(true);
+        while(fODSensor.getRawLightDetected()<0.21&&opModeIsActive()){
+            telemetry.addData("fLight", fODSensor.getRawLightDetected());
             telemetry.update();
 
             // Calculate distance from original heading
@@ -351,8 +486,8 @@ public class cf_auto_blue extends LinearOpMode {
             else
                 error = ((gyroSensor.getHeading()-heading)/60);
 
-            leftSpeed = 0.3-error;
-            rightSpeed = 0.3+error;
+            leftSpeed = 0.25-error;
+            rightSpeed = 0.25+error;
 
             leftSpeed = Range.clip(leftSpeed, -1, 1);
             rightSpeed = Range.clip(rightSpeed, -1, 1);
@@ -370,7 +505,7 @@ public class cf_auto_blue extends LinearOpMode {
 
     // This is the driveToLine method.
     // When called, the robot drives forward until the optical distance sensor detects a white line on the mat.
-    private void driveBackwardToLine() {
+    private void driveBackwardToLine(double heading) {
         lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -379,25 +514,23 @@ public class cf_auto_blue extends LinearOpMode {
         double rightSpeed;
         double error;
 
-        double heading = gyroSensor.getHeading();
-
-        rODSensor.enableLed(true);
-        lODSensor.enableLed(true);
-        while(rODSensor.getRawLightDetected()<0.21&&lODSensor.getRawLightDetected()<0.21&&opModeIsActive()){
-            telemetry.addData("rLight", rODSensor.getRawLightDetected());
-            telemetry.addData("lLight", lODSensor.getRawLightDetected());
+        bODSensor.enableLed(true);
+        while(bODSensor.getRawLightDetected()<0.21&&opModeIsActive()){
+            telemetry.addData("bLight", bODSensor.getRawLightDetected());
             telemetry.update();
 
             // Calculate distance from original heading and divide by 40
-            error = ((gyroSensor.getHeading()-heading)/60);
+            error = ((gyroSensor.getHeading()-heading));
             // Deal with wraparound from 359 to 0
             if (error >180)
                 error = ((gyroSensor.getHeading()-heading-360)/60);
             else if(error <-180)
                 error = ((gyroSensor.getHeading()-heading+360)/60);
+            else
+                error = ((gyroSensor.getHeading()-heading)/60);
 
-            leftSpeed = -0.3-error;
-            rightSpeed = -0.3+error;
+            leftSpeed = -0.25-error;
+            rightSpeed = -0.25+error;
 
             leftSpeed = Range.clip(leftSpeed, -1, 1);
             rightSpeed = Range.clip(rightSpeed, -1, 1);
@@ -412,128 +545,50 @@ public class cf_auto_blue extends LinearOpMode {
         rDrive1.setPower(0);
         rDrive2.setPower(0);
     }
-    // Function to line the robot up a certain distance from the wall using the range function
-    private void lineUp() throws InterruptedException {
 
-//        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
-//        I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
-//        RANGE1Reader.engage();
-//        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-
-        if ( /*(range1Cache[0] & 0xFF)*/rangeSensor.getDistance(DistanceUnit.CM) > 12) {
-            //telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
-            telemetry.update();
-            lDrive1.setPower(-0.5);
-            lDrive2.setPower(-0.5);
-            sleep(500);
-            lDrive1.setPower(0);
-            lDrive2.setPower(0);
-
-            while(/*(range1Cache[0] & 0xFF) >*/rangeSensor.getDistance(DistanceUnit.CM) > 12&&opModeIsActive()) {
-                //range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-                rDrive1.setPower(-0.5);
-                rDrive2.setPower(-0.5);
-                lDrive1.setPower(-0.5);
-                lDrive2.setPower(-0.5);
-                //telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
-                telemetry.update();
-            }
-            rDrive1.setPower(0);
-            rDrive2.setPower(0);
-            lDrive1.setPower(0);
-            lDrive2.setPower(0);
-            //Extensively test and document all parts programming asks engineering to put on the robot before fabrication begins. - Mr. Jason Rahm, 2016
-            telemetry.addData("Ultra Sonic", "NOICE");
-            gyroTurn(315,.4,1);
-            rDrive1.setPower(-0.4);
-            rDrive2.setPower(-0.4);
-            lDrive1.setPower(-0.4);
-            lDrive2.setPower(-0.4);
-            sleep(200);
-            rDrive1.setPower(0);
-            rDrive2.setPower(0);
-            lDrive1.setPower(0);
-            lDrive2.setPower(0);
-            driveToLine();
-            sleep(200);
-        }
-        else if ( /*(range1Cache[0] & 0xFF)*/ rangeSensor.getDistance(DistanceUnit.CM) < 10) {
-            //telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
-            telemetry.update();
-            lDrive1.setPower(0.5);
-            lDrive2.setPower(0.5);
-            sleep(400);
-            lDrive1.setPower(0);
-            lDrive2.setPower(0);
-
-            while(/*(range1Cache[0] & 0xFF)*/rangeSensor.getDistance(DistanceUnit.CM) < 10&&opModeIsActive()) {
-                //range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-                rDrive1.setPower(-0.4);
-                rDrive2.setPower(-0.4);
-                lDrive1.setPower(-0.4);
-                lDrive2.setPower(-0.4);
-                //telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
-                telemetry.update();
-            }
-            rDrive1.setPower(0);
-            rDrive2.setPower(0);
-            lDrive1.setPower(0);
-            lDrive2.setPower(0);
-
-            telemetry.addData("Ultra Sonic", "NOICE");
-            gyroTurn(315,.3,-1);
-            rDrive1.setPower(-0.4);
-            rDrive2.setPower(-0.4);
-            lDrive1.setPower(-0.4);
-            lDrive2.setPower(-0.4);
-            sleep(200);
-            rDrive1.setPower(0);
-            rDrive2.setPower(0);
-            lDrive1.setPower(0);
-            lDrive2.setPower(0);
-            driveToLine();
-            sleep(200);
-        }
-        else {
-            //telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
-            telemetry.update();
-            rDrive1.setPower(-0.4);
-            rDrive2.setPower(-0.4);
-            lDrive1.setPower(-0.4);
-            lDrive2.setPower(-0.4);
-            sleep(200);
-            rDrive1.setPower(0);
-            rDrive2.setPower(0);
-            lDrive1.setPower(0);
-            lDrive2.setPower(0);
-            driveToLine();
-            sleep(200);
-        }
-        //telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
-        telemetry.update();
-    }
-
-
-
-    private void recognizeColor() throws InterruptedException {
+    private void recognizeColorRed(int direction) throws InterruptedException {
         color.enableLed(false);
-        //if the beacon is blue
-        while (color.blue() < (color.red())) {
-            rDrive1.setPower(.3);
-            rDrive2.setPower(.3);
-            lDrive1.setPower(.3);
-            lDrive2.setPower(.3);
+        while (color.red() <= (color.blue())) {
+            rDrive1.setPower(.2*direction);
+            rDrive2.setPower(.2*direction);
+            lDrive1.setPower(.2*direction);
+            lDrive2.setPower(.2*direction);
+            telemetry.addData("red", color.red());
+            telemetry.addData("blue", color.blue());
+            telemetry.update();
         }
         rDrive1.setPower(0);
         rDrive2.setPower(0);
         lDrive1.setPower(0);
         lDrive2.setPower(0);
-        rButton.setPosition(0);
-        sleep(1000);
-        rButton.setPosition(1);
-        sleep(100);
-        rButton.setPosition(0);
-        sleep(1000);
+        button.setPosition(1);
+        sleep(2300);
+        button.setPosition(0);
+        sleep(2300);
+        button.setPosition(0.5);
+        telemetry.update();
+    }
+
+    private void recognizeColorBlue(int direction) throws InterruptedException {
+        color.enableLed(false);
+        while (color.blue() <= (color.red())) {
+            rDrive1.setPower(.2*direction);
+            rDrive2.setPower(.2*direction);
+            lDrive1.setPower(.2*direction);
+            lDrive2.setPower(.2*direction);
+            telemetry.addData("red", color.red());
+            telemetry.addData("blue", color.blue());
+            telemetry.update();
+        }
+        rDrive1.setPower(0);
+        rDrive2.setPower(0);
+        lDrive1.setPower(0);
+        lDrive2.setPower(0);
+        button.setPosition(1);
+        sleep(2300);
+        button.setPosition(0);
+        sleep(2300);
+        button.setPosition(0.5);
         telemetry.update();
     }
 
@@ -548,18 +603,18 @@ public class cf_auto_blue extends LinearOpMode {
 
         //sweeper = hardwareMap.dcMotor.get("sweeper");
         catapult = hardwareMap.dcMotor.get("catapult");
-        lButton = hardwareMap.servo.get("lButton");
-        rButton = hardwareMap.servo.get("rButton");
+        button = hardwareMap.servo.get("button");
         hopper = hardwareMap.servo.get("hopper");
+        belt = hardwareMap.servo.get("belt");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
-        rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "range");
 
-        rODSensor = hardwareMap.opticalDistanceSensor.get("rOD");
-        lODSensor = hardwareMap.opticalDistanceSensor.get("lOD");
-        hopper.setPosition(.8);
-        lButton.setPosition(0);
-        rButton.setPosition(1);
+
+        fODSensor = hardwareMap.opticalDistanceSensor.get("fOD");
+        bODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
+        hopper.setPosition(0.8);
+        button.setPosition(0.5);
+        belt.setPosition(.5);
         setUpGyro();
 
         double distance;
@@ -567,6 +622,8 @@ public class cf_auto_blue extends LinearOpMode {
         int targetHeading;
         int direction;
         long time;
+        double parallel;
+        double heading;
 
         lDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -579,63 +636,63 @@ public class cf_auto_blue extends LinearOpMode {
         rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         idle();
 
-        waitForStart();
-        // Drive forward
-        distance = 9;
-        maxSpeed = 1;
-        drive(distance, maxSpeed);
-        // Turn to face vortex
-        targetHeading = 4;
-        maxSpeed = .4;
-        direction = 1;
-        gyroTurn(targetHeading, maxSpeed, direction);
-        // Fire balls
-        fire();
-        // Turn to hit cap ball
-        targetHeading = 12;
-        maxSpeed = .45;
-        direction = 1;
-        gyroTurn(targetHeading, maxSpeed, direction);
-        // Drive forward
-        distance = 85;
-        maxSpeed = 1;
-        drive(distance, maxSpeed);
-        // Turn towards line
-        targetHeading = 325;
-        maxSpeed = .45;
-        direction = -1;
-        gyroTurn(targetHeading, maxSpeed, direction);
-        // Drive until the robot detects the line
-        driveToLine();
-        // Drive backward
-        time = 400;
-        maxSpeed = .4;
-        driveBackward(time, maxSpeed);
-        // Adjust the robot's distance from the wall
-        lineUp();
-        time = 250;
-        maxSpeed = .4;
-        driveBackward(time,maxSpeed);
-        // Detect beacon color and push the button for red
-        recognizeColor();
-        // Drive backward past the line
-        time = 800;
-        maxSpeed = .5;
-        driveBackward(time, maxSpeed);
-        // Drive backward until we hit the second line
-        driveBackwardToLine();
-        // Drive forward
-        distance = 2;
-        maxSpeed = 1;
-        drive(distance, maxSpeed);
-        // Detect beacon color and push the button for red
-        recognizeColor();
-        targetHeading = 35;
-        maxSpeed = .5;
-        direction = -1;
-        gyroTurn(targetHeading, maxSpeed, direction);
-        // Drive backward onto the ramp
-        driveBackward(1000,.9);
+        while (!isStarted())
+        {
+            telemetry.addData("Heading", gyroSensor.getHeading());
+            updateTelemetry(telemetry);
+        }
 
+        waitForStart();
+
+        int drift;
+        drift = (gyroSensor.getHeading() - 340) * -1;
+        if (drift < 0){
+            drift = drift * -1;
+        }
+        telemetry.addData("Heading", drift);
+        updateTelemetry(telemetry);
+
+        distance = 50;
+        maxSpeed = .7;
+        direction = -1;
+        heading = 340;
+        drive(distance, maxSpeed, direction, heading + drift);
+        driveToWall();
+        gyroTurn(drift, 0.4, -1);
+        //lineUpWithWall();
+        // Remember that the current heading is parallel to the wall
+        parallel = gyroSensor.getHeading();
+        // Drive backward to the white line
+        driveBackwardToLine(parallel + drift);
+        // Drive forward 1 in to accommidate for overshooting
+        distance = 1;
+        maxSpeed = .4;
+        direction = 1;
+        drive(distance, maxSpeed, direction, parallel + drift);
+        // Detect the beacon color and push the correct button
+        direction = -1;
+        recognizeColorRed(direction);
+        // Drive forward 1 in to get past the line
+        distance = 1;
+        maxSpeed = .4;
+        direction = 1;
+        drive(distance, maxSpeed, direction, parallel + drift);
+        // Drive forward to the second line
+        driveToLine(parallel);
+        // Detect the beacon color and push the correct button
+        recognizeColorRed(-1);
+        // Turn to face vortex
+        targetHeading = 75;
+        maxSpeed = .4;
+        direction = 1;
+        gyroTurn(targetHeading + drift, maxSpeed, direction);
+        // Drive forward 1 inch
+        distance = 2;
+        maxSpeed = .4;
+        direction = 1;
+        heading = gyroSensor.getHeading();
+        drive(distance, maxSpeed, direction, heading + drift);
+        // Shoot both balls
+        fire();
     }
 }
