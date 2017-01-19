@@ -17,7 +17,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @Autonomous(name="cf_auto_blue_MOqual", group="LinearOpMode")
 
@@ -47,11 +46,9 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
     //private I2cAddr RANGE1ADDRESS = new I2cAddr(0x28); //Default I2C address for MR Range (7-bit)
     private static final int RANGE1_REG_START = 0x04; //Register to start reading
     private static final int RANGE1_READ_LENGTH = 2; //Number of byte to read
-    private ModernRoboticsI2cRangeSensor rangeSensor;
     //2nd range
     private static final int RANGE2_REG_START = 0x04; //Register to start reading
     private static final int RANGE2_READ_LENGTH = 2; //Number of byte to read
-    private ModernRoboticsI2cRangeSensor rangeSensor2;
     private void lineUpWithWall() throws InterruptedException {
         //prepare first range sensor
         I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
@@ -75,7 +72,7 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
             rDrive1.setPower(0.30);
             lDrive2.setPower(-0.20);
             rDrive2.setPower(0.2);
-            while (!((range1Cache)[0] - (range2Cache[0]) <= 1)) {
+            while (!((range2Cache)[0] - (range1Cache[0]) == 0) && !((range2Cache)[0] - (range1Cache[0]) == 0) ) {
                 range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
                 range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
                 telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
@@ -97,7 +94,7 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
             rDrive1.setPower(-0.30);
             lDrive2.setPower(0.20);
             rDrive2.setPower(-0.2);
-            while (!((range2Cache)[0] - (range1Cache[0]) <= 1)) {
+            while (!((range2Cache)[0] - (range1Cache[0]) == 0) && !((range2Cache)[0] - (range1Cache[0]) == 0) ) {
                 range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
                 range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
                 telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
@@ -129,11 +126,11 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
 
 
         //drive to wall
-        lDrive1.setPower(-0.3);
-        rDrive1.setPower(-0.3);
-        lDrive2.setPower(-0.3);
-        rDrive2.setPower(-0.3);
-        while((range2Cache[0] & 0xFF) > 15) {
+        lDrive1.setPower(0.25);
+        rDrive1.setPower(0.25);
+        lDrive2.setPower(0.25);
+        rDrive2.setPower(0.25);
+        while((range1Cache[0] & 0xFF) > 14) {
             range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
             range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
             telemetry.addData("Range value:", (range1Cache[0] & 0xFF) );
@@ -234,7 +231,7 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
         idle();
 
         // Calls turnCompeted function to determine if we need to keep turning
-        while ((!turnCompleted(gyroSensor.getHeading(), targetHeading, 5, direction) && opModeIsActive())) {
+        while ((!turnCompleted(gyroSensor.getHeading(), targetHeading, 3, direction) && opModeIsActive())) {
 
             // Move speed management to separate function
 
@@ -551,11 +548,14 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
 
     private void recognizeColorRed(int direction) throws InterruptedException {
         color.enableLed(false);
-        while (color.red() < (color.blue())+1) {
+        while (color.red() <= (color.blue())) {
             rDrive1.setPower(.2*direction);
             rDrive2.setPower(.2*direction);
             lDrive1.setPower(.2*direction);
             lDrive2.setPower(.2*direction);
+            telemetry.addData("red", color.red());
+            telemetry.addData("blue", color.blue());
+            telemetry.update();
         }
         rDrive1.setPower(0);
         rDrive2.setPower(0);
@@ -571,11 +571,14 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
 
     private void recognizeColorBlue(int direction) throws InterruptedException {
         color.enableLed(false);
-        while (color.blue() < (color.red())+1) {
+        while (color.blue() <= (color.red())) {
             rDrive1.setPower(.2*direction);
             rDrive2.setPower(.2*direction);
             lDrive1.setPower(.2*direction);
             lDrive2.setPower(.2*direction);
+            telemetry.addData("red", color.red());
+            telemetry.addData("blue", color.blue());
+            telemetry.update();
         }
         rDrive1.setPower(0);
         rDrive2.setPower(0);
@@ -620,6 +623,7 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
         int direction;
         long time;
         double parallel;
+        double heading;
 
         lDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -632,17 +636,26 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
         rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         idle();
 
+        while (!isStarted())
+        {
+            telemetry.addData("Heading", gyroSensor.getHeading());
+            updateTelemetry(telemetry);
+        }
         waitForStart();
 
+        distance = 50;
+        maxSpeed = .7;
+        direction = 1;
+        heading = 20;
+        drive(distance, maxSpeed, direction, heading);
         driveToWall();
-        gyroTurn(3, 0.5, -1);
-        lineUpWithWall();
-
+        gyroTurn(0, 0.4, -1);
+        //lineUpWithWall();
         // Remember that the current heading is parallel to the wall
         parallel = gyroSensor.getHeading();
         // Drive forward to the white line
         driveToLine(parallel);
-        // Drive backward 1 in to accomidate for overshooting
+        // Drive backward 1 in to accommidate for overshooting
         distance = 1;
         maxSpeed = .4;
         direction = -1;
@@ -650,10 +663,27 @@ public class cf_auto_blue_MOqual extends LinearOpMode {
         // Detect the beacon color and push the correct button
         direction = 1;
         recognizeColorBlue(direction);
+        // Drive backward 1 in to get past the line
+        distance = 1;
+        maxSpeed = .4;
+        direction = -1;
+        drive(distance, maxSpeed, direction, parallel);
         // Drive backward to the second line
         driveBackwardToLine(parallel);
         // Detect the beacon color and push the correct button
         recognizeColorBlue(-1);
-
+        // Turn to face vortex
+        targetHeading = 285;
+        maxSpeed = .4;
+        direction = -1;
+        gyroTurn(targetHeading, maxSpeed, direction);
+        // Drive backward 1 in
+        distance = 2;
+        maxSpeed = .4;
+        direction = -1;
+        heading = gyroSensor.getHeading();
+        drive(distance, maxSpeed, direction, heading);
+        // Shoot both balls
+        fire();
     }
 }

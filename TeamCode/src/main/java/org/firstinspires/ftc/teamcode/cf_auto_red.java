@@ -4,6 +4,7 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 //import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -19,8 +20,8 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-@Autonomous(name="cf_auto_fire+drive", group="LinearOpMode")
-
+@Autonomous(name="cf_auto_red", group="LinearOpMode")
+@Disabled
 public class cf_auto_red extends LinearOpMode {
 
     private DcMotor catapult;
@@ -29,8 +30,8 @@ public class cf_auto_red extends LinearOpMode {
     private DcMotor lDrive2;
     private DcMotor rDrive1;
     private DcMotor rDrive2;
-    private Servo belt;
-    private Servo button;
+    private Servo lButton;
+    private Servo rButton;
     private Servo hopper;
 
     private TouchSensor touch;
@@ -525,13 +526,13 @@ public class cf_auto_red extends LinearOpMode {
         rDrive2.setPower(0);
         lDrive1.setPower(0);
         lDrive2.setPower(0);
-        button.setPosition(1);
+        lButton.setPosition(1);
         sleep(1000);
-        button.setPosition(0);
+        lButton.setPosition(0);
         sleep(100);
-        button.setPosition(1);
+        lButton.setPosition(1);
         sleep(1000);
-        button.setPosition(0);
+        lButton.setPosition(0);
         telemetry.update();
     }
 
@@ -543,11 +544,11 @@ public class cf_auto_red extends LinearOpMode {
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
         lDrive1.setDirection(DcMotor.Direction.REVERSE);
         lDrive2.setDirection(DcMotor.Direction.REVERSE);
-        belt = hardwareMap.servo.get("belt");
 
         //sweeper = hardwareMap.dcMotor.get("sweeper");
         catapult = hardwareMap.dcMotor.get("catapult");
-        button = hardwareMap.servo.get("button");
+        lButton = hardwareMap.servo.get("lButton");
+        rButton = hardwareMap.servo.get("rButton");
         hopper = hardwareMap.servo.get("hopper");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
@@ -556,10 +557,8 @@ public class cf_auto_red extends LinearOpMode {
         rODSensor = hardwareMap.opticalDistanceSensor.get("rOD");
         lODSensor = hardwareMap.opticalDistanceSensor.get("lOD");
         hopper.setPosition(.8);
-        button.setPosition(0);
-        button.setPosition(1);
-        button.setPosition(0.5);
-        belt.setPosition(.5);
+        lButton.setPosition(0);
+        rButton.setPosition(1);
         setUpGyro();
 
         double distance;
@@ -582,67 +581,63 @@ public class cf_auto_red extends LinearOpMode {
         waitForStart();
 
         // Drive forward
-//        distance = 7;
-//        maxSpeed = 1;
-//        drive(distance, maxSpeed);
-        // Turn to face vortex
-//        targetHeading = 7;
-//        maxSpeed = .35;
-//        direction = 1;
-//        gyroTurn(targetHeading, maxSpeed, direction);
-//        // Fire balls
-        fire();
-        distance = 48;
+        distance = 7;
         maxSpeed = 1;
         drive(distance, maxSpeed);
-
+        // Turn to face vortex
+        targetHeading = 7;
+        maxSpeed = .35;
+        direction = 1;
+        gyroTurn(targetHeading, maxSpeed, direction);
+        // Fire balls
+        fire();
         // Turn to hit cap ball
-//
-//       targetHeading = 350;
-//        maxSpeed = .5;
-//        direction = -1;
-//        gyroTurn(targetHeading, maxSpeed, direction);
-//        // Drive forward
-//        distance = 89;
-//        maxSpeed = 1;
-//        drive(distance, maxSpeed);
-//        // Turn towards line
-//        targetHeading = 50;
-//        maxSpeed = .5;
-//        direction = 1;
-//        gyroTurn(targetHeading, maxSpeed, direction);
-//        // Drive until the robot detects the line
-//        driveToLine();
-//        // Drive backward
-//        time = 400;
-//        maxSpeed = .4;
-//        driveBackward(time, maxSpeed);
-//        // Adjust the robot's distance from the wall
-//        lineUp();
-//        time = 150;
-//        maxSpeed = .3;
-//        driveBackward(time,maxSpeed);
-//        // Detect beacon color and push the button for red
-//        recognizeColor();
-//        // Drive backward past the line
-//        time = 1000;
-//        maxSpeed = .4;
-//        driveBackward(time, maxSpeed);
-//        // Drive backward until we hit the second line
-//        driveBackwardToLine();
-//        // Drive forward
-//        distance = 1;
-//        maxSpeed = 1;
-//        drive(distance, maxSpeed);
-//        sleep(200);
-//        // Detect beacon color and push the button for red
-//        recognizeColor();
-//        targetHeading = 30;
-//        maxSpeed = .4;
-//        direction = -1;
-//        gyroTurn(targetHeading, maxSpeed, direction);
-//        // Drive backward onto the ramp
-//        driveBackward(800,.9);
+        targetHeading = 350;
+        maxSpeed = .5;
+        direction = -1;
+        gyroTurn(targetHeading, maxSpeed, direction);
+        // Drive forward
+        distance = 89;
+        maxSpeed = 1;
+        drive(distance, maxSpeed);
+        // Turn towards line
+        targetHeading = 50;
+        maxSpeed = .5;
+        direction = 1;
+        gyroTurn(targetHeading, maxSpeed, direction);
+        // Drive until the robot detects the line
+        driveToLine();
+        // Drive backward
+        time = 400;
+        maxSpeed = .4;
+        driveBackward(time, maxSpeed);
+        // Adjust the robot's distance from the wall
+        lineUp();
+        time = 150;
+        maxSpeed = .3;
+        driveBackward(time,maxSpeed);
+        // Detect beacon color and push the button for red
+        recognizeColor();
+        // Drive backward past the line
+        time = 1000;
+        maxSpeed = .4;
+        driveBackward(time, maxSpeed);
+        // Drive backward until we hit the second line
+        driveBackwardToLine();
+        // Drive forward
+        distance = 1;
+        maxSpeed = 1;
+        drive(distance, maxSpeed);
+        sleep(200);
+        // Detect beacon color and push the button for red
+        recognizeColor();
+        targetHeading = 30;
+        maxSpeed = .4;
+        direction = -1;
+        gyroTurn(targetHeading, maxSpeed, direction);
+        // Drive backward onto the ramp
+        driveBackward(800,.9);
+
 
     }
 }
