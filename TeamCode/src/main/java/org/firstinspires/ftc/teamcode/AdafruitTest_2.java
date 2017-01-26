@@ -44,6 +44,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.internal.AppUtil;
 
+import com.qualcomm.robotcore.hardware.DcMotor;
+
 import java.io.File;
 import java.util.Locale;
 
@@ -99,7 +101,7 @@ import java.util.Locale;
  * @see <a href="https://www.bosch-sensortec.com/bst/products/all_products/bno055">BNO055 product page</a>
  * @see <a href="https://ae-bst.resource.bosch.com/media/_tech/media/datasheets/BST_BNO055_DS000_14.pdf">BNO055 specification</a>
  */
-@TeleOp(name = "Sensor: Adafruit IMU Calibration", group = "Sensor")
+@TeleOp(name = "AdafruitTest_2", group = "LinearOpMode")
 //@Disabled                            // Uncomment this to add to the opmode list
 public class AdafruitTest_2 extends LinearOpMode
 {
@@ -112,6 +114,12 @@ public class AdafruitTest_2 extends LinearOpMode
 
     // State used for updating telemetry
     Orientation angles;
+
+    // Test Motors On Robot
+    DcMotor lDrive1;
+    DcMotor lDrive2;
+    DcMotor rDrive1;
+    DcMotor rDrive2;
 
     //----------------------------------------------------------------------------------------------
     // Main logic
@@ -136,6 +144,14 @@ public class AdafruitTest_2 extends LinearOpMode
         parameters.loggingTag     = "IMU";
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
+
+        // Initialize Test Motors
+        rDrive1 = hardwareMap.dcMotor.get("rDrive1");
+        rDrive2 = hardwareMap.dcMotor.get("rDrive2");
+        lDrive1 = hardwareMap.dcMotor.get("lDrive1");
+        lDrive2 = hardwareMap.dcMotor.get("lDrive2");
+        lDrive1.setDirection(DcMotor.Direction.REVERSE);
+        lDrive2.setDirection(DcMotor.Direction.REVERSE);
 
         composeTelemetry();
         telemetry.log().add("Waiting for start...");
@@ -173,6 +189,11 @@ public class AdafruitTest_2 extends LinearOpMode
             }
 
             telemetry.update();
+
+            lDrive1.setPower(gamepad1.left_stick_y);
+            lDrive2.setPower(gamepad1.left_stick_y);
+            rDrive1.setPower(gamepad1.right_stick_y);
+            rDrive2.setPower(gamepad1.right_stick_y);
         }
     }
 

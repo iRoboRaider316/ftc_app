@@ -31,6 +31,7 @@ import com.qualcomm.hardware.adafruit.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
@@ -51,7 +52,7 @@ import java.util.Locale;
  *
  * @see <a href="http://www.adafruit.com/products/2472">Adafruit IMU</a>
  */
-@Autonomous(name = "Adafruit_Test_1", group = "Sensor")
+@Autonomous(name = "Adafruit_Test_1", group = "LinearOpMode")
 //@Disabled                            // Uncomment this to add to the opmode list
 public class AdafruitTest_1 extends LinearOpMode
 {
@@ -62,9 +63,16 @@ public class AdafruitTest_1 extends LinearOpMode
     // The IMU sensor object
     BNO055IMU imu;
 
+
     // State used for updating telemetry
     Orientation angles;
     Acceleration gravity;
+
+    // Test Motors On Robot
+    DcMotor lDrive1;
+    DcMotor lDrive2;
+    DcMotor rDrive1;
+    DcMotor rDrive2;
 
     //----------------------------------------------------------------------------------------------
     // Main logic
@@ -89,6 +97,14 @@ public class AdafruitTest_1 extends LinearOpMode
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
 
+        // Initialize Test Motors
+        rDrive1 = hardwareMap.dcMotor.get("rDrive1");
+        rDrive2 = hardwareMap.dcMotor.get("rDrive2");
+        lDrive1 = hardwareMap.dcMotor.get("lDrive1");
+        lDrive2 = hardwareMap.dcMotor.get("lDrive2");
+        lDrive1.setDirection(DcMotor.Direction.REVERSE);
+        lDrive2.setDirection(DcMotor.Direction.REVERSE);
+
         // Set up our telemetry dashboard
         composeTelemetry();
 
@@ -101,8 +117,13 @@ public class AdafruitTest_1 extends LinearOpMode
         // Loop and update the dashboard
         while (opModeIsActive()) {
             telemetry.update();
+            lDrive1.setPower(gamepad1.left_stick_y);
+            lDrive2.setPower(gamepad1.left_stick_y);
+            rDrive1.setPower(gamepad1.right_stick_y);
+            rDrive2.setPower(gamepad1.right_stick_y);
         }
     }
+
 
     //----------------------------------------------------------------------------------------------
     // Telemetry Configuration
