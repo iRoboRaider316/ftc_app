@@ -121,6 +121,7 @@ public class AdafruitTest_1 extends LinearOpMode
             lDrive2.setPower(gamepad1.left_stick_y);
             rDrive1.setPower(gamepad1.right_stick_y);
             rDrive2.setPower(gamepad1.right_stick_y);
+
         }
     }
 
@@ -186,6 +187,7 @@ public class AdafruitTest_1 extends LinearOpMode
                                         + gravity.zAccel*gravity.zAccel));
                     }
                 });
+        telemetry.addData("Say", "Hello!");
     }
 
     //----------------------------------------------------------------------------------------------
@@ -199,4 +201,5 @@ public class AdafruitTest_1 extends LinearOpMode
     String formatDegrees(double degrees){
         return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
     }
+
 }
