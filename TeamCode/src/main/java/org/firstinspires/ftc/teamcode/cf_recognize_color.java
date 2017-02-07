@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -10,7 +9,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @Autonomous(name="cf_recognize_color", group="LinearOpMode")
-@Disabled
 public class cf_recognize_color extends OpMode{
 
     ColorSensor color;
@@ -27,22 +25,30 @@ public class cf_recognize_color extends OpMode{
 
     public void recognizeColor() {
 
-        color.enableLed(true);
+        color.enableLed(false);
         //if the beacon is red
         if (color.red() > color.blue()){
             //insert code here
             telemetry.addData("Color is red",color.red());
-            updateTelemetry(telemetry);
         }
         //if the beacon is blue
         else if (color.blue() > color.red()) {
             //insert code here
             telemetry.addData("Color is blue",color.blue());
-            updateTelemetry(telemetry);
         }
+
     }
 
     public void init() {
+
+
+    }
+
+
+    public void loop() {
+
+
+
         color = hardwareMap.colorSensor.get("color");
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
@@ -54,13 +60,12 @@ public class cf_recognize_color extends OpMode{
         rButton = hardwareMap.servo.get("rButton");
         hopper = hardwareMap.servo.get("hopper");
         touch = hardwareMap.touchSensor.get("t");
-    }
 
 
-    public void loop() {
 
         recognizeColor();
         updateTelemetry(telemetry);
+
 
     }
 
