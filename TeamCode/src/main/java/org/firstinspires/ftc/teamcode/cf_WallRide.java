@@ -180,7 +180,7 @@ public class cf_WallRide extends LinearOpMode {
     private void wallRideSingleBack(double speed) throws InterruptedException {
         rODSensor.enableLed(true);
         lODSensor.enableLed(true);
-        while (opModeIsActive() && rODSensor.getRawLightDetected()<0.12 && lODSensor.getRawLightDetected()<0.12) {
+        while (opModeIsActive() && rODSensor.getRawLightDetected()<0.1 && lODSensor.getRawLightDetected()<0.1) {
             telemetry.addData("rLight", rODSensor.getRawLightDetected());
             telemetry.addData("lLight", lODSensor.getRawLightDetected());
             telemetry.update();
@@ -442,10 +442,11 @@ waitForStart();
 
 
 
-        //driveToWall();
-        //lineUp();
-
-      wallRideSingleBack(0.2);
+        driveToWall();
+        sleep(1000);
+        lineUp();
+        sleep(1000);
+        wallRideSingleBack(0.2);
 
       // lineUp();
     }

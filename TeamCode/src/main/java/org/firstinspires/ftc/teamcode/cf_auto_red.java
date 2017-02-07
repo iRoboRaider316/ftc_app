@@ -403,5 +403,7 @@ public class cf_auto_red extends LinearOpMode {
         idle();
 
         waitForStart();
+
+
     }
 }

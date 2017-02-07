@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @TeleOp(name="Cross Fire TeleOp", group="TeleOp")
 
-public class crossFireTeleOp extends OpMode{
+public class CrossfireTeleop extends OpMode{
     ColorSensor color;
     DcMotor rDrive1;
     DcMotor rDrive2;
