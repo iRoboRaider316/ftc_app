@@ -1,13 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.I2cAddr;
-import com.qualcomm.robotcore.hardware.I2cDevice;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
-import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
+        import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+        import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+        import com.qualcomm.robotcore.hardware.DcMotor;
+        import com.qualcomm.robotcore.hardware.I2cAddr;
+        import com.qualcomm.robotcore.hardware.I2cDevice;
+        import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
+        import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
+        import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 
 /**
  * Created by James on 1/31/2017.
@@ -180,7 +180,7 @@ public class cf_WallRide extends LinearOpMode {
     private void wallRideSingleBack(double speed) throws InterruptedException {
         rODSensor.enableLed(true);
         lODSensor.enableLed(true);
-        while (opModeIsActive() && rODSensor.getRawLightDetected()<0.1 && lODSensor.getRawLightDetected()<0.1) {
+        while (lODSensor.getRawLightDetected()<0.1) {
             telemetry.addData("rLight", rODSensor.getRawLightDetected());
             telemetry.addData("lLight", lODSensor.getRawLightDetected());
             telemetry.update();
@@ -222,7 +222,7 @@ public class cf_WallRide extends LinearOpMode {
                     telemetry.addData("lLight", lODSensor.getRawLightDetected());
                     telemetry.update();
                     telemetry.update();
-                }while (range == range2Cache[0] && range2Cache[0] < 200 && opModeIsActive());
+                }while (range == range2Cache[0] && range2Cache[0] < 200 && opModeIsActive() && rODSensor.getRawLightDetected()<0.1&&lODSensor.getRawLightDetected()<0.1);
 
                 do {
                     range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
@@ -242,7 +242,7 @@ public class cf_WallRide extends LinearOpMode {
                     telemetry.update();
                     telemetry.update();
 
-                }while (range > range2Cache[0] && range2Cache[0] < 200 && opModeIsActive());
+                }while (range > range2Cache[0] && range2Cache[0] < 200 && opModeIsActive() &&  rODSensor.getRawLightDetected()<0.1&&lODSensor.getRawLightDetected()<0.1);
 
                 do {
                     range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
@@ -261,11 +261,11 @@ public class cf_WallRide extends LinearOpMode {
                     telemetry.addData("lLight", lODSensor.getRawLightDetected());
                     telemetry.update();
                     telemetry.update();
-                }while (range < range2Cache[0] && range2Cache[0] < 200 && opModeIsActive());
+                }while (range < range2Cache[0] && range2Cache[0] < 200 && opModeIsActive() && rODSensor.getRawLightDetected()<0.1&&lODSensor.getRawLightDetected()<0.1);
                 telemetry.addData("range",range);
                 telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
                 telemetry.update();
-            }  while (range2Cache[0] < 200 && opModeIsActive());
+            }  while (range2Cache[0] < 200 && opModeIsActive()&& rODSensor.getRawLightDetected()<0.1&&lODSensor.getRawLightDetected()<0.1);
 
         }
     }
@@ -291,88 +291,87 @@ public class cf_WallRide extends LinearOpMode {
         telemetry.update();
         telemetry.update();
 
-   if (range1Cache[0] > range2Cache[0]) {
-       lDrive1.setPower(0.25);
-       rDrive1.setPower(-0.25);
-       lDrive2.setPower(0.25);
-       rDrive2.setPower(-0.25);
-       while (range1Cache[0] > range2Cache[0] && opModeIsActive()) {
-           range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-           range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-           telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
-           telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
-           if (range1Cache[0] < 200) {
-               lDrive1.setPower(0);
-               rDrive1.setPower(0);
-               lDrive2.setPower(0);
-               rDrive2.setPower(0);
-               sleep(100);
-               lDrive1.setPower(0.25);
-               rDrive1.setPower(-0.25);
-               lDrive2.setPower(0.25);
-               rDrive2.setPower(-0.25);
-           }
-          else if (range2Cache[0] < 200) {
-               lDrive1.setPower(0);
-               rDrive1.setPower(0);
-               lDrive2.setPower(0);
-               rDrive2.setPower(0);
-               sleep(100);
-               lDrive1.setPower(0.25);
-               rDrive1.setPower(-0.25);
-               lDrive2.setPower(0.25);
-               rDrive2.setPower(-0.25);
-           }
-       }
-       lDrive1.setPower(0);
-       rDrive1.setPower(0);
-       lDrive2.setPower(0);
-       rDrive2.setPower(0);
-   }
+        if (range1Cache[0] > range2Cache[0]) {
+            lDrive1.setPower(0.2);
+            rDrive1.setPower(-0.15);
+            lDrive2.setPower(0.2);
+            rDrive2.setPower(-0.15);
+            while (range1Cache[0] > range2Cache[0]  && opModeIsActive()) {
+                range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+                range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+                telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
+                telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
+                if (range1Cache[0] < 200) {
+                    lDrive1.setPower(0);
+                    rDrive1.setPower(0);
+                    lDrive2.setPower(0);
+                    rDrive2.setPower(0);
+                    sleep(10);
+                    lDrive1.setPower(0.2);
+                    rDrive1.setPower(-0.15);
+                    lDrive2.setPower(0.2);
+                    rDrive2.setPower(-0.15);
+                }
+                else if (range2Cache[0] < 200) {
+                    lDrive1.setPower(0);
+                    rDrive1.setPower(0);
+                    lDrive2.setPower(0);
+                    rDrive2.setPower(0);
+                    lDrive1.setPower(0.2);
+                    rDrive1.setPower(-0.15);
+                    lDrive2.setPower(0.2);
+                    rDrive2.setPower(-0.15);
+                }
+            }
+            lDrive1.setPower(0);
+            rDrive1.setPower(0);
+            lDrive2.setPower(0);
+            rDrive2.setPower(0);
+        }
         else if (range1Cache[0] < range2Cache[0]) {
-            lDrive1.setPower(-0.25);
-            rDrive1.setPower(0.25);
-            lDrive2.setPower(-0.25);
-            rDrive2.setPower(0.25);
-       while (range1Cache[0] < range2Cache[0] && opModeIsActive()) {
-           range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-           range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-           telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
-           telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
-           if (range1Cache[0] < 200) {
-               lDrive1.setPower(0);
-               rDrive1.setPower(0);
-               lDrive2.setPower(0);
-               rDrive2.setPower(0);
-               sleep(100);
-               lDrive1.setPower(-0.25);
-               rDrive1.setPower(0.25);
-               lDrive2.setPower(-0.25);
-               rDrive2.setPower(0.25);
-           }
-           else if (range2Cache[0] < 200) {
-               lDrive1.setPower(0);
-               rDrive1.setPower(0);
-               lDrive2.setPower(0);
-               rDrive2.setPower(0);
-               sleep(100);
-               lDrive1.setPower(-0.25);
-               rDrive1.setPower(0.25);
-               lDrive2.setPower(-0.25);
-               rDrive2.setPower(0.25);
-           }
+            lDrive1.setPower(-0.2);
+            rDrive1.setPower(0.2);
+            lDrive2.setPower(-0.2);
+            rDrive2.setPower(0.2);
+            while (range1Cache[0] < range2Cache[0]&& opModeIsActive()) {
+                range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+                range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+                telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
+                telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
+                if (range1Cache[0] < 200) {
+                    lDrive1.setPower(0);
+                    rDrive1.setPower(0);
+                    lDrive2.setPower(0);
+                    rDrive2.setPower(0);
+                    sleep(100);
+                    lDrive1.setPower(-0.2);
+                    rDrive1.setPower(0.2);
+                    lDrive2.setPower(-0.2);
+                    rDrive2.setPower(0.2);
+                }
+                else if (range2Cache[0] < 200) {
+                    lDrive1.setPower(0);
+                    rDrive1.setPower(0);
+                    lDrive2.setPower(0);
+                    rDrive2.setPower(0);
+                    sleep(100);
+                    lDrive1.setPower(-0.2);
+                    rDrive1.setPower(0.2);
+                    lDrive2.setPower(-0.2);
+                    rDrive2.setPower(0.2);
+                }
 
-       }
-       lDrive1.setPower(0);
-       rDrive1.setPower(0);
-       lDrive2.setPower(0);
-       rDrive2.setPower(0);
+            }
+            lDrive1.setPower(0);
+            rDrive1.setPower(0);
+            lDrive2.setPower(0);
+            rDrive2.setPower(0);
         }
         else {
-           lDrive1.setPower(0);
-           rDrive1.setPower(0);
-           lDrive2.setPower(0);
-           rDrive2.setPower(0);
+            lDrive1.setPower(0);
+            rDrive1.setPower(0);
+            lDrive2.setPower(0);
+            rDrive2.setPower(0);
 
         }
     }
@@ -395,11 +394,11 @@ public class cf_WallRide extends LinearOpMode {
         telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
         telemetry.update();
         telemetry.update();
-        lDrive1.setPower(-0.3);
+        lDrive1.setPower(-0.35);
         rDrive1.setPower(-0.3);
-        lDrive2.setPower(-0.3);
+        lDrive2.setPower(-0.35);
         rDrive2.setPower(-0.3);
-        sleep(1000);
+        sleep(2000);
         while (range2Cache[0] >= 15 && opModeIsActive()) {
             range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
             range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
@@ -428,7 +427,7 @@ public class cf_WallRide extends LinearOpMode {
     }
 
     public void runOpMode() throws InterruptedException {
-waitForStart();
+        waitForStart();
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
         lDrive1 = hardwareMap.dcMotor.get("lDrive1");
@@ -437,17 +436,26 @@ waitForStart();
         lODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
         lDrive1.setDirection(DcMotor.Direction.REVERSE);
         lDrive2.setDirection(DcMotor.Direction.REVERSE);
-
-        sleep(1000);
-
-
-
-        driveToWall();
-        sleep(1000);
-        lineUp();
-        sleep(1000);
+//        lDrive1.setPower(0.3);
+//        rDrive1.setPower(0.3);
+//        lDrive2.setPower(0.3);
+//        rDrive2.setPower(0.3);
+//        while(rODSensor.getRawLightDetected()<0.21&&lODSensor.getRawLightDetected()<0.21){
+//            telemetry.addData("rLight", rODSensor.getRawLightDetected());
+//            telemetry.addData("lLight", lODSensor.getRawLightDetected());
+//            telemetry.update();
+//        }
+//        lDrive1.setPower(0);
+//        rDrive1.setPower(0);
+//        lDrive2.setPower(0);
+//        rDrive2.setPower(0);
+//
+//        driveToWall();
+//        sleep(1000);
+//        lineUp();
+//        sleep(1000);
         wallRideSingleBack(0.2);
 
-      // lineUp();
+        // lineUp();
     }
 }
