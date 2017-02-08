@@ -436,10 +436,10 @@ public class cf_WallRide extends LinearOpMode {
         lODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
         lDrive1.setDirection(DcMotor.Direction.REVERSE);
         lDrive2.setDirection(DcMotor.Direction.REVERSE);
-//        lDrive1.setPower(0.3);
-//        rDrive1.setPower(0.3);
-//        lDrive2.setPower(0.3);
-//        rDrive2.setPower(0.3);
+//        lDrive1.setPower(0.6);
+//        rDrive1.setPower(0.6);
+//        lDrive2.setPower(0.6);
+//        rDrive2.setPower(0.6);
 //        while(rODSensor.getRawLightDetected()<0.21&&lODSensor.getRawLightDetected()<0.21){
 //            telemetry.addData("rLight", rODSensor.getRawLightDetected());
 //            telemetry.addData("lLight", lODSensor.getRawLightDetected());
@@ -454,7 +454,8 @@ public class cf_WallRide extends LinearOpMode {
 //        sleep(1000);
 //        lineUp();
 //        sleep(1000);
-        wallRideSingleBack(0.2);
+        wallRideSingleBack(0.15);
+
 
         // lineUp();
     }
