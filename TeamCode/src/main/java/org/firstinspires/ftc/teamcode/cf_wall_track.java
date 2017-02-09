@@ -43,7 +43,7 @@ public class cf_wall_track extends LinearOpMode {
     private OpticalDistanceSensor bODSensor;
 
     I2cAddr RANGE1ADDRESS = new I2cAddr(0x14); //Default I2C address for MR Range (7-bit)
-    I2cAddr RANGE2ADDRESS = new I2cAddr(0x04);
+    I2cAddr RANGE2ADDRESS = new I2cAddr(0x18);
 
 
     //private I2cAddr RANGE1ADDRESS = new I2cAddr(0x28); //Default I2C address for MR Range (7-bit)
@@ -131,70 +131,79 @@ public class cf_wall_track extends LinearOpMode {
     }
 
     public void wallTrack() throws InterruptedException {
-        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
-        I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
-        RANGE1Reader.engage();
-        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        RANGE1Reader.engage();
+        //I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
+        //I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
+        //RANGE1Reader.engage();
+        //byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+        //RANGE1Reader.engage();
         //prepare second range sensor
         I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
         byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         RANGE2Reader.engage();
         telemetry.addData("Status", "Initialized");
-        range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+        //range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
         range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-        telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
+        //telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
         telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
         telemetry.update();
 
         while (bODSensor.getRawLightDetected() < .1 && opModeIsActive()) {
-            range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+            //range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
             range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-            telemetry.addData("Range value:", (range1Cache[0]));
-            telemetry.addData("Range2 value:", (range2Cache[0]));
+            double range2 = range2Cache[0];
+
+            //telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
+            telemetry.addData("Range2 value:", (range2));
             telemetry.addData("bOD light", (bODSensor.getRawLightDetected()));
 
-            double error = (range2Cache[0]-15)/30;
-            telemetry.addData("Error", (error));
+            double error = (range2-15)/60;
+            telemetry.addData("Error", error);
 
-            double leftSpeed;
-            double rightSpeed;
+            double leftSpeed = -.2-error;
+            double rightSpeed = -.2+error;
+            leftSpeed = Range.clip(leftSpeed, -1, 1);
+            rightSpeed = Range.clip(rightSpeed, -1, 1);
 
-            if (range2Cache[0] < 15) {
-                // Adjust right
-                leftSpeed = -.3-error;
-                rightSpeed = -.3+error;
-                leftSpeed = Range.clip(leftSpeed, -1, 1);
-                rightSpeed = Range.clip(rightSpeed, -1, 1);
-                lDrive1.setPower(leftSpeed);
-                lDrive2.setPower(leftSpeed);
-                rDrive1.setPower(rightSpeed);
-                rDrive2.setPower(rightSpeed);
-                telemetry.addLine("Adjusting Right");
-            }
-            else if (range2Cache[0] > 15){
-                // Adjust left
-                leftSpeed = -.3+error;
-                rightSpeed = -.3-error;
-                leftSpeed = Range.clip(leftSpeed, -1, 1);
-                rightSpeed = Range.clip(rightSpeed, -1, 1);
-                lDrive1.setPower(leftSpeed);
-                lDrive2.setPower(leftSpeed);
-                rDrive1.setPower(rightSpeed);
-                rDrive2.setPower(rightSpeed);
-                telemetry.addLine("Adjusting Left");
-            }
-            else {
-                // Drive straight backward
-                leftSpeed = -.3;
-                rightSpeed = -.3;
-                lDrive1.setPower(leftSpeed);
-                lDrive2.setPower(leftSpeed);
-                rDrive1.setPower(rightSpeed);
-                rDrive2.setPower(rightSpeed);
-                telemetry.addLine("Driving Straight");
-            }
+            lDrive1.setPower(leftSpeed);
+            lDrive2.setPower(leftSpeed);
+            rDrive1.setPower(rightSpeed);
+            rDrive2.setPower(rightSpeed);
+
+//            if (range2Cache[0] < 15) {
+//                // Adjust right
+//                leftSpeed = -.3-error;
+//                rightSpeed = -.3+error;
+//                leftSpeed = Range.clip(leftSpeed, -1, 1);
+//                rightSpeed = Range.clip(rightSpeed, -1, 1);
+//                lDrive1.setPower(leftSpeed);
+//                lDrive2.setPower(leftSpeed);
+//                rDrive1.setPower(rightSpeed);
+//                rDrive2.setPower(rightSpeed);
+//                telemetry.addLine("Adjusting Right");
+//            }
+//            else if (range2Cache[0] > 15){
+//                // Adjust left
+//                leftSpeed = -.3+error;
+//                rightSpeed = -.3-error;
+//                leftSpeed = Range.clip(leftSpeed, -1, 1);
+//                rightSpeed = Range.clip(rightSpeed, -1, 1);
+//                lDrive1.setPower(leftSpeed);
+//                lDrive2.setPower(leftSpeed);
+//                rDrive1.setPower(rightSpeed);
+//                rDrive2.setPower(rightSpeed);
+//                telemetry.addLine("Adjusting Left");
+//            }
+//            else {
+//                // Drive straight backward
+//                leftSpeed = -.3;
+//                rightSpeed = -.3;
+//                lDrive1.setPower(leftSpeed);
+//                lDrive2.setPower(leftSpeed);
+//                rDrive1.setPower(rightSpeed);
+//                rDrive2.setPower(rightSpeed);
+//                telemetry.addLine("Driving Straight");
+//            }
             telemetry.addData("leftSpeed",(leftSpeed));
             telemetry.addData("rightSpeed",(rightSpeed));
             telemetry.update();
