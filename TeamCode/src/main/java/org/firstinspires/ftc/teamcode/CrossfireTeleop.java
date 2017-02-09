@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @TeleOp(name="Cross Fire TeleOp", group="TeleOp")
 
-public class CrossfireTeleop extends OpMode{
+public class CrossfireTeleop extends OpMode {
     ColorSensor color;
     DcMotor rDrive1;
     DcMotor rDrive2;
@@ -66,7 +66,7 @@ public class CrossfireTeleop extends OpMode{
         float lTrigger2 = gamepad2.left_trigger;
         float rTrigger2 = gamepad2.right_trigger;
 
-            ///OPERATOR CODE\\\
+        ///OPERATOR CODE\\\
 
         rButton.setPosition(rTrigger2 * -1);
         lButton.setPosition(lTrigger2);
@@ -81,7 +81,7 @@ public class CrossfireTeleop extends OpMode{
             sweeper.setPower(0);
         }
         if (y){
-        catapult.setPower(1);
+            catapult.setPower(1);
         }
         else if (a){
             catapult.setPower(-1);
@@ -98,7 +98,7 @@ public class CrossfireTeleop extends OpMode{
 
 
 
-            ///DRIVER CODE\\\
+        ///DRIVER CODE\\\
 
         // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
         if (lBumper1) {
