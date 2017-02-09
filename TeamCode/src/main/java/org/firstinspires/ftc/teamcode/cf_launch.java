@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="cf_launch", group="LinearOpMode")
-
+@Disabled
 
 public class cf_launch extends LinearOpMode {
     ColorSensor color;

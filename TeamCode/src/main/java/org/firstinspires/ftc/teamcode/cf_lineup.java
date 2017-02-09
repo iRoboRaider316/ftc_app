@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @Autonomous(name="dev_to_wall", group="LinearOpMode")
-
+@Disabled
 
 public class cf_lineup extends LinearOpMode {
     ColorSensor color;

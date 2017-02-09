@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="cf_auto_red", group="LinearOpMode")
+@Disabled
 
 public class cf_auto_red extends LinearOpMode {
 

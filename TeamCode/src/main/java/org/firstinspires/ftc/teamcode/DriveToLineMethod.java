@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.util.Range;
 
 
 @Autonomous(name="DriveToLine", group="Methods")
+@Disabled
 
 public class DriveToLineMethod extends LinearOpMode {
 

@@ -1,75 +1,115 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.GyroSensor;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @Autonomous(name="cf_button_push", group="LinearOpMode")
+//@Disabled
 
 public class cf_buttonPush extends LinearOpMode {
 
-    Servo lHand;
-    Servo rHand;
-    DcMotor lDrive1;
-    DcMotor lDrive2;
-    DcMotor rDrive1;
-    DcMotor rDrive2;
-    ColorSensor color;
 
-    public void buttonPush() throws InterruptedException {
 
+    private DcMotor catapult;
+    //private DcMotor sweeper;
+    private DcMotor lDrive1;
+    private DcMotor lDrive2;
+    private DcMotor rDrive1;
+    private DcMotor rDrive2;
+    private Servo button;
+    private Servo hopper;
+    private Servo belt;
+
+    private ColorSensor color;
+
+    // Fully working as of 2/8/17
+    private void recognizeColorRed(int direction) throws InterruptedException {
         color.enableLed(false);
-        //if the beacon is red
-        if (color.red() > color.blue()){
-            //insert code here
-            lButtonPush();
-            telemetry.addData("Color is red",color.red());
-            sleep(1000);
+        while (color.red() < (color.blue())) {
+            rDrive1.setPower(.2*direction);
+            rDrive2.setPower(.2*direction);
+            lDrive1.setPower(.2*direction);
+            lDrive2.setPower(.2*direction);
+            telemetry.addData("Blue", color.blue());
+            telemetry.addData("Red", color.red());
+            telemetry.update();
         }
-        //if the beacon is blue
-        else if (color.blue() > color.red()) {
-            rDrive1.setPower(0.3);            // at that point, the robot stops...
-            rDrive2.setPower(0.3);
-            lDrive1.setPower(0.3);
-            lDrive2.setPower(0.3);
-            sleep(750);
-            rDrive1.setPower(0);            // at that point, the robot stops...
-            rDrive2.setPower(0);
-            lDrive1.setPower(0);
-            lDrive2.setPower(0);
-            sleep(500);
-            lButtonPush();
-            telemetry.addData("Color is blue", color.blue());
-            sleep(1000);
-        }
-
+        rDrive1.setPower(0);
+        rDrive2.setPower(0);
+        lDrive1.setPower(0);
+        lDrive2.setPower(0);
+        button.setPosition(0);
+        sleep(2300);
+        button.setPosition(1);
+        sleep(2300);
+        button.setPosition(0.5);
+        telemetry.addData("Blue", color.blue());
+        telemetry.addData("Red", color.red());
+        telemetry.update();
     }
 
-    public void lButtonPush() throws InterruptedException {
-        lHand.setPosition(0.5);
-        sleep(1000);
-    }
-
-    public void rButtonPush() throws InterruptedException {
-        rHand.setPosition(0.5);
-        sleep(1000);
+    // Fully working as of 2/8/17
+    private void recognizeColorBlue(int direction) throws InterruptedException {
+        color.enableLed(false);
+        while (color.blue() < (color.red()+1)) {
+            rDrive1.setPower(.2*direction);
+            rDrive2.setPower(.2*direction);
+            lDrive1.setPower(.2*direction);
+            lDrive2.setPower(.2*direction);
+            telemetry.addData("Blue", color.blue());
+            telemetry.addData("Red", color.red());
+            telemetry.update();
+        }
+        rDrive1.setPower(0);
+        rDrive2.setPower(0);
+        lDrive1.setPower(0);
+        lDrive2.setPower(0);
+        button.setPosition(0);
+        sleep(2300);
+        button.setPosition(1);
+        sleep(2300);
+        button.setPosition(0.5);
+        telemetry.addData("Blue", color.blue());
+        telemetry.addData("Red", color.red());
+        telemetry.update();
     }
 
     public void runOpMode() throws InterruptedException {
-        color = hardwareMap.colorSensor.get("color");
-        lHand = hardwareMap.servo.get("lButton");
-        rHand = hardwareMap.servo.get("lButton");
+        //##############Init##############
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
         lDrive1 = hardwareMap.dcMotor.get("lDrive1");
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
+        lDrive1.setDirection(DcMotor.Direction.REVERSE);
+        lDrive2.setDirection(DcMotor.Direction.REVERSE);
+
+        //sweeper = hardwareMap.dcMotor.get("sweeper");
+        catapult = hardwareMap.dcMotor.get("catapult");
+        button = hardwareMap.servo.get("button");
+        hopper = hardwareMap.servo.get("hopper");
+        belt = hardwareMap.servo.get("belt");
+        color = hardwareMap.colorSensor.get("color");
+
+        hopper.setPosition(0.8);
+        button.setPosition(0.5);
+        belt.setPosition(.5);
+
+        while (!isStarted()){
+            telemetry.addData("Blue", color.blue());
+            telemetry.addData("Red", color.red());
+            updateTelemetry(telemetry);
+        }
 
         waitForStart();
-        telemetry.addData("Color is red",color.red());
-        telemetry.addData("Color is blue", color.blue());
-        buttonPush();
-        sleep(3000);
+
+        recognizeColorBlue(-1);
     }
 }
