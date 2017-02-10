@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="Drive Method", group="Methods")
-//@Disabled
+@Disabled
 public class DriveMethod extends LinearOpMode {
 
     DcMotor lDrive1;

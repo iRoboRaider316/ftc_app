@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @Autonomous(name="cf_button_push", group="LinearOpMode")
-//@Disabled
+@Disabled
 
 public class cf_buttonPush extends LinearOpMode {
 

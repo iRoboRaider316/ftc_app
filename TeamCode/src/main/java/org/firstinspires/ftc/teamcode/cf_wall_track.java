@@ -21,7 +21,7 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @Autonomous(name="cf_wall_track", group="LinearOpMode")
-//@Disabled
+@Disabled
 
 public class cf_wall_track extends LinearOpMode {
 
