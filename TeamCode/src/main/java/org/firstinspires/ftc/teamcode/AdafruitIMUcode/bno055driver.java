@@ -6,6 +6,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Quaternion;
 
 import java.util.Locale;
 
+/**
+ * Made by FROGbots
+ * */
 public class bno055driver {
 
     private final BNO055IMU imu;

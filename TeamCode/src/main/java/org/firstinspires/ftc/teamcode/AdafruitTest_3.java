@@ -18,15 +18,22 @@ public class AdafruitTest_3 extends LinearOpMode {
 
     public void IMU_GyroTurn(double heading, double power, int direction) {
 
-        double Target = imu.getAngles()[0] + heading;
-        if(Target > 180) {
-            Target -= 360;
-        }
-        if(Target <= -180) {
-            Target += 360;
-        }
+        double Target = heading;
         double speed;
+        double speedBoost = 0;
 
+        if(direction == 1) {
+            Target = imu.getAngles()[0] + heading;
+            if(Target > 180) {
+                Target -= 360;
+            }
+        }
+        if(direction == -1) {
+            Target = imu.getAngles()[0] + -heading;
+            if(Target <= -180) {
+                Target += 360;
+            }
+        }
         lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -40,11 +47,11 @@ public class AdafruitTest_3 extends LinearOpMode {
             if(direction == -1) {
                 Target += 20;
             }
-            double speedBoost = 0;
-            if((imu.getAngles()[0] + 45 <= heading || imu.getAngles()[0] > heading) && direction == 1) {
+
+            if((imu.getAngles()[0] + 45 <= Target || imu.getAngles()[0] > Target) && direction == 1) {
                 speedBoost = 0.1;
             }
-            if((imu.getAngles()[0] - 45 >= heading || imu.getAngles()[0] < heading) && direction == -1) {
+            if((imu.getAngles()[0] - 45 >= Target || imu.getAngles()[0] < Target) && direction == -1) {
                 speedBoost = -0.1;
             }
             speed = (power * direction) + speedBoost;
