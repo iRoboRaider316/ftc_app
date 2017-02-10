@@ -157,7 +157,7 @@ public class cf_wall_track extends LinearOpMode {
             telemetry.addData("Range2 value:", (range2));
             telemetry.addData("bOD light", (bODSensor.getRawLightDetected()));
 
-            double error = (range2-15)/60;
+            double error = (range2-14)/55;
             telemetry.addData("Error", error);
 
             double leftSpeed = -.2-error;
