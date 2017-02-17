@@ -24,15 +24,18 @@ public class AdafruitTest_3 extends LinearOpMode {
 
         if(direction == 1) {
             Target = imu.getAngles()[0] + heading;
-            if(Target > 180) {
-                Target -= 360;
-            }
+            Target -= 20;
         }
         if(direction == -1) {
             Target = imu.getAngles()[0] + -heading;
-            if(Target <= -180) {
-                Target += 360;
-            }
+            Target += 20;
+        }
+
+        if(Target > 180) {
+            Target -= 360;
+        }
+        if(Target <= -180) {
+            Target += 360;
         }
         lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -41,20 +44,28 @@ public class AdafruitTest_3 extends LinearOpMode {
 
         while(!turnComplete(Target, imu.getAngles()[0])) {
 
-            if(direction == 1) {
-                Target -= 20;
-            }
-            if(direction == -1) {
-                Target += 20;
-            }
-
-            if((imu.getAngles()[0] + 45 <= Target || imu.getAngles()[0] > Target) && direction == 1) {
-                speedBoost = 0.1;
-            }
-            if((imu.getAngles()[0] - 45 >= Target || imu.getAngles()[0] < Target) && direction == -1) {
-                speedBoost = -0.1;
-            }
+            speedBoost = 0.1 * direction;
             speed = (power * direction) + speedBoost;
+
+            lDrive1.setPower(speed);
+            lDrive2.setPower(speed);
+            rDrive2.setPower(speed);
+            rDrive1.setPower(speed);
+
+            telemetry.addData("Values", imu.getAngles()[0]);
+            telemetry.addData("Speed", speed);
+            updateTelemetry(telemetry);
+
+        }
+
+        lDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive1.setPower(0);
+        rDrive2.setPower(0);
+
+        while(!turnComplete(Target, imu.getAngles()[0])) {
+
+            speed = (power * direction);
 
             lDrive1.setPower(speed);
             lDrive2.setPower(speed);
