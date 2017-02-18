@@ -58,34 +58,39 @@ public class cf_2_ball_decatur extends LinearOpMode {
         double rightSpeed;
         double error;
         rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
-        rDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        double heading = gyroSensor.getHeading();
+        //double heading = gyroSensor.getHeading();
         sleep(500);
+
         while (Math.abs(rDrive1.getCurrentPosition())<Math.abs(rDrive1.getTargetPosition()-5)&&opModeIsActive()){
-            // Calculate distance from original heading and divide by 10
-            error = (gyroSensor.getHeading()-heading);
-            // Deal with wraparound from 359 to 0
-            if (error >180)
-                error = ((gyroSensor.getHeading()-heading-360)/30);
-            else if(error <-180)
-                error = ((gyroSensor.getHeading()-heading+360)/30);
-            else
-                error = ((gyroSensor.getHeading()-heading)/30);
-            leftSpeed = maxSpeed-error;
-            rightSpeed = maxSpeed+error;
+//            // Calculate distance from original heading and divide by 10
+//            error = (gyroSensor.getHeading()-heading);
+//            // Deal with wraparound from 359 to 0
+//            if (error >180)
+//                error = ((gyroSensor.getHeading()-heading-360)/30);
+//            else if(error <-180)
+//                error = ((gyroSensor.getHeading()-heading+360)/30);
+//            else
+//                error = ((gyroSensor.getHeading()-heading)/30);
+
+            leftSpeed = maxSpeed/*-error*/;
+            rightSpeed = maxSpeed/*+error*/;
+
             leftSpeed = Range.clip(leftSpeed, -1, 1);
             rightSpeed = Range.clip(rightSpeed, -1, 1);
+
             lDrive1.setPower(leftSpeed);
             rDrive1.setPower(rightSpeed);
             lDrive2.setPower(leftSpeed);
             rDrive2.setPower(rightSpeed);
+
             telemetry.addData("1. speed", speed);
             telemetry.addData("2. leftSpeed", leftSpeed);
             telemetry.addData("3. rightSpeed", rightSpeed);
-            telemetry.addData("4. IntegratedZValue", gyro.getIntegratedZValue());
+            //telemetry.addData("4. IntegratedZValue", gyro.getIntegratedZValue());
             updateTelemetry(telemetry);
         }
         lDrive1.setPower(0);
@@ -188,20 +193,23 @@ public class cf_2_ball_decatur extends LinearOpMode {
         }
         // End of setting up Gyro
     }
-    private void launchPosition() throws InterruptedException{
-        while (!touch.isPressed()){
-            catapult.setPower(0.5);
-        }
-        catapult.setPower(0);
-    }
+
     // Function that utlizes the launchPosition, handleBall, and launch functions to fire and reload the catapult
     private void fire() throws InterruptedException {
         launchPosition();
         launchBall();
         launchPosition();
+        sleep(1000);
         loadBall();
         launchBall();
         launchPosition();
+    }
+    // Resets catapult to the launch position
+    private void launchPosition() throws InterruptedException{
+        while (!touch.isPressed()){
+            catapult.setPower(0.5);
+        }
+        catapult.setPower(0);
     }
     // Function to load the catapult
     private void loadBall() throws InterruptedException {
@@ -227,35 +235,25 @@ public class cf_2_ball_decatur extends LinearOpMode {
         catapult = hardwareMap.dcMotor.get("catapult");
         hopper = hardwareMap.servo.get("hopper");
         touch = hardwareMap.touchSensor.get("t");
+        button = hardwareMap.servo.get("button");
         hopper.setPosition(0.8);
         button.setPosition(0.5);
         belt.setPosition(.5);
 
+        double distance;
+        double maxSpeed;
+
         waitForStart();
-//        sleep(1000);
-//        gyroTurn(30, 0.5, 1);
-//        sleep(1000);
-        lDrive1.setPower(0.5);
-        lDrive2.setPower(0.5);
-        rDrive1.setPower(0.5);
-        rDrive2.setPower(0.5);
-        sleep(1000);
-        lDrive1.setPower(0);
-        lDrive2.setPower(0);
-        rDrive1.setPower(0);
-        rDrive2.setPower(0);
-        sleep(100);
-        // gyroTurn(290, 0.5, -1);
+
+        sleep(20000);
+        distance = 11;
+        maxSpeed = .5;
+        drive(distance, maxSpeed);
         sleep(100);
         fire();
-        lDrive1.setPower(0.5);
-        lDrive2.setPower(0.5);
-        rDrive1.setPower(0.5);
-        rDrive2.setPower(0.5);
-        sleep(3000);
-        lDrive1.setPower(0);
-        lDrive2.setPower(0);
-        rDrive1.setPower(0);
-        rDrive2.setPower(0);
+        distance = 50;
+        maxSpeed = .5;
+        drive(distance, maxSpeed);
+
     }
 }

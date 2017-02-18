@@ -252,6 +252,11 @@ public class cf_2_beacon_red_decatur extends LinearOpMode {
     }
 
     public void driveBackwardToWall() throws InterruptedException {
+        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
         I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         RANGE1Reader.engage();
@@ -268,9 +273,9 @@ public class cf_2_beacon_red_decatur extends LinearOpMode {
         telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
         telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
         telemetry.update();
-        lDrive1.setPower(-0.4);
+        lDrive1.setPower(-0.55);
         rDrive1.setPower(-0.4);
-        lDrive2.setPower(-0.4);
+        lDrive2.setPower(-0.55);
         rDrive2.setPower(-0.4);
         sleep(2000);
         while (range2Cache[0] >= 17 && opModeIsActive()) {
@@ -314,12 +319,19 @@ public class cf_2_beacon_red_decatur extends LinearOpMode {
             //telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
             telemetry.addData("Range2 value:", (range2));
             telemetry.addData("bOD light", (bODSensor.getRawLightDetected()));
+            double error;
+            if (range2 > 200)
+                error = 0;
+            else if (range2 < 0)
+                error = 0;
+            else
+                error = ((range2-12)/60);
 
-            double error = (range2-12)/55;
+            error = Range.clip(error, -.3, .3);
             telemetry.addData("Error", error);
 
-            double leftSpeed = -.15-error;
-            double rightSpeed = -.15+error;
+            double leftSpeed = -.25-error;
+            double rightSpeed = -.25+error;
             leftSpeed = Range.clip(leftSpeed, -1, 1);
             rightSpeed = Range.clip(rightSpeed, -1, 1);
 
@@ -398,14 +410,21 @@ public class cf_2_beacon_red_decatur extends LinearOpMode {
             telemetry.addData("Range2 value:", (range2));
             telemetry.addData("bOD light", (bODSensor.getRawLightDetected()));
 
-            double error = ((range1-12)/60);
+            double error;
+            if (range1 > 200)
+                error = 0;
+            else if (range1 < 0)
+                error = 0;
+            else
+                error = ((range1-12)/60);
+
+            error = Range.clip(error, -.3, .3);
             telemetry.addData("Error", error);
 
-            double leftSpeed = .2+error;
-            double rightSpeed = .2-error;
+            double leftSpeed = .25+error;
+            double rightSpeed = .25-error;
 
-            leftSpeed = Range.clip(leftSpeed, -1, 1);
-            rightSpeed = Range.clip(rightSpeed, -1, 1);
+
 
             lDrive1.setPower(leftSpeed);
             lDrive2.setPower(leftSpeed);
@@ -563,8 +582,8 @@ public class cf_2_beacon_red_decatur extends LinearOpMode {
         while (color.red() < (color.blue())+1) {
             rDrive1.setPower(.2*direction);
             rDrive2.setPower(.2*direction);
-            lDrive1.setPower(.2*direction);
-            lDrive2.setPower(.2*direction);
+            lDrive1.setPower(.3*direction);
+            lDrive2.setPower(.3*direction);
             telemetry.addData("Blue", color.blue());
             telemetry.addData("Red", color.red());
             telemetry.update();
@@ -661,7 +680,8 @@ public class cf_2_beacon_red_decatur extends LinearOpMode {
         wallTrack();
         // Push the button for red
         sleep(500);
-        recognizeColorRed(-1);
+        direction = -1;
+        recognizeColorRed(direction);
         // Drive forward past the line
         rDrive1.setPower(0.4);
         rDrive2.setPower(0.4);
@@ -674,7 +694,7 @@ public class cf_2_beacon_red_decatur extends LinearOpMode {
         lDrive2.setPower(0);
         // Track forward along the wall until the next white line
         wallTrackBack();
-        sleep(500);
+        sleep(1000);
         // Push the button for red
         recognizeColorRed(1);
         // Initialize and calibrate gyro

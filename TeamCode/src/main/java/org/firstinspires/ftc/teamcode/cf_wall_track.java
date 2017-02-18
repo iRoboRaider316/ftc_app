@@ -57,6 +57,11 @@ public class cf_wall_track extends LinearOpMode {
 
 
     public void driveForwardToWall() throws InterruptedException {
+        rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
         I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         RANGE1Reader.engage();
@@ -94,6 +99,11 @@ public class cf_wall_track extends LinearOpMode {
     }
 
     public void driveBackwardToWall() throws InterruptedException {
+        rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
         I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         RANGE1Reader.engage();
@@ -131,6 +141,11 @@ public class cf_wall_track extends LinearOpMode {
     }
 
     public void wallTrack() throws InterruptedException {
+        rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         //I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
         //I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         //RANGE1Reader.engage();
@@ -170,40 +185,6 @@ public class cf_wall_track extends LinearOpMode {
             rDrive1.setPower(rightSpeed);
             rDrive2.setPower(rightSpeed);
 
-//            if (range2Cache[0] < 15) {
-//                // Adjust right
-//                leftSpeed = -.3-error;
-//                rightSpeed = -.3+error;
-//                leftSpeed = Range.clip(leftSpeed, -1, 1);
-//                rightSpeed = Range.clip(rightSpeed, -1, 1);
-//                lDrive1.setPower(leftSpeed);
-//                lDrive2.setPower(leftSpeed);
-//                rDrive1.setPower(rightSpeed);
-//                rDrive2.setPower(rightSpeed);
-//                telemetry.addLine("Adjusting Right");
-//            }
-//            else if (range2Cache[0] > 15){
-//                // Adjust left
-//                leftSpeed = -.3+error;
-//                rightSpeed = -.3-error;
-//                leftSpeed = Range.clip(leftSpeed, -1, 1);
-//                rightSpeed = Range.clip(rightSpeed, -1, 1);
-//                lDrive1.setPower(leftSpeed);
-//                lDrive2.setPower(leftSpeed);
-//                rDrive1.setPower(rightSpeed);
-//                rDrive2.setPower(rightSpeed);
-//                telemetry.addLine("Adjusting Left");
-//            }
-//            else {
-//                // Drive straight backward
-//                leftSpeed = -.3;
-//                rightSpeed = -.3;
-//                lDrive1.setPower(leftSpeed);
-//                lDrive2.setPower(leftSpeed);
-//                rDrive1.setPower(rightSpeed);
-//                rDrive2.setPower(rightSpeed);
-//                telemetry.addLine("Driving Straight");
-//            }
             telemetry.addData("leftSpeed",(leftSpeed));
             telemetry.addData("rightSpeed",(rightSpeed));
             telemetry.update();
@@ -230,8 +211,6 @@ public class cf_wall_track extends LinearOpMode {
         belt = hardwareMap.servo.get("belt");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
-
-
         fODSensor = hardwareMap.opticalDistanceSensor.get("fOD");
         bODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
         hopper.setPosition(0.8);

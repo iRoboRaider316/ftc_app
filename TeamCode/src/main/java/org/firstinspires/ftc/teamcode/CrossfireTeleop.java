@@ -127,7 +127,20 @@ public class crossFireTeleOp extends OpMode {
 
         lift1.setPower(rStick2);
         lift2.setPower(rStick2);
+//
+//        if (gamepad2.right_bumper)
+//            button.setPosition(0);
+//        else if (gamepad2.left_bumper)
+//            button.setPosition(1);
+//        else
+//            button.setPosition(0.5);
 
+        if (gamepad1.b)
+            button.setPosition(0);
+        else if (gamepad1.x)
+            button.setPosition(1);
+        else
+            button.setPosition(0.5);
         ///DRIVER CODE\\\
         // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
 
@@ -139,16 +152,31 @@ public class crossFireTeleOp extends OpMode {
         if (gamepad1.y) {
             drive = 2;
         }
+        if (gamepad1.right_bumper)
+            drive = 3;
+        if (gamepad1.left_bumper)
+            drive = 4;
+
         switch (drive){
             case 1:
-                rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/2);
-                leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/2);
+                rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y)));
+                leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y)));
                 drive = 1;
                 break;
             case 2:
                 rightPower = (gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
                 leftPower = (gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
                 drive = 2;
+                break;
+            case 3:
+                leftPower = ((gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/2);
+                rightPower = ((gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/2);
+                drive = 3;
+                break;
+            case 4:
+                leftPower = (gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
+                rightPower = (gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
+                drive = 4;
                 break;
             default:
                 leftPower = (gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));

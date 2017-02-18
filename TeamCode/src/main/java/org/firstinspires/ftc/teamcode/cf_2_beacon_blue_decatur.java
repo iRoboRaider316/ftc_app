@@ -160,7 +160,15 @@ public class cf_2_beacon_blue_decatur extends LinearOpMode {
             telemetry.addData("Range2 value:", (range2));
             telemetry.addData("bOD light", (bODSensor.getRawLightDetected()));
 
-            double error = (range2-12)/55;
+            double error;
+            if (range2 > 200)
+                error = 0;
+            else if (range2 < 0)
+                error = 0;
+            else
+                error = ((range2-12)/60);
+
+            error = Range.clip(error, -.3, .3);
             telemetry.addData("Error", error);
 
             double leftSpeed = -.2-error;
@@ -242,10 +250,20 @@ public class cf_2_beacon_blue_decatur extends LinearOpMode {
             //telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
             telemetry.addData("Range2 value:", (range2));
             telemetry.addData("bOD light", (bODSensor.getRawLightDetected()));
-            double error = ((range1-12)/60);
+
+            double error;
+            if (range1 > 200)
+                error = 0;
+            else if (range1 < 0)
+                error = 0;
+            else
+                error = ((range1-12)/60);
+
+            error = Range.clip(error, -.3, .3);
             telemetry.addData("Error", error);
-            double leftSpeed = .15+error;
-            double rightSpeed = .15-error;
+
+            double leftSpeed = .2+error;
+            double rightSpeed = .2-error;
             leftSpeed = Range.clip(leftSpeed, -1, 1);
             rightSpeed = Range.clip(rightSpeed, -1, 1);
             lDrive1.setPower(leftSpeed);
@@ -554,10 +572,15 @@ public class cf_2_beacon_blue_decatur extends LinearOpMode {
 
         waitForStart();
 
+        // Drive forward until the range sensor detects the wall
         driveForwardToWall();
+        // Turn until parallel with the wall using both range sensors
         lineUp();
+        // Track along the wall until the white line
         wallTrackBack();
-        recognizeColorBlue(1);
+        // Push the button for blue
+        direction = 1;
+        recognizeColorBlue(direction);
         rDrive1.setPower(-0.4);
         rDrive2.setPower(-0.4);
         lDrive1.setPower(-0.4);
@@ -567,8 +590,12 @@ public class cf_2_beacon_blue_decatur extends LinearOpMode {
         rDrive2.setPower(0);
         lDrive1.setPower(0);
         lDrive2.setPower(0);
+        // Track backward along the wall until the next white line
         wallTrack();
-        recognizeColorBlue(-1);
+        sleep(1000);
+        // Push the button for blue
+        direction = -1;
+        recognizeColorBlue(direction);
 
     }
 }
