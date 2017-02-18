@@ -75,7 +75,7 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
     // Returns:
     // heading = the new heading the gyro reports
     public void gyroTurn(int targetHeading, double maxSpeed, int direction) {
-        int startHeading = gyro.getHeading();
+        int startHeading = gyroX.getHeading();
         int deceleration;
         int currentHeading;
         double oldSpeed;
@@ -84,7 +84,7 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
         double acceleration = 0.01;
         double ka = 0.01;             // Proportional acceleration constant
 
-        targetHeading += gyro.getHeading();
+        targetHeading += gyroX.getHeading();
         targetHeading -= targetHeading > 360 ?
                 360 : 0;
         targetHeading += targetHeading < 0 ?
@@ -96,12 +96,12 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
         rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Calls turnCompeted function to determine if we need to keep turning
-        while ((!turnCompleted(gyro.getHeading(), targetHeading, 5, direction) && opModeIsActive())) {
+        while ((!turnCompleted(gyroX.getHeading(), targetHeading, 5, direction) && opModeIsActive())) {
 
             // Calculate the speed we should be moving at
             oldSpeed = speed;           // save our old speed for use later.
 
-            currentHeading = gyro.getHeading();
+            currentHeading = gyroX.getHeading();
             // Reuses the degreesToTurn function by passing different values to obtain our error
             deceleration = degreesToTurn(targetHeading, currentHeading, direction);
 
@@ -124,7 +124,7 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
             lDrive2.setPower(speed);
             rDrive1.setPower(-speed);
             rDrive2.setPower(-speed);
-            telemetry.addData("Current Heading", gyro.getHeading());
+            telemetry.addData("Current Heading", gyroX.getHeading());
             telemetry.addData("Current Speed", speed);
             updateTelemetry(telemetry);
         }
