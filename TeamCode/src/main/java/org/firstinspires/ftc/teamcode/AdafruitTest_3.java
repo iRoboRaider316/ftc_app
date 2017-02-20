@@ -1,12 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.teamcode.AdafruitIMUcode.bno055driver;
 
 @Autonomous(name="IMUGyro",group="LinearOpMode")
-
+@Disabled
 public class AdafruitTest_3 extends LinearOpMode {
 
     public bno055driver imu;

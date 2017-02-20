@@ -179,7 +179,7 @@ public class vr_AutoRedA extends LinearOpMode {
         paddle.setPower(0);
     }
 
-    public void feederPosition(int feederPos, long time) throws InterruptedException {
+    public void feederPosition(double feederPos, long time) throws InterruptedException {
         feeder.setPosition(feederPos);
         sleep(time);
         feeder.setPosition(0);
@@ -205,16 +205,8 @@ public class vr_AutoRedA extends LinearOpMode {
         waitForStart();
 
         // The code that runs the robot is here.
+        launch(1.4, 1);
+        feederPosition(0.3, 1000);
         launch(1, 1);
-        paddleMotor(1, 2000);
-        paddleMotor(0.3, 500);
-        paddleMotor(1, 1600);
-        feederPosition(45, 1000);
-        launch(1, 1);
-        moveMotors(-1, -1, 300);
-        gyroTurn(320, .3, -1);
-        moveMotors(1, 1, 500);
-        gyroTurn(240, .3, -1);
-        moveMotors(1, 1, 1000);
     }
 }

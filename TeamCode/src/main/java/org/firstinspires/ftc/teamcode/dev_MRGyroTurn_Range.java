@@ -289,7 +289,7 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
         lDrive2.setPower(0.3);
         rDrive1.setPower(0.3);
         rDrive2.setPower(0.3);
-        sleep(1600);
+        sleep(800);
         lDrive1.setPower(0);
         lDrive2.setPower(0);
         rDrive1.setPower(0);

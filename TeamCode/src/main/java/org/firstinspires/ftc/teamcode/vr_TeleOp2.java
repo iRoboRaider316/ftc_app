@@ -6,10 +6,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name="vr_teleop", group="Opmode")
-//@Disabled
+@TeleOp(name="vr_teleop_DEMO", group="Opmode")
 
-public class vr_teleop extends OpMode {
+public class vr_TeleOp2 extends OpMode {
     DcMotor lDrive1;
     DcMotor lDrive2;
     DcMotor rDrive1;
@@ -43,26 +42,21 @@ public class vr_teleop extends OpMode {
         lDrive2.setPower(leftPower);
         rDrive1.setPower(rightPower);
         rDrive2.setPower(rightPower);
-        switch (drive){
-            case 1:
-                leftPower = (-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
-                rightPower = (-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
-                drive = 1;
-                break;
-            case 2:
-                leftPower = (gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
-                rightPower = (gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
-                drive = 2;
-                break;
-            default:
-                leftPower = (-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
-                rightPower = (-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
-        }
+
+        leftPower = (-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
+        rightPower = (-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
+
         // Fires or reverses catapult based on a and y buttons
         if (gamepad2.y) {
             catapult.setPower(.5);
         }
         else if (gamepad2.a) {
+            catapult.setPower(-.5);
+        }
+        if (gamepad1.y) {
+            catapult.setPower(.5);
+        }
+        else if (gamepad1.a) {
             catapult.setPower(-.5);
         }
         else {
@@ -78,6 +72,7 @@ public class vr_teleop extends OpMode {
         else if (gamepad2.dpad_left) {
             paddle.setPower(0);
         }
+
         // Turns the paddle on, off, or on in reverse - Driver gamepad
         if (gamepad1.dpad_up){
             paddle.setPower(-1);
@@ -90,6 +85,9 @@ public class vr_teleop extends OpMode {
         }
         // Sets the feeder servo position to allow balls to enter the catapult when b is pressed
         if (gamepad2.b) {
+            feeder.setPosition(.3);
+        }
+        if (gamepad1.b) {
             feeder.setPosition(.3);
         }
         else {
