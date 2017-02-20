@@ -25,7 +25,7 @@ public class telemetryData extends LinearOpMode {
     I2cAddr RANGE2ADDRESS = new I2cAddr(0x18);
 
 
-    //private I2cAddr RANGE1ADDRESS = new I2cAddr(0x28); //Default I2C address for MR Range (7-bit)
+    //private I2cAddr RANGEfADDRESS = new I2cAddr(0x28); //Default I2C address for MR Range (7-bit)
     private static final int RANGE1_REG_START = 0x04; //Register to start reading
     private static final int RANGE1_READ_LENGTH = 2; //Number of byte to read
     //2nd range
@@ -62,10 +62,10 @@ public class telemetryData extends LinearOpMode {
            do {
                range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
                range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-               telemetry.addData("Ultra Sonic", range1Cache[0] & 0xFF);
+               telemetry.addData("Ultra Sonic back", range1Cache[0] & 0xFF);
                telemetry.addData("ODS", range1Cache[1] & 0xFF);
                telemetry.addData("Status", "Run Time: " + runtime.toString());
-               telemetry.addData("Ultra Sonic2", range2Cache[0] & 0xFF);
+               telemetry.addData("Ultra Sonic front", range2Cache[0] & 0xFF);
                telemetry.addData("ODS2", range2Cache[1] & 0xFF);
                telemetry.addData("ODS2", "ODS2");
                telemetry.addData("ODS2", "ODS2");
