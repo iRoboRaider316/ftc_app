@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
-@Autonomous(name = "MRGyro", group = "LinearOpMode")
+@Autonomous(name = "BasicGyro", group = "LinearOpMode")
 //@Disabled
 
 public class dev_MRGyroTurn_Range extends LinearOpMode {
@@ -68,6 +68,31 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
         range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         RANGE2Reader.engage();
+    }
+
+    public void basicTurn(double power, long time, int direction) {
+        double motors = power * direction;
+
+        lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        lDrive1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lDrive2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rDrive1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rDrive2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        lDrive1.setPower(motors);
+        lDrive2.setPower(motors);
+        rDrive1.setPower(-motors);
+        rDrive2.setPower(-motors);
+        sleep(time);
+        lDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive1.setPower(0);
+        rDrive2.setPower(0);
+        sleep(400);
     }
 
     // Function to use the gyro to do a spinning turn in place.
@@ -252,7 +277,6 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
     }
 
     public void runOpMode() throws InterruptedException {
-        int relativity;
 
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
@@ -266,25 +290,8 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
         setUpSensors();
         waitForStart();
 
-        int relativeHeading = gyroX.getHeading();
+        basicTurn(0.3, 500, -1);
 
-        for(int i = 0; i < 1000; i++) {
-            sleep(1);
-            telemetry.addData("Current Heading", gyroX.getHeading());
-            telemetry.addData("Time Count:", i);
-            updateTelemetry(telemetry);
-        }
-
-        relativity = relativeHeading - gyroX.getHeading();
-
-        gyroTurn(295 + relativity, 0.25, -1); // the method called
-
-        for(int i = 0; i < 2500; i++) {
-            sleep(1);
-            telemetry.addData("Current Heading", gyroX.getHeading());
-            telemetry.addData("Time Count:", i);
-            updateTelemetry(telemetry);
-        }
         lDrive1.setPower(0.3);
         lDrive2.setPower(0.3);
         rDrive1.setPower(0.3);
