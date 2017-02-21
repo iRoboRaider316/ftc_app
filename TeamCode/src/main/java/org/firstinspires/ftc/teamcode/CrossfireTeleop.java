@@ -19,6 +19,8 @@ public class CrossfireTeleop extends OpMode{
     DcMotor lDrive2;
     DcMotor catapult;
     DcMotor sweeper;
+    DcMotor lift1;
+    DcMotor lift2;
     Servo lButton;
     Servo rButton;
     Servo hopper;
@@ -35,6 +37,8 @@ public class CrossfireTeleop extends OpMode{
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
         sweeper = hardwareMap.dcMotor.get("sweeper");
         catapult = hardwareMap.dcMotor.get("catapult");
+        lift1 = hardwareMap.dcMotor.get("lift1");
+        lift2 = hardwareMap.dcMotor.get("lift2");
         lButton = hardwareMap.servo.get("lButton");
         rButton = hardwareMap.servo.get("rButton");
         hopper = hardwareMap.servo.get("hopper");
@@ -44,6 +48,10 @@ public class CrossfireTeleop extends OpMode{
         belt = hardwareMap.servo.get("belt");
         rDrive1.setDirection(DcMotor.Direction.REVERSE);
         rDrive2.setDirection(DcMotor.Direction.REVERSE);
+
+        belt.setPosition(.5);
+        button.setPosition(.5);
+        hopper.setPosition(.8);
 
 
     }
@@ -95,6 +103,16 @@ public class CrossfireTeleop extends OpMode{
         } else {
             hopper.setPosition(.8);
         }
+
+        lift1.setPower(gamepad2.right_stick_y);
+        lift2.setPower(gamepad2.right_stick_y);
+
+        if (lStick2 > .5)
+            belt.setPosition(0);
+        else if (lStick2 < -.5)
+            belt.setPosition(1);
+        else
+            belt.setPosition(.5);
 
 
         ///DRIVER CODE\\\
