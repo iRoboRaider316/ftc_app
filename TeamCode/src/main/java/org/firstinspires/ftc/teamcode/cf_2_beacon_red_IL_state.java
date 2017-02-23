@@ -65,7 +65,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
     // Function to load the catapult
     private void loadBall() throws InterruptedException {
         hopper.setPosition(.5);
-        sleep(500);
+        sleep(1000);
         hopper.setPosition(.8);
     }
     // Fires the ball
@@ -397,14 +397,11 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         double speed = 0;
         double leftSpeed;
         double rightSpeed;
-//
-//        rDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        idle();
-//        lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
 
         if (direction == 1) {
-            while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
+            while (rDrive1.getCurrentPosition() < (rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
 
                 leftSpeed = maxSpeed;
                 rightSpeed = maxSpeed;
@@ -544,7 +541,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         waitForStart();
 
         distance = 70;
-        maxSpeed = .6;
+        maxSpeed = .7;
         direction = -1;
         drive(distance, maxSpeed, direction);
         // Drive backward until the range sensor detects the wall
@@ -557,10 +554,10 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         recognizeColorRed(-1);
         wrongRed();
         // Drive forward past the line
-        rDrive1.setPower(0.5);
-        rDrive2.setPower(0.5);
-        lDrive1.setPower(0.5);
-        lDrive2.setPower(0.5);
+        rDrive1.setPower(0.6);
+        rDrive2.setPower(0.6);
+        lDrive1.setPower(0.6);
+        lDrive2.setPower(0.6);
         sleep(800);
         rDrive1.setPower(0);
         rDrive2.setPower(0);
