@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name = "BasicGyro", group = "LinearOpMode")
 //@Disabled
@@ -25,7 +26,9 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
     private DcMotor rDrive1;
     private DcMotor rDrive2;
     DcMotor catapult;
-    Servo hopper;
+    private Servo button;
+    private Servo hopper;
+    private Servo belt;
     GyroSensor gyroX;
     ModernRoboticsI2cGyro gyro;
     byte[] range1Cache; //The read will return an array of bytes. They are stored in this variable
@@ -70,6 +73,67 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
         RANGE2Reader.engage();
     }
 
+    // This is the Drive Method
+    // It will take in two static values: distance and maxSpeed.
+    // It will then calculate the encoder counts to drive and drive the distance at the specified power,
+    // accelerating to max speed for the first third of the distance, maintaining that speed for the second third,
+    // and decelerating to a minimum speed for the last third.
+    // If the robot deviates from the initial gyro heading, it will correct itself proportionally to the error.
+    public void drive(double distance, double maxSpeed) {
+        int ENCODER_CPR = 1120; // Encoder counts per Rev
+        double gearRatio = 1.75; // [Gear Ratio]:1
+        double circumference = 13.10; // Wheel circumference
+        double ROTATIONS = distance / (circumference * gearRatio); // Number of rotations to drive
+        double COUNTS = ENCODER_CPR * ROTATIONS; // Number of encoder counts to drive
+        //double startPosition = rDrive1.getCurrentPosition();
+
+        //double oldSpeed;
+        double speed = 0;
+        //double minSpeed = 0.3;
+        //double acceleration = 0.01;
+        double leftSpeed;
+        double rightSpeed;
+
+        rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
+
+        rDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        double heading = gyroX.getHeading();
+
+        while (rDrive1.getCurrentPosition()<(rDrive1.getTargetPosition()-5)){
+
+            leftSpeed = maxSpeed-((gyroX.getHeading()-heading)/10);
+            rightSpeed = maxSpeed+((gyroX.getHeading()-heading)/10);
+
+            leftSpeed = Range.clip(leftSpeed, -1, 1);
+            rightSpeed = Range.clip(rightSpeed, -1, 1);
+
+            lDrive1.setPower(leftSpeed);
+            rDrive1.setPower(rightSpeed);
+            lDrive2.setPower(leftSpeed);
+            rDrive2.setPower(rightSpeed);
+
+            telemetry.addData("1. speed", speed);
+            telemetry.addData("2. leftSpeed", leftSpeed);
+            telemetry.addData("3. rightSpeed", rightSpeed);
+            telemetry.addData("4. IntegratedZValue", gyro.getIntegratedZValue());
+            updateTelemetry(telemetry);
+        }
+
+        lDrive1.setPower(0);
+        rDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive2.setPower(0);
+
+        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
     public void basicTurn(double power, long time, int direction) {
         double motors = power * direction;
 
@@ -93,6 +157,48 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
         rDrive1.setPower(0);
         rDrive2.setPower(0);
         sleep(400);
+    }
+
+    public void encoderTurn(double power, double distance) {
+        int ENCODER_CPR = 1120; // Encoder counts per Rev
+        double gearRatio = 1.75; // [Gear Ratio]:1
+        double circumference = 13.10; // Wheel circumference
+        double ROTATIONS = distance / (circumference * gearRatio); // Number of rotations to drive
+        double COUNTS = ENCODER_CPR * ROTATIONS; // Number of encoder counts to drive
+
+        int lTarget1 = lDrive1.getCurrentPosition() + (int) COUNTS;
+        int lTarget2 = lDrive2.getCurrentPosition() + (int) COUNTS;
+        int rTarget1 = rDrive1.getCurrentPosition() - (int) COUNTS;
+        int rTarget2 = rDrive2.getCurrentPosition() - (int) COUNTS;
+
+        lDrive1.setTargetPosition(lTarget1);
+        lDrive2.setTargetPosition(lTarget2);
+        rDrive1.setTargetPosition(rTarget1);
+        rDrive2.setTargetPosition(rTarget2);
+
+        lDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lDrive2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rDrive2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        lDrive1.setPower(power);
+        lDrive2.setPower(power);
+        rDrive1.setPower(-power);
+        rDrive2.setPower(-power);
+
+        while(lDrive1.isBusy()) {
+            telemetry.addData("lDrive1 Position", lDrive1.getCurrentPosition());
+            telemetry.addData("lDrive2 Position", lDrive2.getCurrentPosition());
+            telemetry.addData("rDrive1 Position", rDrive1.getCurrentPosition());
+            telemetry.addData("rDrive2 Position", rDrive2.getCurrentPosition());
+            telemetry.addData("Target Position", lTarget1);
+            telemetry.update();
+        }
+
+        lDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive1.setPower(0);
+        rDrive2.setPower(0);
     }
 
     // Function to use the gyro to do a spinning turn in place.
@@ -260,13 +366,16 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
 
     public void fire() throws InterruptedException {
         launchBall();
+        launchPosition();
+        loadBall();
+        launchBall();
     }
     // Function to load the catapult
     public void loadBall() throws InterruptedException {
-        hopper.setPosition(1);
+        hopper.setPosition(0.5);
         sleep(1000);
-        hopper.setPosition(1000);
-
+        hopper.setPosition(0.8);
+        sleep(1500);
     }
     // Fires the ball
     public void launchBall() throws InterruptedException {
@@ -284,24 +393,24 @@ public class dev_MRGyroTurn_Range extends LinearOpMode {
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
         catapult = hardwareMap.dcMotor.get("catapult");
         hopper = hardwareMap.servo.get("hopper");
+        button = hardwareMap.servo.get("button");
+        belt = hardwareMap.servo.get("belt");
         touch = hardwareMap.touchSensor.get("t");
         lDrive1.setDirection(DcMotor.Direction.REVERSE);
         lDrive2.setDirection(DcMotor.Direction.REVERSE);
+        hopper.setPosition(0.8);
+        button.setPosition(0.5);
+        belt.setPosition(0.5);
         setUpSensors();
         waitForStart();
 
-        basicTurn(0.3, 500, -1);
+        encoderTurn(-0.3, -11);
 
-        lDrive1.setPower(0.3);
-        lDrive2.setPower(0.3);
-        rDrive1.setPower(0.3);
-        rDrive2.setPower(0.3);
-        sleep(800);
-        lDrive1.setPower(0);
-        lDrive2.setPower(0);
-        rDrive1.setPower(0);
-        rDrive2.setPower(0);
-        sleep(700);
+        sleep(500);
+
+        drive(10, 0.3);
+        sleep(300);
+
         fire();
     }
 }
