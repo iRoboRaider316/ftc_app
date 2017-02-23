@@ -21,7 +21,7 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @Autonomous(name="cf_2_beacon_blue_decatur", group="LinearOpMode")
-//@Disabled
+@Disabled
 
 public class cf_2_beacon_blue_decatur extends LinearOpMode {
 
@@ -80,7 +80,6 @@ public class cf_2_beacon_blue_decatur extends LinearOpMode {
         rDrive1.setPower(0.3);
         lDrive2.setPower(0.3);
         rDrive2.setPower(0.3);
-        sleep(2000);
         while (range1Cache[0] >= 17 && opModeIsActive()) {
             range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
             range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
@@ -117,7 +116,6 @@ public class cf_2_beacon_blue_decatur extends LinearOpMode {
         rDrive1.setPower(-0.4);
         lDrive2.setPower(-0.4);
         rDrive2.setPower(-0.4);
-        sleep(2000);
         while (range2Cache[0] >= 17 && opModeIsActive()) {
             range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
             range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
@@ -134,20 +132,12 @@ public class cf_2_beacon_blue_decatur extends LinearOpMode {
     }
 
     public void wallTrack() throws InterruptedException {
-        //I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
-        //I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
-        //RANGE1Reader.engage();
-        //byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        //RANGE1Reader.engage();
-        //prepare second range sensor
         I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
         byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         RANGE2Reader.engage();
         telemetry.addData("Status", "Initialized");
-        //range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
         range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-        //telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
         telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
         telemetry.update();
 
@@ -375,7 +365,7 @@ public class cf_2_beacon_blue_decatur extends LinearOpMode {
         rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    public void lineUp() throws InterruptedException {
+    private void lineUp() throws InterruptedException {
         I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
         I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         RANGE1Reader.engage();

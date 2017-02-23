@@ -82,6 +82,31 @@ public class cf_buttonPush extends LinearOpMode {
         telemetry.update();
     }
 
+
+    private void pushRed() throws InterruptedException {
+        button.setPosition(0);
+        sleep(2300);
+        button.setPosition(1);
+        sleep(2300);
+        button.setPosition(0.5);
+
+        color.enableLed(false);
+        telemetry.addData("Blue", color.blue());
+        telemetry.addData("Red", color.red());
+        telemetry.update();
+        if (color.blue() < (color.red()+1)){
+            sleep(100);
+        }
+        else {
+            sleep (5000);
+            button.setPosition(0);
+            sleep(2300);
+            button.setPosition(1);
+            sleep(2300);
+            button.setPosition(0.5);
+        }
+    }
+
     public void runOpMode() throws InterruptedException {
         //##############Init##############
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
