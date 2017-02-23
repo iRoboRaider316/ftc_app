@@ -43,28 +43,34 @@ public class cf_2_beacon_blue_IL_state extends LinearOpMode {
     private static final int RANGE2_REG_START = 0x04; //Register to start reading
     private static final int RANGE2_READ_LENGTH = 2; //Number of byte to read
 
+
+    // Function that utlizes the launchPosition, handleBall, and launch functions to fire and reload the catapult
     private void fire() throws InterruptedException {
+        launchPosition();
         launchBall();
+        launchPosition();
+        sleep(1000);
+        loadBall();
+        launchBall();
+        launchPosition();
+    }
+    // Resets catapult to the launch position
+    private void launchPosition() throws InterruptedException{
+        while (!touch.isPressed()){
+            catapult.setPower(0.5);
+        }
+        catapult.setPower(0);
     }
     // Function to load the catapult
     private void loadBall() throws InterruptedException {
-        hopper.setPosition(1);
+        hopper.setPosition(.5);
         sleep(1000);
-        hopper.setPosition(1000);
-
+        hopper.setPosition(.8);
     }
     // Fires the ball
     private void launchBall() throws InterruptedException {
         catapult.setPower(1);
         sleep(800);
-        catapult.setPower(0);
-
-    }
-    // Function to reset the catapult to the launch position
-    private void launchPosition() throws InterruptedException{
-        while (!touch.isPressed()){
-            catapult.setPower(0.5);
-        }
         catapult.setPower(0);
     }
 
@@ -89,13 +95,16 @@ public class cf_2_beacon_blue_IL_state extends LinearOpMode {
         rDrive1.setPower(0.4);
         lDrive2.setPower(0.4);
         rDrive2.setPower(0.4);
-        sleep(2000);
-        while (range1Cache[0] >= 17 && opModeIsActive()) {
+        sleep(2500);
+        while (range2Cache[0] >= 17 && opModeIsActive()) {
             range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
             range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
             telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
             telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
-            if (range1Cache[0] <= 200) {
+            if (range2Cache[0] >= 200) {
+                sleep(1);
+            }
+            if (range2Cache[0] < 1) {
                 sleep(1);
             }
         }
@@ -126,7 +135,7 @@ public class cf_2_beacon_blue_IL_state extends LinearOpMode {
         rDrive1.setPower(-0.4);
         lDrive2.setPower(-0.4);
         rDrive2.setPower(-0.4);
-        sleep(2000);
+        sleep(2500);
 
         while (range1Cache[0] >= 200) {
             sleep(1);
@@ -141,6 +150,12 @@ public class cf_2_beacon_blue_IL_state extends LinearOpMode {
             telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
             telemetry.update();
             if (range1Cache[0] >= 200) {
+                sleep(1);
+                telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
+                telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
+                telemetry.update();
+            }
+            if (range1Cache[0] < 1) {
                 sleep(1);
                 telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
                 telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
@@ -472,62 +487,6 @@ public class cf_2_beacon_blue_IL_state extends LinearOpMode {
         }
     }
 
-    private void encoderTurn(int degrees, double maxSpeed, int direction) throws InterruptedException {
-        // one full rotation = 2200 encoder ticks
-        // 1 degree = 6.11 encoder ticks
-        double ticks = degrees * 6;
-        double speed = 0;
-        double leftSpeed;
-        double rightSpeed;
-
-        double start = rDrive1.getCurrentPosition();
-
-        rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) ticks);
-
-        // right turn
-        if (direction == 1) {
-            while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
-
-                lDrive1.setPower(maxSpeed);
-                lDrive2.setPower(maxSpeed);
-                rDrive1.setPower(-maxSpeed);
-                rDrive2.setPower(-maxSpeed);
-
-                telemetry.addData("1. start", start);
-                telemetry.addData("2. current", rDrive1.getCurrentPosition());
-                updateTelemetry(telemetry);
-            }
-
-            lDrive1.setPower(0);
-            rDrive1.setPower(0);
-            lDrive2.setPower(0);
-            rDrive2.setPower(0);
-        }
-        else if (direction == -1) {
-            while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
-                lDrive1.setPower(-maxSpeed);
-                lDrive2.setPower(-maxSpeed);
-                rDrive1.setPower(maxSpeed);
-                rDrive2.setPower(maxSpeed);
-
-                telemetry.addData("1. start", start);
-                telemetry.addData("2. current", rDrive1.getCurrentPosition());
-                updateTelemetry(telemetry);
-            }
-
-            lDrive1.setPower(0);
-            rDrive1.setPower(0);
-            lDrive2.setPower(0);
-            rDrive2.setPower(0);
-
-        }
-        else {
-            telemetry.addLine("Invalid direction");
-            telemetry.update();
-            sleep(10000);
-        }
-    }
-
     public void runOpMode() throws InterruptedException {
         //##############Init##############
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
@@ -544,20 +503,11 @@ public class cf_2_beacon_blue_IL_state extends LinearOpMode {
         belt = hardwareMap.servo.get("belt");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
-
-
         fODSensor = hardwareMap.opticalDistanceSensor.get("fOD");
         bODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
         hopper.setPosition(0.8);
         button.setPosition(0.5);
         belt.setPosition(.5);
-
-        double distance;
-        double maxSpeed;
-        int targetHeading;
-        int direction;
-        long time;
-        double parallel;
 
         lDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

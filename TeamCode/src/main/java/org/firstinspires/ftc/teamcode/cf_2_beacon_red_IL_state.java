@@ -46,61 +46,62 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
     private static final int RANGE2_READ_LENGTH = 2; //Number of byte to read
     private ModernRoboticsI2cRangeSensor rangeSensor2;
 
+    // Function that utlizes the launchPosition, handleBall, and launch functions to fire and reload the catapult
     private void fire() throws InterruptedException {
+        launchPosition();
         launchBall();
+        launchPosition();
+        loadBall();
+        launchBall();
+        launchPosition();
     }
-    // Function to load the catapult
-    private void loadBall() throws InterruptedException {
-        hopper.setPosition(1);
-        sleep(1000);
-        hopper.setPosition(1000);
-
-    }
-    // Fires the ball
-    private void launchBall() throws InterruptedException {
-        catapult.setPower(1);
-        sleep(800);
-        catapult.setPower(0);
-
-    }
-    // Function to reset the catapult to the launch position
+    // Resets catapult to the launch position
     private void launchPosition() throws InterruptedException{
         while (!touch.isPressed()){
             catapult.setPower(0.5);
         }
         catapult.setPower(0);
     }
+    // Function to load the catapult
+    private void loadBall() throws InterruptedException {
+        hopper.setPosition(.5);
+        sleep(500);
+        hopper.setPosition(.8);
+    }
+    // Fires the ball
+    private void launchBall() throws InterruptedException {
+        catapult.setPower(1);
+        sleep(800);
+        catapult.setPower(0);
+    }
 
     private void driveForwardToWall() throws InterruptedException {
-        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
-        I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
-        RANGE1Reader.engage();
-        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        RANGE1Reader.engage();
+//        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
+//        I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
+//        RANGE1Reader.engage();
+//        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+//        RANGE1Reader.engage();
         //prepare second range sensor
         I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
         byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         RANGE2Reader.engage();
         telemetry.addData("Status", "Initialized");
-        range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-        telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
+//        range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+//        range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+//        telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
         telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
         telemetry.update();
         lDrive1.setPower(0.4);
         rDrive1.setPower(0.4);
         lDrive2.setPower(0.4);
         rDrive2.setPower(0.4);
-        sleep(2000);
-        while (range1Cache[0] >= 17 && opModeIsActive()) {
-            range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+        //sleep(2000);
+        while (range2Cache[0] >= 12 && opModeIsActive()) {
+//            range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
             range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-            telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
+//            telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
             telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
-            if (range1Cache[0] <= 200) {
-                sleep(1);
-            }
         }
         lDrive1.setPower(0);
         rDrive1.setPower(0);
@@ -114,41 +115,29 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         RANGE1Reader.engage();
         byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
         RANGE1Reader.engage();
-        //prepare second range sensor
-        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
-        I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
-        byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-        RANGE2Reader.engage();
+//        //prepare second range sensor
+//        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
+//        I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
+//        byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+//        RANGE2Reader.engage();
         telemetry.addData("Status", "Initialized");
-        range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+//        range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+//        range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
-        telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
+//        telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
         telemetry.update();
         lDrive1.setPower(-0.4);
         rDrive1.setPower(-0.4);
         lDrive2.setPower(-0.4);
         rDrive2.setPower(-0.4);
-        sleep(2000);
+        //sleep(2000);
 
-        while (range1Cache[0] >= 200) {
-            sleep(1);
-            telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
-            telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
-            telemetry.update();
-        }
-        while (range1Cache[0] >= 17 && opModeIsActive()) {
+        while (range1Cache[0] >= 12 && opModeIsActive()) {
             range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-            range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+//            range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
             telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
-            telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
+//            telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
             telemetry.update();
-            if (range1Cache[0] >= 200) {
-                sleep(1);
-                telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
-                telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
-                telemetry.update();
-            }
         }
         lDrive1.setPower(0);
         rDrive1.setPower(0);
@@ -165,33 +154,33 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         //prepare second range sensor
         I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
         I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
-        byte[] range1Cache = RANGE1Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+//        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
         RANGE1Reader.engage();
         telemetry.addData("Status", "Initialized");
         //range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+//        range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
         //telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
-        telemetry.addData("Range2 value:", (range1Cache[0] & 0xFF));
+//        telemetry.addData("Range2 value:", (range1Cache[0] & 0xFF));
         telemetry.update();
 
         while (bODSensor.getRawLightDetected() < .075 && opModeIsActive()) {
             //range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-            range1Cache = RANGE1Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+            byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
             double range1 = range1Cache[0];
 
             //telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
             telemetry.addData("Range1 value:", (range1));
             telemetry.addData("bOD light", (bODSensor.getRawLightDetected()));
 
-            double error = (range1-12)/55; //55
+            double error = (range1-12)/70; //55
             if (range1 > 100)
                 error = 0;
             telemetry.addData("Error", error);
             if (error > 0.1){
                 error = 0.1;
             }
-            double leftSpeed = -.15-error;
-            double rightSpeed = -.15+error;
+            double leftSpeed = -.2-error;
+            double rightSpeed = -.2+error;
 
             leftSpeed = Range.clip(leftSpeed, -1, 1);
             rightSpeed = Range.clip(rightSpeed, -1, 1);
@@ -212,27 +201,27 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
     }
 
     private void wallTrackForward() throws InterruptedException {
-        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
-        I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
-        RANGE1Reader.engage();
-        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        RANGE1Reader.engage();
+//        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
+//        I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
+//        RANGE1Reader.engage();
+//        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+//        RANGE1Reader.engage();
         //prepare second range sensor
         I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
-        byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+//        byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         RANGE2Reader.engage();
         telemetry.addData("Status", "Initialized");
         //range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+//        range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         //telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
-        telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
+//        telemetry.addData("Range2 value:", (range2Cache[0] & 0xFF));
         telemetry.update();
         while (fODSensor.getRawLightDetected() < .1 && opModeIsActive()) {
-            range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-            range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+//            range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+            byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
             double range2 = range2Cache[0];
-            double range1 = range1Cache[0];
+//            double range1 = range1Cache[0];
             //telemetry.addData("Range value:", (range1Cache[0] & 0xFF));
             telemetry.addData("Range2 value:", (range2));
             telemetry.addData("bOD light", (bODSensor.getRawLightDetected()));
@@ -408,15 +397,11 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         double speed = 0;
         double leftSpeed;
         double rightSpeed;
-
+//
+//        rDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        idle();
+//        lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
-
-        rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        sleep(500);
 
         if (direction == 1) {
             while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
@@ -475,60 +460,45 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         }
     }
 
-    private void encoderTurn(int degrees, double maxSpeed, int direction) throws InterruptedException {
-        // one full rotation = 2200 encoder ticks
-        // 1 degree = 6.11 encoder ticks
-        double ticks = degrees * 6;
-        double speed = 0;
-        double leftSpeed;
-        double rightSpeed;
-
-        double start = rDrive1.getCurrentPosition();
-
-        rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) ticks);
-
-        // right turn
-        if (direction == 1) {
-            while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
-
-                lDrive1.setPower(maxSpeed);
-                lDrive2.setPower(maxSpeed);
-                rDrive1.setPower(-maxSpeed);
-                rDrive2.setPower(-maxSpeed);
-
-                telemetry.addData("1. start", start);
-                telemetry.addData("2. current", rDrive1.getCurrentPosition());
-                updateTelemetry(telemetry);
-            }
-
-            lDrive1.setPower(0);
-            rDrive1.setPower(0);
-            lDrive2.setPower(0);
-            rDrive2.setPower(0);
-        }
-        else if (direction == -1) {
-            while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
-                lDrive1.setPower(-maxSpeed);
-                lDrive2.setPower(-maxSpeed);
-                rDrive1.setPower(maxSpeed);
-                rDrive2.setPower(maxSpeed);
-
-                telemetry.addData("1. start", start);
-                telemetry.addData("2. current", rDrive1.getCurrentPosition());
-                updateTelemetry(telemetry);
-            }
-
-            lDrive1.setPower(0);
-            rDrive1.setPower(0);
-            lDrive2.setPower(0);
-            rDrive2.setPower(0);
-
-        }
-        else {
-            telemetry.addLine("Invalid direction");
+    private void encoderTurn(double power, double distance) {
+        int ENCODER_CPR = 1120; // Encoder counts per Rev
+        double gearRatio = 1.75; // [Gear Ratio]:1
+        double circumference = 13.10; // Wheel circumference
+        double ROTATIONS = distance / (circumference * gearRatio); // Number of rotations to drive
+        double COUNTS = ENCODER_CPR * ROTATIONS; // Number of encoder counts to drive
+        int lTarget1 = lDrive1.getCurrentPosition() + (int) COUNTS;
+        int lTarget2 = lDrive2.getCurrentPosition() + (int) COUNTS;
+        int rTarget1 = rDrive1.getCurrentPosition() - (int) COUNTS;
+        int rTarget2 = rDrive2.getCurrentPosition() - (int) COUNTS;
+        lDrive1.setTargetPosition(lTarget1);
+        lDrive2.setTargetPosition(lTarget2);
+        rDrive1.setTargetPosition(rTarget1);
+        rDrive2.setTargetPosition(rTarget2);
+        lDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lDrive2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rDrive2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lDrive1.setPower(power);
+        lDrive2.setPower(power);
+        rDrive1.setPower(-power);
+        rDrive2.setPower(-power);
+        while(lDrive1.isBusy()) {
+            telemetry.addData("lDrive1 Position", lDrive1.getCurrentPosition());
+            telemetry.addData("lDrive2 Position", lDrive2.getCurrentPosition());
+            telemetry.addData("rDrive1 Position", rDrive1.getCurrentPosition());
+            telemetry.addData("rDrive2 Position", rDrive2.getCurrentPosition());
+            telemetry.addData("Target Position", lTarget1);
             telemetry.update();
-            sleep(10000);
         }
+        lDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive1.setPower(0);
+        rDrive2.setPower(0);
+
+        lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public void runOpMode() throws InterruptedException {
@@ -573,6 +543,10 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
 
         waitForStart();
 
+        distance = 70;
+        maxSpeed = .6;
+        direction = -1;
+        drive(distance, maxSpeed, direction);
         // Drive backward until the range sensor detects the wall
         driveBackwardToWall();
         // Turn until parallel with the wall using both range sensors
@@ -580,38 +554,30 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         // Track backward along the wall until the white line
         wallTrackBackward();
         // Push the button for red
-        sleep(500);
         recognizeColorRed(-1);
         wrongRed();
         // Drive forward past the line
-        rDrive1.setPower(0.4);
-        rDrive2.setPower(0.4);
-        lDrive1.setPower(0.4);
-        lDrive2.setPower(0.4);
-        sleep(1000);
+        rDrive1.setPower(0.5);
+        rDrive2.setPower(0.5);
+        lDrive1.setPower(0.5);
+        lDrive2.setPower(0.5);
+        sleep(800);
         rDrive1.setPower(0);
         rDrive2.setPower(0);
         lDrive1.setPower(0);
         lDrive2.setPower(0);
         // Track forward along the wall until the next white line
         wallTrackForward();
-        sleep(500);
         // Push the button for red
         recognizeColorRed(1);
         wrongRed();
         lineUp();
-        degrees = 85;
-        maxSpeed = .3;
-        direction = -1;
-        encoderTurn(degrees, maxSpeed, direction);
-
-
-        distance = 10;
-        maxSpeed = .4;
+        encoderTurn(-0.3, -11);
+        distance = 15;
+        maxSpeed = .5;
         direction = 1;
         drive(distance, maxSpeed, direction);
         fire();
-
 
     }
 }

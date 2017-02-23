@@ -86,6 +86,74 @@ public class cf_encoder_turn extends LinearOpMode {
         }
     }
 
+    private void turn(int degrees, double maxSpeed, int direction) throws InterruptedException {
+        // one full rotation = 2200 encoder ticks
+        // 1 degree = 6.11 encoder ticks
+        double ticks = degrees * 6;
+        rDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) ticks);
+        rDrive2.setTargetPosition(rDrive2.getCurrentPosition() + (int) ticks);
+        lDrive1.setTargetPosition(lDrive1.getCurrentPosition() + (int) ticks);
+        lDrive2.setTargetPosition(lDrive2.getCurrentPosition() + (int) ticks);
+
+        sleep(500);
+
+        if (direction == 1) {
+            while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
+
+                rDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rDrive2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                lDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                lDrive2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                lDrive1.setPower(maxSpeed);
+                lDrive2.setPower(maxSpeed);
+                rDrive1.setPower(-maxSpeed);
+                rDrive2.setPower(-maxSpeed);
+
+                updateTelemetry(telemetry);
+            }
+
+            lDrive1.setPower(0);
+            rDrive1.setPower(0);
+            lDrive2.setPower(0);
+            rDrive2.setPower(0);
+        }
+        else if (direction == -1) {
+            while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
+                rDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rDrive2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                lDrive1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                lDrive2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                lDrive1.setPower(-maxSpeed);
+                lDrive2.setPower(-maxSpeed);
+                rDrive1.setPower(maxSpeed);
+                rDrive2.setPower(maxSpeed);
+
+            }
+
+            lDrive1.setPower(0);
+            rDrive1.setPower(0);
+            lDrive2.setPower(0);
+            rDrive2.setPower(0);
+            rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            lDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        }
+        else {
+            telemetry.addLine("Invalid direction");
+            telemetry.update();
+            sleep(10000);
+        }
+    }
+
     @Override
     public void runOpMode() throws InterruptedException {
         telemetry.addData("Status", "Initialized");
@@ -118,7 +186,7 @@ public class cf_encoder_turn extends LinearOpMode {
         degrees = 90;
         maxSpeed = .3;
         direction = -1;
-        encoderTurn(degrees, maxSpeed, direction);
+        turn(degrees, maxSpeed, direction);
         sleep(5000);
 
 
