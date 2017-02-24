@@ -48,6 +48,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
 
     // Function that utlizes the launchPosition, handleBall, and launch functions to fire and reload the catapult
     private void fire() throws InterruptedException {
+        sleep(1000);
         launchPosition();
         launchBall();
         launchPosition();
@@ -173,7 +174,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
             telemetry.addData("bOD light", (bODSensor.getRawLightDetected()));
 
             double error = (range1-12)/70; //55
-            if (range1 > 100)
+            if (range1 > 100 || range1 < 1)
                 error = 0;
             telemetry.addData("Error", error);
             if (error > 0.1){
@@ -227,7 +228,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
             telemetry.addData("bOD light", (bODSensor.getRawLightDetected()));
 
             double error = ((range2-12)/70); //60
-            if (range2 > 100)
+            if (range2 > 100 || range2 < 1)
                 error = 0;
             telemetry.addData("Error", error);
             if (error > 0.1){
@@ -258,22 +259,22 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
         I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         RANGE1Reader.engage();
-        byte[] rangefCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        RANGE1Reader.engage();
+//        byte[] rangefCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+//        RANGE1Reader.engage();
         //prepare second range sensor
         I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
-        byte[] rangebCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+//        byte[] rangebCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         RANGE2Reader.engage();
-        rangebCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        rangefCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+//        rangebCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+//        rangefCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
 
         double error = 0;
         boolean done = false;
 
         while (!done && opModeIsActive()) {
-            rangebCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-            rangefCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+            byte[] rangebCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+            byte[] rangefCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
             double rangeb = rangebCache[0];
             double rangef = rangefCache[0];
             telemetry.addData("Range value:", rangef);
@@ -570,7 +571,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         wrongRed();
         lineUp();
         encoderTurn(-0.3, -11);
-        distance = 15;
+        distance = 12;
         maxSpeed = .5;
         direction = 1;
         drive(distance, maxSpeed, direction);

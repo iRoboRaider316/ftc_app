@@ -27,8 +27,6 @@ public class cf_2_ball_IL_state extends LinearOpMode {
     private Servo button;
     private Servo hopper;
     private TouchSensor touch;
-    private GyroSensor gyroSensor;
-    private ModernRoboticsI2cGyro gyro;
 
 
     // This is the Drive Method

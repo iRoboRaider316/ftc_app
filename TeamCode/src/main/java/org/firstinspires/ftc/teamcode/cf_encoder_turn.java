@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="Encoder Turn", group="Methods")
-
+@Disabled
 public class cf_encoder_turn extends LinearOpMode {
 
     DcMotor lDrive1;
