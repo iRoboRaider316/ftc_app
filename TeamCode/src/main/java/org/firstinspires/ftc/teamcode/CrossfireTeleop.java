@@ -163,8 +163,6 @@ public class CrossfireTeleop extends OpMode{
         if (gamepad1.dpad_down && drive == 3) { //Backward 1/2 speed in a straight line
             drive = 10;
         }
-
-
         switch (drive) {
             case 1:
                 rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y)));
@@ -220,13 +218,10 @@ public class CrossfireTeleop extends OpMode{
                 leftPower = (gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
                 rightPower = (gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
         }
-
         lDrive1.setPower(leftPower);
         lDrive2.setPower(leftPower);
         rDrive1.setPower(rightPower);
         rDrive2.setPower(rightPower);
-
     }
-
-//Jims says: Gyro + rive function needs to be super exact
+//Jims says: Gyro + drive function needs to be super exact
 }
