@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name="vr_teleop", group="Opmode")
-//@Disabled
+@Disabled
 
 public class vr_teleop extends OpMode {
     DcMotor lDrive1;
@@ -29,7 +29,7 @@ public class vr_teleop extends OpMode {
         rDrive1.setDirection(DcMotor.Direction.REVERSE);
         catapult = hardwareMap.dcMotor.get("catapult");
         paddle = hardwareMap.dcMotor.get("paddle");
-        feeder = hardwareMap.servo.get("f");
+        feeder = hardwareMap.servo.get("feeder");
     }
     public void loop(){
         // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
