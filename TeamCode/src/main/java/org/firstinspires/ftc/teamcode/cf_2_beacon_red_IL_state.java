@@ -83,7 +83,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
 //        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
 //        RANGE1Reader.engage();
         //prepare second range sensor
-        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
+        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("fRS");
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
         byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         RANGE2Reader.engage();
@@ -111,7 +111,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
     }
 
     private void driveBackwardToWall() throws InterruptedException {
-        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
+        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("bRS");
         I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         RANGE1Reader.engage();
         byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
@@ -153,7 +153,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         //byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
         //RANGE1Reader.engage();
         //prepare second range sensor
-        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
+        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("bRS");
         I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
 //        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
         RANGE1Reader.engage();
@@ -208,7 +208,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
 //        byte[] range1Cache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
 //        RANGE1Reader.engage();
         //prepare second range sensor
-        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
+        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("fRS");
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
 //        byte[] range2Cache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         RANGE2Reader.engage();
@@ -256,18 +256,12 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
     }
 
     private void lineUp() throws InterruptedException {
-        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
+        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("bRS");
         I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         RANGE1Reader.engage();
-//        byte[] rangefCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-//        RANGE1Reader.engage();
-        //prepare second range sensor
-        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
+        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("fRS");
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
-//        byte[] rangebCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         RANGE2Reader.engage();
-//        rangebCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-//        rangefCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
 
         double error = 0;
         boolean done = false;
@@ -281,6 +275,14 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
             telemetry.addData("Range2 value:", rangeb);
 
             error = (rangef - rangeb)/100;
+            if (error > .15)
+                error = .15;
+            else if (error < .05 && error > 0)
+                error = .05;
+            else if (error < -.15)
+                error = -.15;
+            else if (error < 0 && error > -.05)
+                error = -.05;
             telemetry.addData("error", error);
 
             lDrive1.setPower(0+error);
@@ -288,10 +290,10 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
             rDrive1.setPower(0-error);
             rDrive2.setPower(0-error);
             telemetry.update();
-            if (rangef > 200 || rangeb > 200)
+            if (rangef > 200 || rangeb > 200 || rangeb == -1 || rangef == -1)
                 done = false;
             else {
-                if (rangef >= rangeb-1 && rangef <= rangeb+1)
+                if (rangef >= rangeb+1 && rangeb >= rangef-1)
                     done = true;
                 else
                     done = false;
@@ -389,73 +391,56 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
     // accelerating to max speed for the first third of the distance, maintaining that speed for the second third,
     // and decelerating to a minimum speed for the last third.
     // If the robot deviates from the initial gyro heading, it will correct itself proportionally to the error.
-    private void drive(double distance, double maxSpeed, int direction) throws InterruptedException {
+    private void encoderDrive(double distance, double maxSpeed, int direction) throws InterruptedException {
         int ENCODER_CPR = 1120; // Encoder counts per Rev
         double gearRatio = 1.75; // [Gear Ratio]:1
         double circumference = 13.10; // Wheel circumference
         double ROTATIONS = distance / (circumference * gearRatio); // Number of rotations to drive
         double COUNTS = ENCODER_CPR * ROTATIONS; // Number of encoder counts to drive
-        double speed = 0;
-        double leftSpeed;
-        double rightSpeed;
 
         rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
 
         if (direction == 1) {
-            while (rDrive1.getCurrentPosition() < (rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
-
-                leftSpeed = maxSpeed;
-                rightSpeed = maxSpeed;
-
-                leftSpeed = Range.clip(leftSpeed, -1, 1);
-                rightSpeed = Range.clip(rightSpeed, -1, 1);
-
-                lDrive1.setPower(leftSpeed);
-                rDrive1.setPower(rightSpeed);
-                lDrive2.setPower(leftSpeed);
-                rDrive2.setPower(rightSpeed);
-
-                telemetry.addData("1. speed", speed);
-                telemetry.addData("2. leftSpeed", leftSpeed);
-                telemetry.addData("3. rightSpeed", rightSpeed);
+            while (rDrive1.getCurrentPosition() < rDrive1.getTargetPosition() - 5 && opModeIsActive()) {
+                drive(maxSpeed);
+                telemetry.addData("1. speed", maxSpeed);
                 updateTelemetry(telemetry);
             }
-
-            lDrive1.setPower(0);
-            rDrive1.setPower(0);
-            lDrive2.setPower(0);
-            rDrive2.setPower(0);
+            driveStop();
         }
         else if (direction == -1) {
             while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
-
-                leftSpeed = maxSpeed;
-                rightSpeed = maxSpeed;
-
-                leftSpeed = Range.clip(leftSpeed, -1, 1);
-                rightSpeed = Range.clip(rightSpeed, -1, 1);
-
-                lDrive1.setPower(-leftSpeed);
-                rDrive1.setPower(-rightSpeed);
-                lDrive2.setPower(-leftSpeed);
-                rDrive2.setPower(-rightSpeed);
-
-                telemetry.addData("1. speed", speed);
-                telemetry.addData("2. leftSpeed", leftSpeed);
-                telemetry.addData("3. rightSpeed", rightSpeed);
+                drive(-maxSpeed);
+                telemetry.addData("1. speed", maxSpeed);
                 updateTelemetry(telemetry);
             }
-
-            lDrive1.setPower(0);
-            rDrive1.setPower(0);
-            lDrive2.setPower(0);
-            rDrive2.setPower(0);
+            driveStop();
         }
         else {
             telemetry.addLine("Invalid direction");
             telemetry.update();
             sleep(10000);
         }
+    }
+
+    private void drive(double speed){
+        lDrive1.setPower(speed);
+        lDrive2.setPower(speed);
+        rDrive1.setPower(speed);
+        rDrive2.setPower(speed);
+    }
+    private void driveTurn(double speed){
+        lDrive1.setPower(-speed);
+        lDrive2.setPower(-speed);
+        rDrive1.setPower(speed);
+        rDrive2.setPower(speed);
+    }
+
+    private void driveStop(){
+        lDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive1.setPower(0);
+        rDrive2.setPower(0);
     }
 
     private void encoderTurn(double power, double distance) {
@@ -499,6 +484,56 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         rDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
+    private void redLineUp() throws InterruptedException {
+        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("bRS");
+        I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
+        RANGE1Reader.engage();
+        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("fRS");
+        I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
+        RANGE2Reader.engage();
+
+        double error = 0;
+        boolean done = false;
+
+        while (!done && opModeIsActive()) {
+            byte[] rangebCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+            byte[] rangefCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+            double rangeb = rangebCache[0];
+            double rangef = rangefCache[0];
+            telemetry.addData("Range value:", rangef);
+            telemetry.addData("Range2 value:", rangeb);
+
+            error = (rangef - rangeb)/100;
+            if (error > .15)
+                error = .15;
+            else if (error < .05 && error > 0)
+                error = .05;
+            else if (error < -.15)
+                error = -.15;
+            else if (error < 0 && error > -.05)
+                error = -.05;
+            telemetry.addData("error", error);
+
+            lDrive1.setPower(0+error);
+            lDrive2.setPower(0+error);
+            rDrive1.setPower(0-error);
+            rDrive2.setPower(0-error);
+            telemetry.update();
+            if (rangef > 200 || rangeb > 200 || rangeb == -1 || rangef == -1)
+                done = false;
+            else {
+                if (rangeb > rangef-1)
+                    done = true;
+                else
+                    done = false;
+            }
+        }
+        lDrive1.setPower(0);
+        rDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive2.setPower(0);
+    }
+
     public void runOpMode() throws InterruptedException {
         //##############Init##############
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
@@ -516,9 +551,9 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
 
-
         fODSensor = hardwareMap.opticalDistanceSensor.get("fOD");
         bODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
+
         hopper.setPosition(0.8);
         button.setPosition(0.5);
         belt.setPosition(.5);
@@ -544,11 +579,11 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         distance = 70;
         maxSpeed = .7;
         direction = -1;
-        drive(distance, maxSpeed, direction);
+        encoderDrive(distance, maxSpeed, direction);
         // Drive backward until the range sensor detects the wall
         driveBackwardToWall();
         // Turn until parallel with the wall using both range sensors
-        lineUp();
+        redLineUp();
         // Track backward along the wall until the white line
         wallTrackBackward();
         // Push the button for red
@@ -574,7 +609,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         distance = 12;
         maxSpeed = .5;
         direction = 1;
-        drive(distance, maxSpeed, direction);
+        encoderDrive(distance, maxSpeed, direction);
         fire();
 
     }

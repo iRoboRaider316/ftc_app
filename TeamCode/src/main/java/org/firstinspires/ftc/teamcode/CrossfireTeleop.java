@@ -20,13 +20,12 @@ public class crossFireTeleOp extends OpMode{
     DcMotor sweeper;
     DcMotor lift1;
     DcMotor lift2;
-    Servo lButton;
-    Servo rButton;
     Servo hopper;
     Servo button;
     Servo belt;
     TouchSensor touch;
-    int drive = 0;
+    int direction = 0;
+    int power = 1;
 
 
     public void init() {
@@ -38,8 +37,6 @@ public class crossFireTeleOp extends OpMode{
         catapult = hardwareMap.dcMotor.get("catapult");
         lift1 = hardwareMap.dcMotor.get("lift1");
         lift2 = hardwareMap.dcMotor.get("lift2");
-        lButton = hardwareMap.servo.get("lButton");
-        rButton = hardwareMap.servo.get("rButton");
         hopper = hardwareMap.servo.get("hopper");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
@@ -76,12 +73,9 @@ public class crossFireTeleOp extends OpMode{
         float leftPower;
         float rightPower;
         float lTrigger2 = gamepad2.left_trigger;
-        float rTrigger2 = gamepad2.right_trigger;
+        float speed;
 
         ///OPERATOR CODE\\\
-
-        rButton.setPosition(rTrigger2 * -1);
-        lButton.setPosition(lTrigger2);
 
         if (up) {
             sweeper.setPower(-1);
@@ -116,7 +110,6 @@ public class crossFireTeleOp extends OpMode{
 
         ///DRIVER CODE\\\
 
-
         //This code controls the side button pusher
         if (gamepad1.b)
             button.setPosition(0);
@@ -131,93 +124,79 @@ public class crossFireTeleOp extends OpMode{
             sweeper.setPower(0);
         }
 
-        // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
-        if (gamepad1.a) { // Backward 100%
-            drive = 1;
-        }
-        if (gamepad1.y) { //Forward 100%
-            drive = 2;
-        }
-        if (gamepad1.right_bumper && drive == 1) { //Backward 1/2 speed
-            drive = 3;
-        }
-        if (gamepad1.right_bumper && drive == 2) { //Forward 1/2 speed
-            drive = 4;
-        }
-        if (gamepad1.dpad_up) { //Forward in a straight line 100% power
-            drive = 5;
-        }
-        if (gamepad1.dpad_down) { // Backward in a straight line 100% power
-            drive = 6;
-        }
-        if (gamepad1.dpad_up && drive == 1) { // Forward in a straight line at 100%
-            drive = 7;
-        }
-        if (gamepad1.dpad_down && drive == 2) { // Backward in a straight line 100%
-            drive = 8;
-        }
-        if (gamepad1.dpad_up && drive == 4) {//Forward 1/2 speed in a straight line
-            drive = 9;
-        }
-        if (gamepad1.dpad_down && drive == 3) { //Backward 1/2 speed in a straight line
-            drive = 10;
-        }
+        // Universal drive train power switch case
+        if (gamepad1.right_bumper && power == 1)
+            // cut to half speed
+            power = 2;
+        else if (gamepad1.right_bumper && power == 2)
+            // set to full speed
+            power = 1;
 
-
-        switch (drive) {
+        switch (power){
             case 1:
-                rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y)));
-                leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y)));
-                drive = 1;
+                // divide all powers by 1 (full speed)
+                speed = 1;
+                power = 1;
                 break;
             case 2:
-                rightPower = (gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
-                leftPower = (gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
-                drive = 2;
-                break;
-            case 3:
-                rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y)) / 2);
-                leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y)) / 2);
-                drive = 3;
-                break;
-            case 4:
-                rightPower = (gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y)) / 2;
-                leftPower = (gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y)) / 2;
-                drive = 4;
-                break;
-            case 5:
-                rightPower = 1;
-                leftPower = 1;
-                drive = 1;
-                break;
-            case 6:
-                rightPower = -1;
-                leftPower = -1;
-                drive = 1;
-                break;
-            case 7:
-                rightPower = -1;
-                leftPower = -1;
-                drive = 2;
-                break;
-            case 8:
-                rightPower = 1;
-                leftPower = 1;
-                drive = 2;
-                break;
-            case 9:
-                rightPower = -1/2;
-                leftPower = -1/2;
-                drive = 4;
-                break;
-            case 10:
-                rightPower = -1/2;
-                leftPower = -1/2;
-                drive = 3;
+                // divide all powers by 2 (half speed
+                speed = 2;
+                power = 2;
                 break;
             default:
-                leftPower = (gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
-                rightPower = (gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
+                speed = 1;
+                break;
+        }
+
+        if (gamepad1.y)
+            // robot sweeper is forward
+            direction = 1;
+        else if (gamepad1.a)
+            // robot cap ball lift is forward
+            direction = 2;
+
+        switch (direction) {
+            case 1:
+                // drive straight forward
+                if (gamepad1.dpad_up){
+                    rightPower = -1/speed;
+                    leftPower = -1/speed;
+                }
+                // drive straight backward
+                else if (gamepad1.dpad_down){
+                    rightPower = 1/speed;
+                    leftPower = 1/speed;
+                }
+                // standard driving
+                else {
+                    leftPower = ((gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed);
+                    rightPower = ((gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed);
+                }
+                direction = 1;
+                break;
+            case 2:
+                // drive straight backward
+                if (gamepad1.dpad_up){
+                    rightPower = 1/speed;
+                    leftPower = 1/speed;
+                }
+                // drive straight forward
+                else if (gamepad1.dpad_down){
+                    rightPower = -1/speed;
+                    leftPower = -1/speed;
+                }
+                // backward driving
+                else {
+                    leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed);
+                    rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed);
+                }
+                direction = 2;
+                break;
+            default:
+                // standard driving
+                leftPower = ((gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed);
+                rightPower = ((gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed);
+                break;
         }
 
         lDrive1.setPower(leftPower);
@@ -226,6 +205,4 @@ public class crossFireTeleOp extends OpMode{
         rDrive2.setPower(rightPower);
 
     }
-
-//Jims says: Gyro + rive function needs to be super exact
 }

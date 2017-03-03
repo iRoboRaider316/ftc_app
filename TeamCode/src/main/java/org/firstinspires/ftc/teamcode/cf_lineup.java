@@ -16,7 +16,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="cf_linup", group="LinearOpMode")
-@Disabled
+//@Disabled
 
 public class cf_lineup extends LinearOpMode {
 
@@ -47,51 +47,110 @@ public class cf_lineup extends LinearOpMode {
     private ModernRoboticsI2cRangeSensor rangeSensor2;
 
     private void lineUp() throws InterruptedException {
-        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("range");
+        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("bRS");
         I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
         RANGE1Reader.engage();
-        byte[] rangefCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        RANGE1Reader.engage();
-        //prepare second range sensor
-        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("range2");
+        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("fRS");
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
-        byte[] rangebCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
         RANGE2Reader.engage();
-        rangebCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-        rangefCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
 
         double error = 0;
         boolean done = false;
 
-            while (!done && opModeIsActive()) {
-                rangebCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
-                rangefCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
-                double rangeb = rangebCache[0];
-                double rangef = rangefCache[0];
-                telemetry.addData("Range value:", rangef);
-                telemetry.addData("Range2 value:", rangeb);
+        while (!done && opModeIsActive()) {
+            byte[] rangebCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+            byte[] rangefCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+            double rangeb = rangebCache[0];
+            double rangef = rangefCache[0];
+            telemetry.addData("Range value:", rangef);
+            telemetry.addData("Range2 value:", rangeb);
 
-                error = (rangef - rangeb)/100;
-                telemetry.addData("error", error);
+            error = (rangef - rangeb)/100;
+            if (error > .15)
+                error = .15;
+            else if (error < .05 && error > 0)
+                error = .05;
+            else if (error < -.15)
+                error = -.15;
+            else if (error < 0 && error > -.05)
+                error = -.05;
+            telemetry.addData("error", error);
 
-                lDrive1.setPower(0+error);
-                lDrive2.setPower(0+error);
-                rDrive1.setPower(0-error);
-                rDrive2.setPower(0-error);
-                telemetry.update();
-                if (rangef > 200 || rangeb > 200)
+            lDrive1.setPower(0+error);
+            lDrive2.setPower(0+error);
+            rDrive1.setPower(0-error);
+            rDrive2.setPower(0-error);
+            telemetry.update();
+            if (rangef > 200 || rangeb > 200 || rangeb == -1 || rangef == -1)
+                done = false;
+            else {
+                if (rangef >= rangeb+1 && rangeb >= rangef-1)
+                    done = true;
+                else
                     done = false;
-                else {
-                    if (rangef >= rangeb-1 && rangef <= rangeb+1)
-                        done = true;
-                    else
-                        done = false;
-                }
             }
-            lDrive1.setPower(0);
-            rDrive1.setPower(0);
-            lDrive2.setPower(0);
-            rDrive2.setPower(0);
+        }
+        lDrive1.setPower(0);
+        rDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive2.setPower(0);
+    }
+
+    private void redLineUp() throws InterruptedException {
+        I2cDevice RANGE1 = hardwareMap.i2cDevice.get("bRS");
+        I2cDeviceSynch RANGE1Reader = new I2cDeviceSynchImpl(RANGE1, RANGE1ADDRESS, false);
+        RANGE1Reader.engage();
+        I2cDevice RANGE2 = hardwareMap.i2cDevice.get("fRS");
+        I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
+        RANGE2Reader.engage();
+
+        double error = 0;
+        boolean done = false;
+
+        while (!done && opModeIsActive()) {
+            byte[] rangebCache = RANGE1Reader.read(RANGE1_REG_START, RANGE1_READ_LENGTH);
+            byte[] rangefCache = RANGE2Reader.read(RANGE2_REG_START, RANGE2_READ_LENGTH);
+            double rangeb = rangebCache[0];
+            double rangef = rangefCache[0];
+            telemetry.addData("Range value:", rangef);
+            telemetry.addData("Range2 value:", rangeb);
+
+            error = (rangef - rangeb)/100;
+            if (error > .15)
+                error = .15;
+            else if (error < .05 && error > 0)
+                error = .05;
+            else if (error < -.15)
+                error = -.15;
+            else if (error < 0 && error > -.05)
+                error = -.05;
+            telemetry.addData("error", error);
+
+            lDrive1.setPower(0+error);
+            lDrive2.setPower(0+error);
+            rDrive1.setPower(0-error);
+            rDrive2.setPower(0-error);
+            telemetry.update();
+            if (rangef > 200 || rangeb > 200 || rangeb == -1 || rangef == -1)
+                done = false;
+            else {
+                if (rangef >= rangeb+1)
+                    done = true;
+                else
+                    done = false;
+            }
+        }
+        lDrive1.setPower(0);
+        rDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive2.setPower(0);
+    }
+
+    private void driveTurn(double speed){
+        lDrive1.setPower(-speed);
+        lDrive2.setPower(-speed);
+        rDrive1.setPower(speed);
+        rDrive2.setPower(speed);
     }
 
     public void runOpMode() throws InterruptedException {

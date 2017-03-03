@@ -5,9 +5,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
-@Autonomous(name="cf_2_ball", group="LinearOPMode")
+@Autonomous(name="cf_2_ball_park", group="LinearOPMode")
 
-public class cf_2_ball_IL_state extends LinearOpMode {
+public class cf_2_ball_park_IL_state extends LinearOpMode {
     private DcMotor catapult;
     //private DcMotor sweeper;
     private DcMotor lDrive1;
@@ -146,6 +146,11 @@ public class cf_2_ball_IL_state extends LinearOpMode {
         loadBall();
         fire();
         sweeper.setPower(0);
+        distance = 40;
+        maxSpeed = 1;
+        direction = 1;
+        encoderDrive(distance, maxSpeed, direction);
+        sleep(5000);
 
     }
 }
