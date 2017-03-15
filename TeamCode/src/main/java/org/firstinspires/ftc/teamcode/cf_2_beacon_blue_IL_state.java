@@ -519,7 +519,7 @@ public class cf_2_beacon_blue_IL_state extends LinearOpMode {
             if (rangef > 200 || rangeb > 200 || rangeb == -1 || rangef == -1)
                 done = false;
             else {
-                if (rangef > rangeb-1)
+                if (rangef >= rangeb-1)
                     done = true;
                 else
                     done = false;
@@ -599,9 +599,9 @@ public class cf_2_beacon_blue_IL_state extends LinearOpMode {
         // Push the button for red
         recognizeColorBlue(-1);
         wrongBlue();
-        lineUp();
+        //lineUp();
         encoderTurn(-0.3, -11);
-        distance = 12;
+        distance = 10;
         maxSpeed = .5;
         direction = 1;
         encoderDrive(distance, maxSpeed, direction);

@@ -263,7 +263,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
         RANGE2Reader.engage();
 
-        double error = 0;
+        double error;
         boolean done = false;
 
         while (!done && opModeIsActive()) {
@@ -492,7 +492,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         I2cDeviceSynch RANGE2Reader = new I2cDeviceSynchImpl(RANGE2, RANGE2ADDRESS, false);
         RANGE2Reader.engage();
 
-        double error = 0;
+        double error;
         boolean done = false;
 
         while (!done && opModeIsActive()) {
@@ -522,7 +522,7 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
             if (rangef > 200 || rangeb > 200 || rangeb == -1 || rangef == -1)
                 done = false;
             else {
-                if (rangeb > rangef-1)
+                if (rangeb >= rangef-1)
                     done = true;
                 else
                     done = false;
@@ -604,9 +604,9 @@ public class cf_2_beacon_red_IL_state extends LinearOpMode {
         // Push the button for red
         recognizeColorRed(1);
         wrongRed();
-        lineUp();
+        //lineUp();
         encoderTurn(-0.3, -11);
-        distance = 12;
+        distance = 10;
         maxSpeed = .5;
         direction = 1;
         encoderDrive(distance, maxSpeed, direction);

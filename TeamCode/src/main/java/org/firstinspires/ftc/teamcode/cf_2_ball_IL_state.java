@@ -38,7 +38,7 @@ public class cf_2_ball_IL_state extends LinearOpMode {
 
         if (direction == 1) {
             while (rDrive1.getCurrentPosition() < rDrive1.getTargetPosition() - 5 && opModeIsActive()) {
-                drive(maxSpeed);
+                drive(maxSpeed, maxSpeed);
                 telemetry.addData("1. speed", maxSpeed);
                 updateTelemetry(telemetry);
             }
@@ -46,7 +46,7 @@ public class cf_2_ball_IL_state extends LinearOpMode {
         }
         else if (direction == -1) {
             while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
-                drive(-maxSpeed);
+                drive(-maxSpeed, -maxSpeed);
                 telemetry.addData("1. speed", maxSpeed);
                 updateTelemetry(telemetry);
             }
@@ -59,17 +59,11 @@ public class cf_2_ball_IL_state extends LinearOpMode {
         }
     }
 
-    private void drive(double speed){
-        lDrive1.setPower(speed);
-        lDrive2.setPower(speed);
-        rDrive1.setPower(speed);
-        rDrive2.setPower(speed);
-    }
-    private void driveTurn(double speed){
-        lDrive1.setPower(-speed);
-        lDrive2.setPower(-speed);
-        rDrive1.setPower(speed);
-        rDrive2.setPower(speed);
+    private void drive(double leftSpeed, double rightSpeed){
+        lDrive1.setPower(leftSpeed);
+        lDrive2.setPower(leftSpeed);
+        rDrive1.setPower(rightSpeed);
+        rDrive2.setPower(rightSpeed);
     }
 
     private void driveStop(){

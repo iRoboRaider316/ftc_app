@@ -23,9 +23,15 @@ public class crossFireTeleOp extends OpMode{
     Servo hopper;
     Servo button;
     Servo belt;
+    Servo wheels;
     TouchSensor touch;
     int direction = 0;
     int power = 1;
+    int sideWheels = 1;
+    boolean wheelsDown = false;
+    boolean wheelsUp = false;
+    boolean halfSpeed = false;
+    boolean fullSpeed = false;
 
 
     public void init() {
@@ -42,13 +48,14 @@ public class crossFireTeleOp extends OpMode{
         color = hardwareMap.colorSensor.get("color");
         button = hardwareMap.servo.get("button");
         belt = hardwareMap.servo.get("belt");
+        wheels = hardwareMap.servo.get("wheels");
         rDrive1.setDirection(DcMotor.Direction.REVERSE);
         rDrive2.setDirection(DcMotor.Direction.REVERSE);
 
         belt.setPosition(.5);
         button.setPosition(.5);
         hopper.setPosition(.8);
-
+        wheels.setPosition(.2);
 
     }
 
@@ -124,13 +131,51 @@ public class crossFireTeleOp extends OpMode{
             sweeper.setPower(0);
         }
 
+        // Switch case to control wheel position
+        if (gamepad1.left_bumper && sideWheels == 1){
+            wheelsDown = true;
+        }
+        else if (wheelsDown && !gamepad1.left_bumper){
+            sideWheels = 2;
+            wheelsDown = false;
+        }
+        else if (gamepad1.left_bumper && sideWheels == 2){
+            wheelsUp = true;
+        }
+        else if (wheelsUp && !gamepad1.left_bumper){
+            sideWheels = 1;
+            wheelsUp = false;
+        }
+
+        switch (sideWheels){
+            case 1:
+                wheels.setPosition(.2);
+                sideWheels = 1;
+                break;
+            case 2:
+                wheels.setPosition(.85);
+                sideWheels = 2;
+                break;
+            default:
+                wheels.setPosition(.2);
+                break;
+        }
+
         // Universal drive train power switch case
-        if (gamepad1.right_bumper && power == 1)
-            // cut to half speed
+        if (gamepad1.right_bumper && power == 1){
+            halfSpeed = true;
+        }
+        else if (halfSpeed && !gamepad1.right_bumper){
             power = 2;
-        else if (gamepad1.right_bumper && power == 2)
-            // set to full speed
+            halfSpeed = false;
+        }
+        else if (gamepad1.right_bumper && power == 2){
+            fullSpeed = true;
+        }
+        else if (fullSpeed && !gamepad1.right_bumper){
             power = 1;
+            fullSpeed = false;
+        }
 
         switch (power){
             case 1:

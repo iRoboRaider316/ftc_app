@@ -5,9 +5,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="GyroTurn", group="Methods")
-@Disabled
+//@Disabled
 public class GyroTurnMethod extends LinearOpMode {
 
     DcMotor lDrive1;
@@ -40,7 +42,107 @@ public class GyroTurnMethod extends LinearOpMode {
         // End of setting up Gyro
     }
 
-    // Function to use the gyro to do a spinning turn in place.
+    private void timedGyroTurn (int targetHeading, double time){
+        //boolean done = false;
+        double error;
+        double currentHeading;
+        double kp = .0025;//.0035;
+        double power;
+        ElapsedTime runtime = new ElapsedTime();
+        gyro.resetZAxisIntegrator();
+        runtime.reset();
+        sleep(250);
+
+        while (runtime.seconds() < time && opModeIsActive()){
+            currentHeading = -gyro.getIntegratedZValue();
+
+            error = (targetHeading-currentHeading);
+            if (error > 0)
+                power = .15+(error*kp);
+            else if (error < 0)
+                power = -.15+(error*kp);
+            else
+                power = 0;
+
+//            error = Range.clip(error, -.3, .3);
+//            if (error > 0 && error < .15)
+//                error = .15;
+//            else if (error < 0 && error > -.15)
+//                error = -.15;
+
+            drive(0+power, 0-power);
+
+            telemetry.addData("error", error);
+            telemetry.addData("power", power);
+            telemetry.addData("currentHeading", currentHeading);
+            telemetry.addData("targetHeading", targetHeading);
+            telemetry.update();
+
+//            if (currentHeading <= targetHeading+1 && currentHeading >= targetHeading-1)
+//                done = true;
+//            else
+//                done = false;
+
+        }
+        driveStop();
+    }
+
+    private void gyroTurn (int targetHeading){
+        boolean done = false;
+        double error;
+        double currentHeading;
+        double kp = .0035;
+        double power;
+        ElapsedTime runtime = new ElapsedTime();
+        gyro.resetZAxisIntegrator();
+        runtime.reset();
+        sleep(250);
+
+        while (!done && opModeIsActive()){
+            currentHeading = -gyro.getIntegratedZValue();
+
+            error = (targetHeading-currentHeading);
+            power = error*kp;
+
+            error = Range.clip(error, -.3, .3);
+            if (error > 0 && error < .15)
+                error = .15;
+            else if (error < 0 && error > -.15)
+                error = -.15;
+
+            drive(0+power, 0-power);
+
+            telemetry.addData("error", error);
+            telemetry.addData("power", power);
+            telemetry.addData("currentHeading", currentHeading);
+            telemetry.addData("targetHeading", targetHeading);
+            telemetry.update();
+
+            if (currentHeading <= targetHeading+1 && currentHeading >= targetHeading-1)
+                done = true;
+            else
+                done = false;
+
+        }
+        driveStop();
+    }
+
+
+
+    private void drive(double leftSpeed, double rightSpeed){
+        lDrive1.setPower(leftSpeed);
+        lDrive2.setPower(leftSpeed);
+        rDrive1.setPower(rightSpeed);
+        rDrive2.setPower(rightSpeed);
+    }
+
+    private void driveStop(){
+        lDrive1.setPower(0);
+        lDrive2.setPower(0);
+        rDrive1.setPower(0);
+        rDrive2.setPower(0);
+    }
+    /*// Function to use the gyro to do a spinning turn in place.
     // It points the robot at an absolute heading, not a relative turn.  0 will point robot to same
     // direction we were at the start of program.
     // Pass:
@@ -168,7 +270,7 @@ public class GyroTurnMethod extends LinearOpMode {
             }
         }
         return (result);
-    }
+    }*/
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -200,9 +302,15 @@ public class GyroTurnMethod extends LinearOpMode {
 
         waitForStart();
 
-        targetHeading = 45;
-        maxSpeed = 1;
-        direction = 1;
-        gyroTurn(targetHeading, maxSpeed, direction);
+        targetHeading = -45;
+        gyroTurn(targetHeading);
+        while (opModeIsActive()){
+            telemetry.addData("Heading", -gyro.getIntegratedZValue());
+            telemetry.update();
+        }
+//
+//        drive(.12,-.12);
+//        sleep(8000);
+//        driveStop();
     }
 }

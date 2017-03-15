@@ -5,9 +5,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
-@Autonomous(name="cf_2_ball_park", group="LinearOPMode")
+@Autonomous(name="cf_2_ball_NSR", group="LinearOPMode")
 
-public class cf_2_ball_park_IL_state extends LinearOpMode {
+public class cf_2_ball_NSR extends LinearOpMode {
     private DcMotor catapult;
     //private DcMotor sweeper;
     private DcMotor lDrive1;
@@ -20,34 +20,32 @@ public class cf_2_ball_park_IL_state extends LinearOpMode {
     private Servo hopper;
     private TouchSensor touch;
 
-
-    // This is the Drive Method
-    // It will take in two static values: distance and maxSpeed.
-    // It will then calculate the encoder counts to drive and drive the distance at the specified power,
-    // accelerating to max speed for the first third of the distance, maintaining that speed for the second third,
-    // and decelerating to a minimum speed for the last third.
-    // If the robot deviates from the initial gyro heading, it will correct itself proportionally to the error.
-    private void encoderDrive(double distance, double maxSpeed, int direction) throws InterruptedException {
+    private void encoderDrive(double distance, double leftSpeed, double rightSpeed, int direction) throws InterruptedException {
         int ENCODER_CPR = 1120; // Encoder counts per Rev
         double gearRatio = 1.75; // [Gear Ratio]:1
         double circumference = 13.10; // Wheel circumference
         double ROTATIONS = distance / (circumference * gearRatio); // Number of rotations to drive
         double COUNTS = ENCODER_CPR * ROTATIONS; // Number of encoder counts to drive
 
-        rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
+        if (direction == 1)
+            rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
+        else if (direction ==-1)
+            rDrive1.setTargetPosition(rDrive1.getCurrentPosition() - (int) COUNTS);
 
         if (direction == 1) {
             while (rDrive1.getCurrentPosition() < rDrive1.getTargetPosition() - 5 && opModeIsActive()) {
-                drive(maxSpeed, maxSpeed);
-                telemetry.addData("1. speed", maxSpeed);
+                drive(leftSpeed, rightSpeed);
+                telemetry.addData("1. left speed", leftSpeed);
+                telemetry.addData("2. right speed", rightSpeed);
                 updateTelemetry(telemetry);
             }
             driveStop();
         }
         else if (direction == -1) {
-            while (Math.abs(rDrive1.getCurrentPosition()) < Math.abs(rDrive1.getTargetPosition() - 5) && opModeIsActive()) {
-                drive(-maxSpeed, -maxSpeed);
-                telemetry.addData("1. speed", maxSpeed);
+            while (rDrive1.getCurrentPosition() > rDrive1.getTargetPosition() + 5 && opModeIsActive()) {
+                drive(-leftSpeed, -rightSpeed);
+                telemetry.addData("1. left speed", leftSpeed);
+                telemetry.addData("2. right speed", rightSpeed);
                 updateTelemetry(telemetry);
             }
             driveStop();
@@ -121,30 +119,37 @@ public class cf_2_ball_park_IL_state extends LinearOpMode {
         belt.setPosition(.5);
 
         double distance;
-        double maxSpeed;
+        double leftSpeed;
+        double rightSpeed;
         int direction;
 
         waitForStart();
-
-        //sleep(10000);
+        // Drive forward from wall
         distance = 25;
-        maxSpeed = .5;
+        leftSpeed = .5;
+        rightSpeed = .5;
         direction = 1;
-        encoderDrive(distance, maxSpeed, direction);
+        encoderDrive(distance, leftSpeed, rightSpeed, direction);
         sleep(1000);
+        // deploy sweeper
         sweeper.setPower(1);
         sleep(500);
         sweeper.setPower(-1);
+        // fire balls
         fire();
         sleep(5000);
+        // load any balls that have been picked up
         loadBall();
+        // fire balls
         fire();
+        // stop sweeper
         sweeper.setPower(0);
+        // drive forward to knock off cap ball
         distance = 40;
-        maxSpeed = 1;
+        leftSpeed = 1;
+        rightSpeed = 1;
         direction = 1;
-        encoderDrive(distance, maxSpeed, direction);
-        sleep(5000);
+        encoderDrive(distance, leftSpeed, rightSpeed, direction);
 
     }
 }
