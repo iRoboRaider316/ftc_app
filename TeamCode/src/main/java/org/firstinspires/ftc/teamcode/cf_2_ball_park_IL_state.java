@@ -1,12 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @Autonomous(name="cf_2_ball_park", group="LinearOPMode")
-
+@Disabled
 public class cf_2_ball_park_IL_state extends LinearOpMode {
     private DcMotor catapult;
     //private DcMotor sweeper;
