@@ -1,59 +1,42 @@
 package org.firstinspires.ftc.teamcode;
-//import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
-//import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name="CrossFireTeleOp", group="TeleOp")
-//@Disabled
-public class CrossfireTeleop extends OpMode {
-    private DcMotor rDrive1;
-    private DcMotor rDrive2;
-    private DcMotor lDrive1;
-    private DcMotor lDrive2;
-    private DcMotor catapult;
-    private DcMotor sweeper;
-    private DcMotor lift1;
-    private DcMotor lift2;
-    private Servo belt;
-    private Servo hopper;
-    //private TouchSensor touch;
+@TeleOp(name="CrossFire TeleOp", group="TeleOp")
 
-    int drive=0;
-    float leftPower;
-    float rightPower;
+public class CrossfireTeleop extends OpMode{
+    ColorSensor color;
+    DcMotor rDrive1;
+    DcMotor rDrive2;
+    DcMotor lDrive1;
+    DcMotor lDrive2;
+    DcMotor catapult;
+    DcMotor sweeper;
+    DcMotor lift1;
+    DcMotor lift2;
+    Servo hopper;
+    Servo button;
+    Servo belt;
+    Servo wheels;
+    TouchSensor touch;
+    int direction = 0;
+    int power = 1;
+    int sideWheels = 1;
+    int drive = 0;
+    boolean wheelsDown = false;
+    boolean wheelsUp = false;
+    boolean halfSpeed = false;
+    boolean fullSpeed = false;
+    double floor = 0.13;
 
-    // Function to reset the catapult to the launch position
-    /*private void launchPosition() throws InterruptedException{
-        while (!touch.isPressed() && opModeIsActive()){
-            catapult.setPower(0.5);
-        }
-        catapult.setPower(0);
-    }
-    // Function that utlizes the launchPosition, handleBall, and launch functions to fire and reload the catapult
-    private void fire() throws InterruptedException {
-        launchBall();
-        launchPosition();
-        loadBall();
-    }
-    // Function to load the catapult
-    private void loadBall() throws InterruptedException {
-        hopper.setPosition(.5);
-        Thread.sleep(1000);
-        hopper.setPosition(.8);
-    }
-    // Fires the ball
-    private void launchBall() throws InterruptedException {
-        catapult.setPower(1);
-        Thread.sleep(800);
-        catapult.setPower(0);
-    }*/
-
-    @Override
-    public void init(){
+    public void init() {
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
         lDrive1 = hardwareMap.dcMotor.get("lDrive1");
@@ -62,14 +45,25 @@ public class CrossfireTeleop extends OpMode {
         catapult = hardwareMap.dcMotor.get("catapult");
         lift1 = hardwareMap.dcMotor.get("lift1");
         lift2 = hardwareMap.dcMotor.get("lift2");
-        belt = hardwareMap.servo.get("belt");
         hopper = hardwareMap.servo.get("hopper");
+        touch = hardwareMap.touchSensor.get("t");
+        color = hardwareMap.colorSensor.get("color");
+        button = hardwareMap.servo.get("button");
+        belt = hardwareMap.servo.get("belt");
+        wheels = hardwareMap.servo.get("wheels");
         rDrive1.setDirection(DcMotor.Direction.REVERSE);
         rDrive2.setDirection(DcMotor.Direction.REVERSE);
-        //touch = hardwareMap.touchSensor.get("t");
+
+        belt.setPosition(.5);
+        button.setPosition(.5);
+        hopper.setPosition(.8);
+        wheels.setPosition(.2);
+
     }
 
+
     public void loop() {
+        belt.setPosition(.5);
         float rStick1 = gamepad1.left_stick_y;
         float lStick1 = gamepad1.right_stick_y;
         float lStick2 = gamepad2.left_stick_y;
@@ -78,77 +72,168 @@ public class CrossfireTeleop extends OpMode {
         boolean left = gamepad2.dpad_left;
         boolean down = gamepad2.dpad_down;
         boolean y = gamepad2.y;
-        //boolean x = gamepad2.x;
+        boolean x = gamepad2.x;
         boolean a = gamepad2.a;
         boolean b = gamepad2.b;
         boolean rBumper1 = gamepad1.right_bumper;
         boolean lBumper1 = gamepad1.left_bumper;
-        //boolean rBumper2 = gamepad2.right_bumper;
-        //boolean lBumper2 = gamepad2.left_bumper;
-        float leftPower;
-        float rightPower;
-        //float lTrigger2 = gamepad2.left_trigger;
-        //float rTrigger2 = gamepad2.right_trigger;
+        boolean rBumper2 = gamepad2.right_bumper;
+        boolean lBumper2 = gamepad2.left_bumper;
+        double leftPower;
+        double rightPower;
+        float lTrigger2 = gamepad2.left_trigger;
+        float speed;
 
         ///OPERATOR CODE\\\
+
+        if (up) {
+            sweeper.setPower(-1);
+        } else if (down) {
+            sweeper.setPower(1);
+        } else if (left) {
+            sweeper.setPower(0);
+        }
+        if (y) {
+            catapult.setPower(1);
+        } else if (a) {
+            catapult.setPower(-1);
+        } else {
+            catapult.setPower(0);
+        }
+        if (b) {
+            hopper.setPosition(.5);
+        } else {
+            hopper.setPosition(.8);
+        }
+
+        lift1.setPower(gamepad2.right_stick_y);
+        lift2.setPower(gamepad2.right_stick_y);
+
         if (lStick2 > .5)
             belt.setPosition(0);
-        else if(lStick2 < -.5)
+        else if (lStick2 < -.5)
             belt.setPosition(1);
         else
             belt.setPosition(.5);
 
-        // Set collection to on, off, or reversed
-        if (up)
-            sweeper.setPower(-1);
-        else if (down)
-            sweeper.setPower(1);
-        else if (left)
-            sweeper.setPower(0);
-
-        // Manual catapult controls
-        if (y)
-            catapult.setPower(1);
-        else if (a)
-            catapult.setPower(-1);
-        else
-            catapult.setPower(0);
-
-        // Manual catapult loading
-        if (b)
-            hopper.setPosition(.5);
-        else
-            hopper.setPosition(.8);
-
-        lift1.setPower(rStick2);
-        lift2.setPower(rStick2);
 
         ///DRIVER CODE\\\
-        // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
 
+        //This code controls the side button pusher
+        if (gamepad1.b)
+            button.setPosition(0);
+        else if (gamepad1.x)
+            button.setPosition(1);
+        else
+            button.setPosition(0.5);
 
-        // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
-        if (gamepad1.a) {
-            drive = 1;
+        if (gamepad1.dpad_left) {
+            sweeper.setPower(-1);
+        } else if (gamepad1.dpad_right) {
+            sweeper.setPower(0);
         }
-        if (gamepad1.y) {
-            drive = 2;
+
+        // Switch case to control wheel position
+        if (gamepad1.left_bumper && sideWheels == 1){
+            wheelsDown = true;
         }
-        switch (drive){
+        else if (wheelsDown && !gamepad1.left_bumper){
+            sideWheels = 2;
+            wheelsDown = false;
+        }
+        else if (gamepad1.left_bumper && sideWheels == 2){
+            wheelsUp = true;
+        }
+        else if (wheelsUp && !gamepad1.left_bumper){
+            sideWheels = 1;
+            wheelsUp = false;
+        }
+
+        switch (sideWheels){
             case 1:
-                rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/2);
-                leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/2);
+                wheels.setPosition(.2);
+                sideWheels = 1;
+                break;
+            case 2:
+                wheels.setPosition(.85);
+                sideWheels = 2;
+                break;
+            default:
+                wheels.setPosition(.2);
+                break;
+        }
+
+        // Universal drive train power switch case
+        if (gamepad1.right_bumper && power == 1){
+            halfSpeed = true;
+        }
+        else if (halfSpeed && !gamepad1.right_bumper){
+            power = 2;
+            halfSpeed = false;
+        }
+        else if (gamepad1.right_bumper && power == 2){
+            fullSpeed = true;
+        }
+        else if (fullSpeed && !gamepad1.right_bumper){
+            power = 1;
+            fullSpeed = false;
+        }
+
+        switch (power){
+            case 1:
+                // divide all powers by 1 (full speed)
+                speed = 1;
+                power = 1;
+                break;
+            case 2:
+                // divide all powers by 2 (half speed
+                speed = 2;
+                power = 2;
+                break;
+            default:
+                speed = 1;
+                break;
+        }
+
+        if (gamepad1.y)
+            // robot sweeper is forward
+            direction = 1;
+        else if (gamepad1.a)
+            // robot cap ball lift is forward
+            direction = 2;
+
+        switch (drive) {
+            case 1:
+                // forward default
+                rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) - floor;
+                leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) - floor;
                 drive = 1;
                 break;
             case 2:
-                rightPower = (gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
-                leftPower = (gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
+                // backward
+                rightPower = ((gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) + floor;
+                leftPower = ((gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) + floor;
                 drive = 2;
                 break;
+            case 3:
+                rightPower = (Math.abs(gamepad1.right_stick_y) * -1) - floor;
+                leftPower = (Math.abs(gamepad1.right_stick_y) * -1) - floor;
+                drive = 1;
+                break;
+            case 4:
+                rightPower = Math.abs(gamepad1.right_stick_y) + floor;
+                leftPower = Math.abs(gamepad1.right_stick_y) + floor;
+                drive = 1;
+                break;
+
             default:
-                leftPower = (gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y));
-                rightPower = (gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
+                leftPower = ((gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) - floor;
+                rightPower = ((gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) - floor;
         }
+
+        leftPower = Range.clip(leftPower, -1, 1);
+        rightPower = Range.clip(rightPower, -1, 1);
+
         lDrive1.setPower(leftPower);
         lDrive2.setPower(leftPower);
         rDrive1.setPower(rightPower);

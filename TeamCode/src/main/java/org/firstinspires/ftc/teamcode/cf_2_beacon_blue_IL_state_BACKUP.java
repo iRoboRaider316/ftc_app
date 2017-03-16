@@ -31,8 +31,11 @@ public class cf_2_beacon_blue_IL_state_BACKUP extends LinearOpMode {
     private OpticalDistanceSensor fODSensor;
     private OpticalDistanceSensor bODSensor;
 
-    public ModernRoboticsI2cRangeSensor fRangeSensor;
-    public ModernRoboticsI2cRangeSensor bRangeSensor;
+    private ModernRoboticsI2cRangeSensor fRangeSensor;
+    private ModernRoboticsI2cRangeSensor bRangeSensor;
+
+    int FORWARD  =  1;
+    int BACKWARD = -1;
 
     // Function that utlizes the launchPosition, handleBall, and launch functions to fire and reload the catapult
     private void fire() throws InterruptedException {
@@ -64,36 +67,18 @@ public class cf_2_beacon_blue_IL_state_BACKUP extends LinearOpMode {
         catapult.setPower(0);
     }
 
-    private void driveForwardToWall() throws InterruptedException {
+    // This function gets the robot to the wall with the Beacons
+    // so that we can wall track. 1st parameter: direction, 2nd parameter: the Range sensor to use
+    private void driveToWall(int direction, ModernRoboticsI2cRangeSensor range) throws InterruptedException {
         telemetry.addData("Status", "Initialized");
-        telemetry.addData("Range2 value:", bRangeSensor.getDistance(DistanceUnit.CM));
+        telemetry.addData("Range value:", range.getDistance(DistanceUnit.CM));
         telemetry.update();
-        lDrive1.setPower(0.4);
-        rDrive1.setPower(0.4);
-        lDrive2.setPower(0.4);
-        rDrive2.setPower(0.4);
-        //sleep(2000);
-        while (bRangeSensor.getDistance(DistanceUnit.CM) >= 12 && opModeIsActive()) {
-            telemetry.addData("Range2 value:", bRangeSensor.getDistance(DistanceUnit.CM));
-            telemetry.update();
-        }
-        lDrive1.setPower(0);
-        rDrive1.setPower(0);
-        lDrive2.setPower(0);
-        rDrive2.setPower(0);
-    }
-
-    private void driveBackwardToWall() throws InterruptedException {
-        telemetry.addData("Status", "Initialized");
-        telemetry.addData("Range value:", fRangeSensor.getDistance(DistanceUnit.CM));
-        telemetry.update();
-        lDrive1.setPower(-0.4);
-        rDrive1.setPower(-0.4);
-        lDrive2.setPower(-0.4);
-        rDrive2.setPower(-0.4);
-
-        while (fRangeSensor.getDistance(DistanceUnit.CM) >= 12 && opModeIsActive()) {
-            telemetry.addData("Range value:", (fRangeSensor.getDistance(DistanceUnit.CM)));
+        lDrive1.setPower(0.4 * direction);
+        rDrive1.setPower(0.4 * direction);
+        lDrive2.setPower(0.4 * direction);
+        rDrive2.setPower(0.4 * direction);
+        while (range.getDistance(DistanceUnit.CM) >= 12 && opModeIsActive()) {
+            telemetry.addData("Range value:", range.getDistance(DistanceUnit.CM));
             telemetry.update();
         }
         lDrive1.setPower(0);
@@ -227,8 +212,6 @@ public class cf_2_beacon_blue_IL_state_BACKUP extends LinearOpMode {
         telemetry.addData("Blue", color.blue());
         telemetry.addData("Red", color.red());
         telemetry.update();
-
-
     }
 
     // Fully working as of 2/8/17
@@ -447,7 +430,7 @@ public class cf_2_beacon_blue_IL_state_BACKUP extends LinearOpMode {
         direction = 1;
         drive(distance, maxSpeed, direction);
         // Drive forward until the range sensor detects the wall
-        driveForwardToWall();
+        driveToWall(FORWARD, fRangeSensor);
         // Turn until parallel with the wall using both range sensors
         lineUp();
         // Track forward along the wall until the white line
@@ -477,6 +460,5 @@ public class cf_2_beacon_blue_IL_state_BACKUP extends LinearOpMode {
         direction = 1;
         drive(distance, maxSpeed, direction);
         fire();
-
     }
 }
