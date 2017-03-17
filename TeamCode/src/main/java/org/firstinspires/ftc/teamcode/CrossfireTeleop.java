@@ -34,7 +34,6 @@ public class CrossfireTeleop extends OpMode{
     boolean wheelsUp = false;
     boolean halfSpeed = false;
     boolean fullSpeed = false;
-    double floor = 0.13;
 
     public void init() {
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
@@ -83,6 +82,10 @@ public class CrossfireTeleop extends OpMode{
         double rightPower;
         float lTrigger2 = gamepad2.left_trigger;
         float speed;
+        double floorLeft;
+        double floorRight;
+        double lDriveDirection;
+        double rDriveDirection;
 
         ///OPERATOR CODE\\\
 
@@ -202,35 +205,56 @@ public class CrossfireTeleop extends OpMode{
             // robot cap ball lift is forward
             direction = 2;
 
+        // These algorithms determine the direction of Crossfire's speed and uses the result later
+        if(gamepad1.left_stick_y != 0) {
+            lDriveDirection = gamepad1.left_stick_y / Math.abs(gamepad1.left_stick_y);
+        } else {
+            lDriveDirection = 1;
+        }
+
+        if(gamepad1.right_stick_y != 0) {
+            rDriveDirection = gamepad1.right_stick_y / Math.abs(gamepad1.right_stick_y);
+        } else {
+            rDriveDirection = 1;
+        }
+
+        // This is the floor-ceiling algorithm we use to keep Crossfire moving without wearing too
+        // much battery power
+        floorLeft = gamepad1.left_stick_y  ==  0  ? 0 : 0.13 * lDriveDirection;
+        floorRight = gamepad1.right_stick_y  == 0 ? 0 : 0.13 * rDriveDirection;
+
+        // This is the switch case that sets the motor powers of Crossfire. Floor-Ceiling algorithms
+        // have been included for greater control
         switch (drive) {
             case 1:
                 // forward default
-                rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) - floor;
-                leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) - floor;
+                rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) + floorLeft;
+                leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) + floorRight;
                 drive = 1;
                 break;
             case 2:
                 // backward
-                rightPower = ((gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) + floor;
-                leftPower = ((gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) + floor;
+                rightPower = ((gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) + floorRight;
+                leftPower = ((gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) + floorLeft;
                 drive = 2;
                 break;
             case 3:
-                rightPower = (Math.abs(gamepad1.right_stick_y) * -1) - floor;
-                leftPower = (Math.abs(gamepad1.right_stick_y) * -1) - floor;
+                rightPower = (Math.abs(gamepad1.right_stick_y) * -1) + floorRight;
+                leftPower = (Math.abs(gamepad1.right_stick_y) * -1) + floorRight;
                 drive = 1;
                 break;
             case 4:
-                rightPower = Math.abs(gamepad1.right_stick_y) + floor;
-                leftPower = Math.abs(gamepad1.right_stick_y) + floor;
+                rightPower = Math.abs(gamepad1.right_stick_y) + floorRight;
+                leftPower = Math.abs(gamepad1.right_stick_y) + floorRight;
                 drive = 1;
                 break;
 
             default:
-                leftPower = ((gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) - floor;
-                rightPower = ((gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) - floor;
+                leftPower = ((gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) + floorLeft;
+                rightPower = ((gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) + floorRight;
         }
 
+        // Clips off the power in case it's over 1 or under -1 from the floor-ceiling function.
         leftPower = Range.clip(leftPower, -1, 1);
         rightPower = Range.clip(rightPower, -1, 1);
 
