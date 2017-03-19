@@ -205,31 +205,18 @@ public class CrossfireTeleop extends OpMode{
             // robot cap ball lift is forward
             direction = 2;
 
-        // These algorithms determine the direction of Crossfire's speed and uses the result later
-        if(gamepad1.left_stick_y != 0) {
-            lDriveDirection = gamepad1.left_stick_y / Math.abs(gamepad1.left_stick_y);
-        } else {
-            lDriveDirection = 1;
-        }
-
-        if(gamepad1.right_stick_y != 0) {
-            rDriveDirection = gamepad1.right_stick_y / Math.abs(gamepad1.right_stick_y);
-        } else {
-            rDriveDirection = 1;
-        }
-
         // This is the floor-ceiling algorithm we use to keep Crossfire moving without wearing too
         // much battery power
-        floorLeft = gamepad1.left_stick_y  ==  0  ? 0 : 0.13 * lDriveDirection;
-        floorRight = gamepad1.right_stick_y  == 0 ? 0 : 0.13 * rDriveDirection;
+        floorLeft = gamepad1.left_stick_y <= 0.01 && gamepad1.left_stick_y >= -0.01 ? 0 : 0.13;
+        floorRight = gamepad1.right_stick_y <= 0.01 && gamepad1.right_stick_y >= -0.01 ? 0 : 0.13;
 
         // This is the switch case that sets the motor powers of Crossfire. Floor-Ceiling algorithms
         // have been included for greater control
         switch (drive) {
             case 1:
                 // forward default
-                rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) + floorLeft;
-                leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) + floorRight;
+                rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) - floorLeft;
+                leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) - floorRight;
                 drive = 1;
                 break;
             case 2:
@@ -239,8 +226,8 @@ public class CrossfireTeleop extends OpMode{
                 drive = 2;
                 break;
             case 3:
-                rightPower = (Math.abs(gamepad1.right_stick_y) * -1) + floorRight;
-                leftPower = (Math.abs(gamepad1.right_stick_y) * -1) + floorRight;
+                rightPower = (Math.abs(gamepad1.right_stick_y) * -1) - floorRight;
+                leftPower = (Math.abs(gamepad1.right_stick_y) * -1) - floorRight;
                 drive = 1;
                 break;
             case 4:
