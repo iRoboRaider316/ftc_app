@@ -42,7 +42,7 @@ public class CrossfireTeleop extends OpMode{
             return inputPower * Math.abs(inputPower);
         }
     }
-
+// ========================== INIT ================================
     public void init() {
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
@@ -68,8 +68,8 @@ public class CrossfireTeleop extends OpMode{
 
     }
 
-
     public void loop() {
+        // These variables are for simplifying the code
         belt.setPosition(.5);
         float lStick1 = gamepad1.left_stick_y;
         float rStick1 = gamepad1.right_stick_y;
@@ -79,24 +79,17 @@ public class CrossfireTeleop extends OpMode{
         boolean left = gamepad2.dpad_left;
         boolean down = gamepad2.dpad_down;
         boolean y = gamepad2.y;
-        boolean x = gamepad2.x;
         boolean a = gamepad2.a;
         boolean b = gamepad2.b;
         boolean rBumper1 = gamepad1.right_bumper;
         boolean lBumper1 = gamepad1.left_bumper;
-        boolean rBumper2 = gamepad2.right_bumper;
-        boolean lBumper2 = gamepad2.left_bumper;
         double leftPower;
         double rightPower;
-        float lTrigger2 = gamepad2.left_trigger;
         float speed;
         double floorLeft;
         double floorRight;
-        double lDriveDirection;
-        double rDriveDirection;
 
-        ///OPERATOR CODE\\\
-//================================================
+//======================/// OPERATOR CODE \\\=================================
         if (up) {
             sweeper.setPower(-1);
         } else if (down) {
@@ -117,8 +110,8 @@ public class CrossfireTeleop extends OpMode{
             hopper.setPosition(.8);
         }
 
-        lift1.setPower(gamepad2.right_stick_y);
-        lift2.setPower(gamepad2.right_stick_y);
+        lift1.setPower(rStick2);
+        lift2.setPower(rStick2);
 
         if (lStick2 > .5)
             belt.setPosition(0);
@@ -127,9 +120,7 @@ public class CrossfireTeleop extends OpMode{
         else
             belt.setPosition(.5);
 
-
-        ///DRIVER CODE\\\
-//================================================
+//======================///DRIVER CODE\\\=====================================
         //This code controls the side button pusher
         if (gamepad1.b)
             button.setPosition(0);
@@ -145,17 +136,17 @@ public class CrossfireTeleop extends OpMode{
         }
 
         // Switch case to control wheel position
-        if (gamepad1.left_bumper && sideWheels == 1){
+        if (lBumper1 && sideWheels == 1){
             wheelsDown = true;
         }
-        else if (wheelsDown && !gamepad1.left_bumper){
+        else if (wheelsDown && !lBumper1){
             sideWheels = 2;
             wheelsDown = false;
         }
-        else if (gamepad1.left_bumper && sideWheels == 2){
+        else if (lBumper1 && sideWheels == 2){
             wheelsUp = true;
         }
-        else if (wheelsUp && !gamepad1.left_bumper){
+        else if (wheelsUp && !lBumper1){
             sideWheels = 1;
             wheelsUp = false;
         }
@@ -175,17 +166,17 @@ public class CrossfireTeleop extends OpMode{
         }
 
         // Universal drive train power switch case
-        if (gamepad1.right_bumper && power == 1){
+        if (rBumper1 && power == 1){
             halfSpeed = true;
         }
-        else if (halfSpeed && !gamepad1.right_bumper){
+        else if (halfSpeed && !rBumper1){
             power = 2;
             halfSpeed = false;
         }
-        else if (gamepad1.right_bumper && power == 2){
+        else if (rBumper1 && power == 2){
             fullSpeed = true;
         }
-        else if (fullSpeed && !gamepad1.right_bumper){
+        else if (fullSpeed && !rBumper1){
             power = 1;
             fullSpeed = false;
         }
