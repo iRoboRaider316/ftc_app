@@ -35,6 +35,14 @@ public class CrossfireTeleop extends OpMode{
     boolean halfSpeed = false;
     boolean fullSpeed = false;
 
+    public double getDirection(double inputPower) {
+        if(inputPower == 0) {
+            return 1;
+        } else {
+            return inputPower * Math.abs(inputPower);
+        }
+    }
+
     public void init() {
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
@@ -63,8 +71,8 @@ public class CrossfireTeleop extends OpMode{
 
     public void loop() {
         belt.setPosition(.5);
-        float rStick1 = gamepad1.left_stick_y;
-        float lStick1 = gamepad1.right_stick_y;
+        float lStick1 = gamepad1.left_stick_y;
+        float rStick1 = gamepad1.right_stick_y;
         float lStick2 = gamepad2.left_stick_y;
         float rStick2 = gamepad2.right_stick_y;
         boolean up = gamepad2.dpad_up;
@@ -88,7 +96,7 @@ public class CrossfireTeleop extends OpMode{
         double rDriveDirection;
 
         ///OPERATOR CODE\\\
-
+//================================================
         if (up) {
             sweeper.setPower(-1);
         } else if (down) {
@@ -121,7 +129,7 @@ public class CrossfireTeleop extends OpMode{
 
 
         ///DRIVER CODE\\\
-
+//================================================
         //This code controls the side button pusher
         if (gamepad1.b)
             button.setPosition(0);
@@ -207,38 +215,38 @@ public class CrossfireTeleop extends OpMode{
 
         // This is the floor-ceiling algorithm we use to keep Crossfire moving without wearing too
         // much battery power
-        floorLeft = gamepad1.left_stick_y <= 0.01 && gamepad1.left_stick_y >= -0.01 ? 0 : 0.13;
-        floorRight = gamepad1.right_stick_y <= 0.01 && gamepad1.right_stick_y >= -0.01 ? 0 : 0.13;
+        floorLeft = lStick1 <= 0.01 && lStick1 >= -0.01 ? 0 : 0.13 * getDirection(lStick1);
+        floorRight = rStick1 <= 0.01 && rStick1 >= -0.01 ? 0 : 0.13 * getDirection(rStick1);
 
         // This is the switch case that sets the motor powers of Crossfire. Floor-Ceiling algorithms
         // have been included for greater control
         switch (drive) {
             case 1:
                 // forward default
-                rightPower = ((-gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) - floorLeft;
-                leftPower = ((-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) - floorRight;
+                rightPower = ((-lStick1 * Math.abs(lStick1))/speed) + floorLeft;
+                leftPower = ((-rStick1 * Math.abs(rStick1))/speed) + floorRight;
                 drive = 1;
                 break;
             case 2:
                 // backward
-                rightPower = ((gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) + floorRight;
-                leftPower = ((gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) + floorLeft;
+                rightPower = ((rStick1 * Math.abs(rStick1))/speed) + floorRight;
+                leftPower = ((lStick1 * Math.abs(lStick1))/speed) + floorLeft;
                 drive = 2;
                 break;
             case 3:
-                rightPower = (Math.abs(gamepad1.right_stick_y) * -1) - floorRight;
-                leftPower = (Math.abs(gamepad1.right_stick_y) * -1) - floorRight;
+                rightPower = (Math.abs(rStick1) * -1) + floorRight;
+                leftPower = (Math.abs(rStick1) * -1) + floorRight;
                 drive = 1;
                 break;
             case 4:
-                rightPower = Math.abs(gamepad1.right_stick_y) + floorRight;
-                leftPower = Math.abs(gamepad1.right_stick_y) + floorRight;
+                rightPower = Math.abs(rStick1) + floorRight;
+                leftPower = Math.abs(rStick1) + floorRight;
                 drive = 1;
                 break;
 
             default:
-                leftPower = ((gamepad1.left_stick_y * Math.abs(gamepad1.left_stick_y))/speed) + floorLeft;
-                rightPower = ((gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y))/speed) + floorRight;
+                leftPower = ((lStick1 * Math.abs(lStick1))/speed) + floorLeft;
+                rightPower = ((rStick1 * Math.abs(rStick1))/speed) + floorRight;
         }
 
         // Clips off the power in case it's over 1 or under -1 from the floor-ceiling function.
