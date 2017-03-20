@@ -17,10 +17,10 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-@Autonomous(name="cf_red_beacons_NSR", group="LinearOpMode")
+@Autonomous(name="cf_blue_beacons_NSR", group="LinearOpMode")
 //@Disabled
 
-public class cf_red_beacons_NSR extends LinearOpMode {
+public class cf_blue_beacons_NSR extends LinearOpMode {
 
     private DcMotor catapult;
     //private DcMotor sweeper;
@@ -371,7 +371,7 @@ public class cf_red_beacons_NSR extends LinearOpMode {
         distance = 10;
         leftSpeed = .5;
         rightSpeed = .5;
-        direction = -1;
+        direction = 1;
         encoderDrive(distance, leftSpeed, rightSpeed, direction);
         // lower side wheels
         wheels.setPosition(.85);
@@ -379,51 +379,51 @@ public class cf_red_beacons_NSR extends LinearOpMode {
         distance = 60;
         leftSpeed = .62;
         rightSpeed = .75;
-        direction = -1;
+        direction = 1;
         encoderDrive(distance, leftSpeed, rightSpeed, direction);
         // Drive backward
         distance = 25;
         leftSpeed = .5;
         rightSpeed = .45;
-        direction = -1;
+        direction = 1;
         encoderDrive(distance, leftSpeed, rightSpeed, direction);
         // Drive backward until we reach the far white line
-        driveToLine(-1);
+        driveToLine(1);
         // drive backward until we see red strong enough, then push the button
-        huntBeacon(-1, red);
+        huntBeacon(1, blue);
         // double check to make sure we hit the right color
         //wrongColor(red);
         // Drive forward past the line
         distance = 38;
         leftSpeed = .6;
         rightSpeed = .6;
-        direction = 1;
+        direction = -1;
         encoderDrive(distance, leftSpeed, rightSpeed, direction);
         // Track forward along the wall until the next white line
-        driveToLine(1);
+        driveToLine(-1);
         // Push the button for red
-        huntBeacon(1, red);
+        huntBeacon(-1, blue);
         // double check to make sure we hit the right color
         //wrongColor(red);
         // drive back past line
         distance = 11;
         leftSpeed = .5;
         rightSpeed = .5;
-        direction = -1;
+        direction = 1;
         encoderDrive(distance, leftSpeed, rightSpeed, direction);
         // drive forward to the line
-        driveToLine(1);
+        driveToLine(-1);
         // drive forward correct distance for shooting
         distance = 7;
         leftSpeed = .5;
         rightSpeed = .5;
-        direction = 1;
+        direction = -1;
         encoderDrive(distance, leftSpeed, rightSpeed, direction);
         // raise the side wheels
         wheels.setPosition(.2);
         sleep(250);
-        // Turn 90 degrees left to face vortex
-        gyroTurn(-90);
+        // Turn 80 degrees left to face vortex
+        gyroTurn(-75);
         // Drive forward into range
         distance = 5;
         leftSpeed = .5;
@@ -440,8 +440,8 @@ public class cf_red_beacons_NSR extends LinearOpMode {
             sleep(2500);
             driveStop();
             // turn to move cap ball
-            gyroTurn(40);
             gyroTurn(-40);
+            gyroTurn(40);
             // drive onto center
             drive(0.5, 0.5);
             sleep(1000);
@@ -464,7 +464,7 @@ public class cf_red_beacons_NSR extends LinearOpMode {
         }
         else {
             // turn toward ramp
-            gyroTurn(100);
+            gyroTurn(-100);
             // drive into ramp
             distance = 24;
             leftSpeed = .5;

@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 
 public class cf_2_ball_NSR extends LinearOpMode {
     private DcMotor catapult;
-    //private DcMotor sweeper;
     private DcMotor lDrive1;
     private DcMotor lDrive2;
     private DcMotor rDrive1;
@@ -21,64 +20,13 @@ public class cf_2_ball_NSR extends LinearOpMode {
     private Servo wheels;
     private TouchSensor touch;
 
-    private void encoderDrive(double distance, double leftSpeed, double rightSpeed, int direction) throws InterruptedException {
-        int ENCODER_CPR = 1120; // Encoder counts per Rev
-        double gearRatio = 1.75; // [Gear Ratio]:1
-        double circumference = 13.10; // Wheel circumference
-        double ROTATIONS = distance / (circumference * gearRatio); // Number of rotations to drive
-        double COUNTS = ENCODER_CPR * ROTATIONS; // Number of encoder counts to drive
-
-        if (direction == 1)
-            rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
-        else if (direction ==-1)
-            rDrive1.setTargetPosition(rDrive1.getCurrentPosition() - (int) COUNTS);
-
-        if (direction == 1) {
-            while (rDrive1.getCurrentPosition() < rDrive1.getTargetPosition() - 5 && opModeIsActive()) {
-                drive(leftSpeed, rightSpeed);
-                telemetry.addData("1. left speed", leftSpeed);
-                telemetry.addData("2. right speed", rightSpeed);
-                updateTelemetry(telemetry);
-            }
-            driveStop();
-        }
-        else if (direction == -1) {
-            while (rDrive1.getCurrentPosition() > rDrive1.getTargetPosition() + 5 && opModeIsActive()) {
-                drive(-leftSpeed, -rightSpeed);
-                telemetry.addData("1. left speed", leftSpeed);
-                telemetry.addData("2. right speed", rightSpeed);
-                updateTelemetry(telemetry);
-            }
-            driveStop();
-        }
-        else {
-            telemetry.addLine("Invalid direction");
-            telemetry.update();
-            sleep(10000);
-        }
-    }
-
-    private void drive(double leftSpeed, double rightSpeed){
-        lDrive1.setPower(leftSpeed);
-        lDrive2.setPower(leftSpeed);
-        rDrive1.setPower(rightSpeed);
-        rDrive2.setPower(rightSpeed);
-    }
-
-    private void driveStop(){
-        lDrive1.setPower(0);
-        lDrive2.setPower(0);
-        rDrive1.setPower(0);
-        rDrive2.setPower(0);
-    }
-
-    // Function that utlizes the launchPosition, handleBall, and launch functions to fire and reload the catapult
+    // Function that utilizes the launchPosition, handleBall, and launch functions to fire and reload the catapult
     private void fire() throws InterruptedException {
+        sleep(1000);
         launchPosition();
         launchBall();
-        launchPosition();
-        sleep(1000);
         loadBall();
+        launchPosition();
         launchBall();
         launchPosition();
     }
@@ -100,6 +48,85 @@ public class cf_2_ball_NSR extends LinearOpMode {
         catapult.setPower(1);
         sleep(800);
         catapult.setPower(0);
+    }
+
+    private void drive(double leftSpeed, double rightSpeed){
+        lDrive1.setPower(leftSpeed);
+        lDrive2.setPower(leftSpeed);
+        rDrive1.setPower(rightSpeed);
+        rDrive2.setPower(rightSpeed);
+    }
+    private void driveStop(){
+        drive(0,0);
+    }
+
+    private void noEncoders(){
+        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        while(lDrive1.isBusy()){
+            sleep(10);
+        }
+    }
+    private void useEncoders(){
+        rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        while(lDrive1.isBusy()){
+            sleep(10);
+        }
+    }
+    private void resetEncoders(){
+        lDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        while(lDrive1.isBusy()){
+            sleep(10);
+        }
+    }
+
+    private void encoderDrive(double distance, double leftSpeed, double rightSpeed, int direction) throws InterruptedException {
+        int ENCODER_CPR = 1120; // Encoder counts per Rev
+        double gearRatio = 1.75; // [Gear Ratio]:1
+        double circumference = 13.10; // Wheel circumference
+        double ROTATIONS = distance / (circumference * gearRatio); // Number of rotations to drive
+        double COUNTS = ENCODER_CPR * ROTATIONS; // Number of encoder counts to drive
+
+        // set the position we want to run to
+        if (direction == 1)
+            rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
+        else if (direction ==-1)
+            rDrive1.setTargetPosition(rDrive1.getCurrentPosition() - (int) COUNTS);
+
+
+        if (direction == 1) {
+            // drive forward until we reach the encoder target
+            while (rDrive1.getCurrentPosition() < rDrive1.getTargetPosition() - 5 && opModeIsActive()) {
+                drive(leftSpeed, rightSpeed);
+                telemetry.addData("1. left speed", leftSpeed);
+                telemetry.addData("2. right speed", rightSpeed);
+                updateTelemetry(telemetry);
+            }
+            driveStop();
+        }
+        else if (direction == -1) {
+            // drive backward until we reach the encoder target
+            while (rDrive1.getCurrentPosition() > rDrive1.getTargetPosition() + 5 && opModeIsActive()) {
+                drive(-leftSpeed, -rightSpeed);
+                telemetry.addData("1. left speed", leftSpeed);
+                telemetry.addData("2. right speed", rightSpeed);
+                updateTelemetry(telemetry);
+            }
+            driveStop();
+        }
+        else {
+            telemetry.addLine("Invalid direction");
+            telemetry.update();
+            sleep(10000);
+        }
     }
 
     public void runOpMode() throws InterruptedException {
