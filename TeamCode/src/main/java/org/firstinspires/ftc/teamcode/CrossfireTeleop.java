@@ -214,8 +214,8 @@ public class CrossfireTeleop extends OpMode{
         switch (drive) {
             case 1:
                 // forward default
-                rightPower = ((-lStick1 * Math.abs(lStick1))/speed) + floorLeft;
-                leftPower = ((-rStick1 * Math.abs(rStick1))/speed) + floorRight;
+                rightPower = ((-lStick1 * Math.abs(lStick1))/speed) - floorLeft;
+                leftPower = ((-rStick1 * Math.abs(rStick1))/speed) - floorRight;
                 drive = 1;
                 break;
             case 2:
@@ -225,8 +225,8 @@ public class CrossfireTeleop extends OpMode{
                 drive = 2;
                 break;
             case 3:
-                rightPower = (Math.abs(rStick1) * -1) + floorRight;
-                leftPower = (Math.abs(rStick1) * -1) + floorRight;
+                rightPower = (Math.abs(rStick1) * -1) - floorRight;
+                leftPower = (Math.abs(rStick1) * -1) - floorRight;
                 drive = 1;
                 break;
             case 4:
