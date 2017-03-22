@@ -213,72 +213,149 @@ public class cf_NSR_2Balls extends LinearOpMode {
         idle();
         useEncoders();
         idle();
-        while (gamepad1.right_trigger < 0.5 &&opModeIsActive()){
-            telemetry.addData("Driver controller X = blue", "Driver controller B = red");
+//        telemetry.addData("Driver controller X = blue", "Driver controller B = red");
+//        telemetry.update();
+//        while (!gamepad1.left_bumper &&opModeIsActive()){
+//            telemetry.addData("Driver controller X = blue", "Driver controller B = red");
+//            telemetry.update();
+//            if (gamepad1.x) {
+//                blue = true;
+//                red = false;
+//                telemetry.addData("On the blue alliance",blue);
+//                telemetry.update();
+//            }
+//            else if (gamepad1.b) {
+//                blue = false;
+//                red = true;
+//                telemetry.addData("On the red alliance",red);
+//                telemetry.update();
+//            }
+//
+//        }
+//        sleep(1000);
+//        while (!gamepad1.left_bumper && opModeIsActive()){
+//            telemetry.addData("Dpad Up = Far start center end", "Dpad Down = Near start center end");
+//            telemetry.addData("Dpad Right = Far start corner end", "Dpad Left = Near Start corner end");
+//            telemetry.update();
+//            if (gamepad1.dpad_up){
+//                far = true;
+//                farCenter = true;
+//                farCorner = false;
+//                near = false;
+//                nearCenter = false;
+//                nearCorner = false;
+//                telemetry.addData("Far start center end","");
+//                telemetry.update();
+//
+//            }
+//            else if (gamepad1.dpad_down){
+//                far = false;
+//                farCenter = false;
+//                farCorner = false;
+//                near = true;
+//                nearCenter = true;
+//                nearCorner = false;
+//                telemetry.addData("Near start center end","");
+//                telemetry.update();
+//
+//            }
+//            else if (gamepad1.dpad_left){
+//                far = false;
+//                farCenter = false;
+//                farCorner = false;
+//                near = true;
+//                nearCenter = false;
+//                nearCorner = true;
+//                telemetry.addData("Near start corner end","");
+//                telemetry.update();
+//
+//            }
+//            else if (gamepad1.dpad_right){
+//                far = true;
+//                farCenter = false;
+//                farCorner = true;
+//                near = false;
+//                nearCenter = false;
+//                nearCorner = false;
+//                telemetry.addData("Far start corner end","");
+//                telemetry.update();
+//
+//            }
+//
+//
+//        }
+        while (!red && !blue){
+            telemetry.addLine("Press B for red alliance");
+            telemetry.addLine("Press X for blue alliance");
+            telemetry.addLine("Press dpad_right to turn vortex");
             telemetry.update();
-            if (gamepad1.x) {
+            if (gamepad1.x)
                 blue = true;
-                red = false;
-                telemetry.addData("On the blue alliance",blue);
-                telemetry.update();
-            }
-            else if (gamepad1.b) {
-                blue = false;
+            else if (gamepad1.b)
                 red = true;
-                telemetry.addData("On the red alliance",red);
-                telemetry.update();
-            }
+
         }
-        while (gamepad1.left_trigger < 0.5 && opModeIsActive()){
-            telemetry.addData("Dpad Up = Far start center end", "Dpad Down = Near start center end");
-            telemetry.addData("Dpad Right = Far start corner end", "Dpad Left = Near Start corner end");
+sleep(1000);
+        while (!near && !far){
+            telemetry.addLine("Press dpad_up to start far corner");
+            telemetry.addLine("Press dpad_down to start near ramp");
             telemetry.update();
-            if (gamepad1.dpad_up){
+            if (gamepad1.dpad_up)
                 far = true;
-                farCenter = true;
-                farCorner = false;
-                near = false;
-                nearCenter = false;
-                nearCorner = false;
-                telemetry.addData("Far start center end","");
-                telemetry.update();
-
-            }
-            else if (gamepad1.dpad_down){
-                far = false;
-                farCenter = false;
-                farCorner = false;
+            else if (gamepad1.dpad_down)
                 near = true;
-                nearCenter = true;
-                nearCorner = false;
-                telemetry.addData("Near start center end","");
-                telemetry.update();
+        }
+        sleep(1000);
+if (near) {
+    while (!nearCenter && !nearCorner) {
+        telemetry.addLine("Press dpad_up to park center");
+        telemetry.addLine("Press dpad_down to park ramp");
+        telemetry.update();
 
-            }
-            else if (gamepad1.dpad_left){
-                far = false;
-                farCenter = false;
-                farCorner = false;
-                near = true;
-                nearCenter = false;
-                nearCorner = true;
-                telemetry.addData("Near start corner end","");
-                telemetry.update();
+        telemetry.update();
+        if (gamepad1.dpad_up)
+            nearCenter = true;
+        else if (gamepad1.dpad_down)
+            nearCorner = true;
 
-            }
-            else if (gamepad1.dpad_right){
-                far = true;
-                farCenter = false;
-                farCorner = true;
-                near = false;
-                nearCenter = false;
-                nearCorner = false;
-                telemetry.addData("Far start corner end","");
-                telemetry.update();
+    }
+}
+        else if (far){
+    while (!farCenter && !farCorner) {
+        telemetry.addLine("Press dpad_up to park center");
+        telemetry.addLine("Press dpad_down to park ramp");
+        telemetry.update();
 
-            }
+        telemetry.update();
+        if (gamepad1.dpad_up)
+            farCenter = true;
+        else if (gamepad1.dpad_down)
+            farCorner = true;
+
+    }
 
 
+
+}
+
+        while (!isStarted()){
+            if (blue)
+                telemetry.addLine("Blue alliance");
+            if (red)
+                telemetry.addLine("Red alliance");
+            if (near)
+                telemetry.addLine("Near start");
+            if (far)
+                telemetry.addLine("far start");
+            if (nearCenter)
+                telemetry.addLine("Center End");
+            if (nearCorner)
+                telemetry.addLine("Corner End");
+            if (farCenter)
+                telemetry.addLine("Center End");
+            if (farCorner)
+                telemetry.addLine("Corner End");
+            telemetry.update();
         }
 
         waitForStart();
@@ -312,18 +389,21 @@ public class cf_NSR_2Balls extends LinearOpMode {
                 encoderDrive(/*distance*/40, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
             }
             if (farCorner) {
-                gyroTurn(45);
+                gyroTurn(-45);
 
-                encoderDrive(/*distance*/40, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);            }
+                encoderDrive(/*distance*/50, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                gyroTurn(-45);
+                encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+            }
 
             if (nearCenter) {
 
                 encoderDrive(/*distance*/40, /*leftSpeed*/0.8, /*rightSpeed*/0.8, /*direction*/1);
             }
             if (nearCorner) {
-                gyroTurn(-80);
+                gyroTurn(-70);
 
-                encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                encoderDrive(/*distance*/20, /*leftSpeed*/0.8, /*rightSpeed*/1, /*direction*/1);
             }
 
         }
@@ -358,18 +438,21 @@ public class cf_NSR_2Balls extends LinearOpMode {
                 encoderDrive(/*distance*/40, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
             }
             if (farCorner) {
-                gyroTurn(-45);
+                gyroTurn(45);
 
-                encoderDrive(/*distance*/40, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);            }
+                encoderDrive(/*distance*/50, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                gyroTurn(45);
+                encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+            }
 
             if (nearCenter) {
 
                 encoderDrive(/*distance*/40, /*leftSpeed*/0.8, /*rightSpeed*/0.8, /*direction*/1);
             }
             if (nearCorner) {
-                gyroTurn(80);
+                gyroTurn(70);
 
-                encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/0.8, /*direction*/1);
             }
 
         }
