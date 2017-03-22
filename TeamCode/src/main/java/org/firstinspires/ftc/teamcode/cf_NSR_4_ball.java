@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
@@ -9,8 +10,9 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="cf_4_ball_red_NSR", group="LinearOPMode")
+@Disabled
 
-public class cf_4_ball_red_NSR extends LinearOpMode {
+public class cf_NSR_4_ball extends LinearOpMode {
     private DcMotor catapult;
     //private DcMotor sweeper;
     private DcMotor lDrive1;
@@ -218,11 +220,6 @@ public class cf_4_ball_red_NSR extends LinearOpMode {
         belt.setPosition(.5);
         wheels.setPosition(.2);
         setUpGyro();
-
-        double distance;
-        double leftSpeed;
-        double rightSpeed;
-        int direction;
 
         waitForStart();
 

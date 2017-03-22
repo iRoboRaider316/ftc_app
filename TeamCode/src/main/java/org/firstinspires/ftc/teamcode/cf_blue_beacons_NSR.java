@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-//import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -18,7 +18,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="cf_blue_beacons_NSR", group="LinearOpMode")
-//@Disabled
+@Disabled
 
 public class cf_blue_beacons_NSR extends LinearOpMode {
 
@@ -368,25 +368,13 @@ public class cf_blue_beacons_NSR extends LinearOpMode {
         waitForStart();
 
         // drive forward for clearance
-        distance = 10;
-        leftSpeed = .5;
-        rightSpeed = .5;
-        direction = 1;
-        encoderDrive(distance, leftSpeed, rightSpeed, direction);
+        encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
         // lower side wheels
         wheels.setPosition(.85);
         // curve until parallel with wall
-        distance = 60;
-        leftSpeed = .62;
-        rightSpeed = .75;
-        direction = 1;
-        encoderDrive(distance, leftSpeed, rightSpeed, direction);
+        encoderDrive(/*Distance*/60, /*leftSpeed*/.62, /*rightSpeed*/.75, /*direction*/1);
         // Drive backward
-        distance = 25;
-        leftSpeed = .5;
-        rightSpeed = .45;
-        direction = 1;
-        encoderDrive(distance, leftSpeed, rightSpeed, direction);
+        encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.45, /*direction*/1);
         // Drive backward until we reach the far white line
         driveToLine(1);
         // drive backward until we see red strong enough, then push the button
@@ -394,11 +382,7 @@ public class cf_blue_beacons_NSR extends LinearOpMode {
         // double check to make sure we hit the right color
         //wrongColor(red);
         // Drive forward past the line
-        distance = 38;
-        leftSpeed = .6;
-        rightSpeed = .6;
-        direction = -1;
-        encoderDrive(distance, leftSpeed, rightSpeed, direction);
+        encoderDrive(/*Distance*/38, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/-1);
         // Track forward along the wall until the next white line
         driveToLine(-1);
         // Push the button for red
@@ -406,30 +390,18 @@ public class cf_blue_beacons_NSR extends LinearOpMode {
         // double check to make sure we hit the right color
         //wrongColor(red);
         // drive back past line
-        distance = 11;
-        leftSpeed = .5;
-        rightSpeed = .5;
-        direction = 1;
-        encoderDrive(distance, leftSpeed, rightSpeed, direction);
+        encoderDrive(/*Distance*/11, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
         // drive forward to the line
         driveToLine(-1);
         // drive forward correct distance for shooting
-        distance = 7;
-        leftSpeed = .5;
-        rightSpeed = .5;
-        direction = -1;
-        encoderDrive(distance, leftSpeed, rightSpeed, direction);
+        encoderDrive(/*Distance*/7, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
         // raise the side wheels
         wheels.setPosition(.2);
         sleep(250);
         // Turn 80 degrees left to face vortex
         gyroTurn(-75);
         // Drive forward into range
-        distance = 5;
-        leftSpeed = .5;
-        rightSpeed = .5;
-        direction = 1;
-        encoderDrive(distance, leftSpeed, rightSpeed, direction);
+        encoderDrive(/*Distance*/5, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
         // Shoot both balls
         fire();
 
@@ -456,21 +428,13 @@ public class cf_blue_beacons_NSR extends LinearOpMode {
             gyroTurn(40);
             gyroTurn(-40);
             // drive onto center
-            distance = 6;
-            leftSpeed = .5;
-            rightSpeed = .5;
-            direction = 1;
-            encoderDrive(distance, leftSpeed, rightSpeed, direction);
+            encoderDrive(/*Distance*/6, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
         }
         else {
             // turn toward ramp
             gyroTurn(-100);
             // drive into ramp
-            distance = 24;
-            leftSpeed = .5;
-            rightSpeed = .5;
-            direction = 1;
-            encoderDrive(distance, leftSpeed, rightSpeed, direction);
+            encoderDrive(/*Distance*/24, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
         }
     }
 }

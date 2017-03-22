@@ -1,26 +1,19 @@
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+//import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
-import com.qualcomm.robotcore.hardware.I2cAddr;
-import com.qualcomm.robotcore.hardware.I2cDevice;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynchImpl;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
-@Autonomous(name="cf_red_beacons_NSR", group="LinearOpMode")
-@Disabled
+@Autonomous(name="cf_NSR_beacons", group="LinearOpMode")
+//@Disabled
 
-public class cf_red_beacons_NSR extends LinearOpMode {
+public class cf_NSR_beacons extends LinearOpMode {
 
     private DcMotor catapult;
     //private DcMotor sweeper;
@@ -42,6 +35,8 @@ public class cf_red_beacons_NSR extends LinearOpMode {
 
     boolean blue = true;
     boolean red = false;
+    boolean redSide = false;
+    boolean blueSide = false;
 
     // Function to set up the Gyro
     // Function called in the init
@@ -325,13 +320,8 @@ public class cf_red_beacons_NSR extends LinearOpMode {
         hopper.setPosition(0.8);
         button.setPosition(0.5);
         belt.setPosition(.5);
-        wheels.setPosition(.2);
+        wheels.setPosition(.62);
 
-        double distance;
-        double leftSpeed;
-        double rightSpeed;
-        int direction;
-        int degrees;
         boolean center = false;
         boolean ramp = false;
         boolean vortex = false;
@@ -341,6 +331,18 @@ public class cf_red_beacons_NSR extends LinearOpMode {
         useEncoders();
         idle();
         setUpGyro();
+
+        while (!redSide&&!blueSide){
+            telemetry.addLine("Press dpad_left for RED side");
+            telemetry.addLine("Press dpad_right for BLUE side");
+            telemetry.update();
+            if (gamepad1.dpad_left)
+                redSide = true;
+            else if (gamepad1.dpad_right)
+                blueSide = true;
+        }
+        telemetry.update();
+        sleep(1000);
 
         while (!center && !ramp && !vortex){
             telemetry.addLine("Press dpad_up to park center");
@@ -356,6 +358,10 @@ public class cf_red_beacons_NSR extends LinearOpMode {
         }
 
         while (!isStarted()){
+            if (blueSide)
+                telemetry.addLine("BLUE");
+            else if (redSide)
+                telemetry.addLine("RED");
             if (center)
                 telemetry.addLine("Parking center");
             else if (ramp)
@@ -367,82 +373,147 @@ public class cf_red_beacons_NSR extends LinearOpMode {
 
         waitForStart();
 
-        // drive forward for clearance
-        encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
-        // lower side wheels
-        wheels.setPosition(.85);
-        // curve until parallel with wall
-        encoderDrive(/*Distance*/60, /*leftSpeed*/.62, /*rightSpeed*/.75, /*direction*/-1);
-        // Drive backward
-        encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.45, /*direction*/-1);
-        // Drive backward until we reach the far white line
-        driveToLine(-1);
-        // drive backward until we see red strong enough, then push the button
-        huntBeacon(-1, red);
-        // double check to make sure we hit the right color
-        //wrongColor(red);
-        // Drive forward past the line
-        encoderDrive(/*Distance*/38, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/1);
-        // Track forward along the wall until the next white line
-        driveToLine(1);
-        // Push the button for red
-        huntBeacon(1, red);
-        // double check to make sure we hit the right color
-        //wrongColor(red);
-        // drive back past line
-        encoderDrive(/*Distance*/11, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
-        // drive forward to the line
-        driveToLine(1);
-        // drive forward correct distance for shooting
-        encoderDrive(/*Distance*/7, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
-        // raise the side wheels
-        wheels.setPosition(.2);
-        sleep(250);
-        // Turn 90 degrees left to face vortex
-        gyroTurn(-90);
-        // Drive forward into range
-        encoderDrive(/*Distance*/5, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
-        // Shoot both balls
-        fire();
+        if (redSide){
+            // drive forward for clearance
+            encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
+            // lower side wheels
+            wheels.setPosition(1);
+            // curve until parallel with wall
+            encoderDrive(/*Distance*/60, /*leftSpeed*/.62, /*rightSpeed*/.75, /*direction*/-1);
+            // Drive backward
+            encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.45, /*direction*/-1);
+            // Drive backward until we reach the far white line
+            driveToLine(-1);
+            // drive backward until we see red strong enough, then push the button
+            huntBeacon(-1, red);
+            // double check to make sure we hit the right color
+            //wrongColor(red);
+            // Drive forward past the line
+            encoderDrive(/*Distance*/38, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/1);
+            // Track forward along the wall until the next white line
+            driveToLine(1);
+            // Push the button for red
+            huntBeacon(1, red);
+            // double check to make sure we hit the right color
+            //wrongColor(red);
+            // drive back past line
+            encoderDrive(/*Distance*/11, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
+            // drive forward to the line
+            driveToLine(1);
+            // drive forward correct distance for shooting
+            encoderDrive(/*Distance*/7, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            // raise the side wheels
+            wheels.setPosition(.62);
+            sleep(250);
+            // Turn 90 degrees left to face vortex
+            gyroTurn(-85);
+            // Drive forward into range
+            encoderDrive(/*Distance*/5, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            // Shoot both balls
+            fire();
 
-        if(vortex) {
-            // drive forward into cap ball
-            drive(0.5, 0.5);
-            // wait until vortex rotates
-            sleep(2500);
-            driveStop();
-            // turn to move cap ball
-            gyroTurn(40);
-            gyroTurn(-40);
-            // drive onto center
-            drive(0.5, 0.5);
-            sleep(1000);
-            driveStop();
+            if(vortex) {
+                // drive forward into cap ball
+                drive(0.5, 0.5);
+                // wait until vortex rotates
+                sleep(2500);
+                driveStop();
+                // turn to move cap ball
+                gyroTurn(40);
+                gyroTurn(-40);
+                // drive onto center
+                drive(0.5, 0.5);
+                sleep(1000);
+                driveStop();
+            }
+            else if(center) {
+                // drive forward into cap ball
+                drive(0.5, 0.5);
+                sleep(1000);
+                driveStop();
+                // turn to move cap ball
+                gyroTurn(40);
+                gyroTurn(-40);
+                // drive onto center
+                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            }
+            else {
+                // turn toward ramp
+                gyroTurn(100);
+                // drive into ramp
+                encoderDrive(/*Distance*/24, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            }
         }
-        else if(center) {
-            // drive forward into cap ball
-            drive(0.5, 0.5);
-            sleep(1000);
-            driveStop();
-            // turn to move cap ball
-            gyroTurn(40);
-            gyroTurn(-40);
-            // drive onto center
-            distance = 6;
-            leftSpeed = .5;
-            rightSpeed = .5;
-            direction = 1;
-            encoderDrive(/*Distance*/6, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
-        }
-        else {
-            // turn toward ramp
-            gyroTurn(100);
-            // drive into ramp
-            distance = 24;
-            leftSpeed = .5;
-            rightSpeed = .5;
-            direction = 1;
-            encoderDrive(/*Distance*/24, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+        else if (blueSide){
+            // drive forward for clearance
+            encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            // lower side wheels
+            wheels.setPosition(1);
+            // curve until parallel with wall
+            encoderDrive(/*Distance*/60, /*leftSpeed*/.62, /*rightSpeed*/.75, /*direction*/1);
+            // Drive backward
+            encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.45, /*direction*/1);
+            // Drive backward until we reach the far white line
+            driveToLine(1);
+            // drive backward until we see red strong enough, then push the button
+            huntBeacon(1, blue);
+            // double check to make sure we hit the right color
+            //wrongColor(red);
+            // Drive forward past the line
+            encoderDrive(/*Distance*/38, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/-1);
+            // Track forward along the wall until the next white line
+            driveToLine(-1);
+            // Push the button for red
+            huntBeacon(-1, blue);
+            // double check to make sure we hit the right color
+            //wrongColor(red);
+            // drive back past line
+            encoderDrive(/*Distance*/11, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            // drive forward to the line
+            driveToLine(-1);
+            // drive forward correct distance for shooting
+            encoderDrive(/*Distance*/7, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
+            // raise the side wheels
+            wheels.setPosition(.62);
+            sleep(250);
+            // Turn 80 degrees left to face vortex
+            gyroTurn(-75);
+            // Drive forward into range
+            encoderDrive(/*Distance*/5, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            // Shoot both balls
+            fire();
+
+            if(vortex) {
+                // drive forward into cap ball
+                drive(0.5, 0.5);
+                // wait until vortex rotates
+                sleep(2500);
+                driveStop();
+                // turn to move cap ball
+                gyroTurn(-40);
+                gyroTurn(40);
+                // drive onto center
+                drive(0.5, 0.5);
+                sleep(1000);
+                driveStop();
+            }
+            else if(center) {
+                // drive forward into cap ball
+                drive(0.5, 0.5);
+                sleep(1000);
+                driveStop();
+                // turn to move cap ball
+                gyroTurn(40);
+                gyroTurn(-40);
+                // drive onto center
+                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            }
+            else {
+                // turn toward ramp
+                gyroTurn(-100);
+                // drive into ramp
+                encoderDrive(/*Distance*/24, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            }
         }
     }
 }
