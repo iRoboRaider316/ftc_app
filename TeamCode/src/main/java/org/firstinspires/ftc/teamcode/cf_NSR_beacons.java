@@ -503,8 +503,8 @@ public class cf_NSR_beacons extends LinearOpMode {
                 sleep(1000);
                 driveStop();
                 // turn to move cap ball
-                gyroTurn(40);
                 gyroTurn(-40);
+                gyroTurn(40);
                 // drive onto center
                 encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             }
