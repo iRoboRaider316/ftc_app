@@ -220,12 +220,29 @@ public class cf_NSR_4_ball extends LinearOpMode {
         belt.setPosition(.5);
         wheels.setPosition(.2);
         setUpGyro();
+        boolean redSide = false;
+        boolean blueSide = false;
 
+        while (!redSide&&!blueSide){
+            telemetry.addLine("Press dpad_left for RED side");
+            telemetry.addLine("Press dpad_right for BLUE side");
+            telemetry.update();
+            if (gamepad1.dpad_left)
+                redSide = true;
+            else if (gamepad1.dpad_right)
+                blueSide = true;
+        }
+        telemetry.update();
         waitForStart();
 
-        // Code here
-        // Eventually
-        // Maybe
+        if (redSide){
+            encoderDrive(/*Distance*/125, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/-1);
+            fire();
+            encoderDrive(/*Distance*/100, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/1);
+        }
+        else if (blueSide){
+
+        }
 
 
     }

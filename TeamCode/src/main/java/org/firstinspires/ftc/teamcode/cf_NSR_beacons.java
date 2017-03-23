@@ -416,7 +416,7 @@ public class cf_NSR_beacons extends LinearOpMode {
                 // drive forward into cap ball
                 drive(0.5, 0.5);
                 // wait until vortex rotates
-                sleep(2500);
+                sleep(3000);
                 driveStop();
                 // turn to move cap ball
                 gyroTurn(40);
@@ -487,7 +487,7 @@ public class cf_NSR_beacons extends LinearOpMode {
                 // drive forward into cap ball
                 drive(0.5, 0.5);
                 // wait until vortex rotates
-                sleep(2500);
+                sleep(3000);
                 driveStop();
                 // turn to move cap ball
                 gyroTurn(-40);
