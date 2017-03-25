@@ -204,13 +204,13 @@ public class crossFireTeleOp extends OpMode{
             case 1:
                 // drive straight forward
                 if (gamepad1.dpad_up){
-                    rightPower = -1/speed;
-                    leftPower = -1/speed;
+                    rightPower = gamepad1.right_stick_y/speed;
+                    leftPower = gamepad1.right_stick_y/speed;
                 }
                 // drive straight backward
                 else if (gamepad1.dpad_down){
-                    rightPower = 1/speed;
-                    leftPower = 1/speed;
+                    rightPower = -gamepad1.right_stick_y/speed;
+                    leftPower = -gamepad1.right_stick_y/speed;
                 }
                 // standard driving
                 else {
@@ -220,15 +220,14 @@ public class crossFireTeleOp extends OpMode{
                 direction = 1;
                 break;
             case 2:
-                // drive straight backward
                 if (gamepad1.dpad_up){
-                    rightPower = 1/speed;
-                    leftPower = 1/speed;
+                    rightPower = -gamepad1.right_stick_y/speed;
+                    leftPower = -gamepad1.right_stick_y/speed;
                 }
-                // drive straight forward
+                // drive straight backward
                 else if (gamepad1.dpad_down){
-                    rightPower = -1/speed;
-                    leftPower = -1/speed;
+                    rightPower = gamepad1.right_stick_y/speed;
+                    leftPower = gamepad1.right_stick_y/speed;
                 }
                 // backward driving
                 else {

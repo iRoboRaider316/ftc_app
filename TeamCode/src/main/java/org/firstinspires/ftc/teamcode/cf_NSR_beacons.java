@@ -435,7 +435,7 @@ public class cf_NSR_beacons extends LinearOpMode {
                 gyroTurn(40);
                 gyroTurn(-40);
                 // drive onto center
-                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                encoderDrive(/*Distance*/15, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             }
             else {
                 // turn toward ramp
@@ -506,7 +506,7 @@ public class cf_NSR_beacons extends LinearOpMode {
                 gyroTurn(-40);
                 gyroTurn(40);
                 // drive onto center
-                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                encoderDrive(/*Distance*/15, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             }
             else {
                 // turn toward ramp
