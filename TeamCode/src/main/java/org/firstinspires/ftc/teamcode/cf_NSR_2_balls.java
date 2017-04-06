@@ -6,11 +6,13 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="cf_NSR_2_balls", group="LinearOPMode")
 
 public class cf_NSR_2_balls extends LinearOpMode {
+    ElapsedTime timer = new ElapsedTime();
     private DcMotor catapult;
     //private DcMotor sweeper;
     private DcMotor lDrive1;
@@ -209,6 +211,8 @@ public class cf_NSR_2_balls extends LinearOpMode {
         boolean farCorner = false;
         boolean red = false;
         boolean blue = false;
+        int wait = 0;
+
         setUpGyro();
         resetEncoders();
         idle();
@@ -282,10 +286,14 @@ public class cf_NSR_2_balls extends LinearOpMode {
                 telemetry.addLine("Center End");
             if (farCorner)
                 telemetry.addLine("Corner End");
+            if (gamepad1.y)
+                wait = wait + 1;
+            sleep(100);
             telemetry.update();
         }
 
         waitForStart();
+        timer.reset();
         if (red) {
             // Drive forward from wall
             if (far) {
@@ -311,10 +319,12 @@ public class cf_NSR_2_balls extends LinearOpMode {
             // stop sweeper
 //            sweeper.setPower(0);
             // drive forward to knock off cap ball
-            if (farCenter) {
+            if (wait > timer.seconds())
 
-                encoderDrive(/*distance*/40, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
-            }
+                if (farCenter) {
+
+                    encoderDrive(/*distance*/40, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                }
             if (farCorner) {
                 gyroTurn(-45);
 
@@ -347,23 +357,25 @@ public class cf_NSR_2_balls extends LinearOpMode {
                 sleep(1000);
             }
             // deploy sweeper
-            sweeper.setPower(1);
-            sleep(500);
-            sweeper.setPower(-1);
-            // fire balls
+//            sweeper.setPower(1);
+//            sleep(500);
+//            sweeper.setPower(-1);
+//            // fire balls
             fire();
-            sleep(5000);
-            // load any balls that have been picked up
-            loadBall();
-            // fire balls
-            fire();
+//            sleep(5000);
+//            // load any balls that have been picked up
+//            loadBall();
+//            // fire balls
+//            fire();
             // stop sweeper
-            sweeper.setPower(0);
+            //sweeper.setPower(0);
             // drive forward to knock off cap ball
-            if (farCenter) {
+            if (wait > timer.seconds())
 
-                encoderDrive(/*distance*/40, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
-            }
+                if (farCenter) {
+
+                    encoderDrive(/*distance*/40, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                }
             if (farCorner) {
                 gyroTurn(45);
 

@@ -408,7 +408,7 @@ public class cf_NSR_beacons extends LinearOpMode {
             // Turn 90 degrees left to face vortex
             gyroTurn(-85);
             // Drive forward into range
-            encoderDrive(/*Distance*/5, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            encoderDrive(/*Distance*/8, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // Shoot both balls
             fire();
 
@@ -479,7 +479,7 @@ public class cf_NSR_beacons extends LinearOpMode {
             // Turn 80 degrees left to face vortex
             gyroTurn(-75);
             // Drive forward into range
-            encoderDrive(/*Distance*/5, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            encoderDrive(/*Distance*/8, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // Shoot both balls
             fire();
 
