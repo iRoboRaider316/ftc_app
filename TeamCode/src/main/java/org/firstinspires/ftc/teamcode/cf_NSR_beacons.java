@@ -37,6 +37,7 @@ public class cf_NSR_beacons extends LinearOpMode {
     boolean red = false;
     boolean redSide = false;
     boolean blueSide = false;
+    boolean nothing = false;
 
     // Function to set up the Gyro
     // Function called in the init
@@ -344,10 +345,11 @@ public class cf_NSR_beacons extends LinearOpMode {
         telemetry.update();
         sleep(1000);
 
-        while (!center && !ramp && !vortex){
+        while (!center && !ramp && !vortex && !nothing){
             telemetry.addLine("Press dpad_up to park center");
             telemetry.addLine("Press dpad_left to park ramp");
             telemetry.addLine("Press dpad_right to turn vortex");
+            telemetry.addLine("Press dpad_down to not park");
             telemetry.update();
             if (gamepad1.dpad_up)
                 center = true;
@@ -355,6 +357,8 @@ public class cf_NSR_beacons extends LinearOpMode {
                 ramp = true;
             else if (gamepad1.dpad_right)
                 vortex = true;
+            else if (gamepad1.dpad_down)
+                nothing = true;
         }
 
         while (!isStarted()){
@@ -366,6 +370,8 @@ public class cf_NSR_beacons extends LinearOpMode {
                 telemetry.addLine("Parking center");
             else if (ramp)
                 telemetry.addLine("Parking ramp");
+            else if (nothing)
+            telemetry.addLine("No Park");
             else
                 telemetry.addLine("Turning vortex");
             telemetry.update();
@@ -416,10 +422,10 @@ public class cf_NSR_beacons extends LinearOpMode {
                 // drive forward into cap ball
                 drive(0.5, 0.5);
                 // wait until vortex rotates
-                sleep(3000);
+                sleep(2500);
                 driveStop();
                 // turn to move cap ball
-                gyroTurn(40);
+                gyroTurn(35);
                 gyroTurn(-40);
                 // drive onto center
                 drive(0.5, 0.5);
@@ -428,11 +434,9 @@ public class cf_NSR_beacons extends LinearOpMode {
             }
             else if(center) {
                 // drive forward into cap ball
-                drive(0.5, 0.5);
-                sleep(1000);
-                driveStop();
+                encoderDrive(/*Distance*/16, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
                 // turn to move cap ball
-                gyroTurn(40);
+                gyroTurn(35);
                 gyroTurn(-40);
                 // drive onto center
                 encoderDrive(/*Distance*/15, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
@@ -487,10 +491,10 @@ public class cf_NSR_beacons extends LinearOpMode {
                 // drive forward into cap ball
                 drive(0.5, 0.5);
                 // wait until vortex rotates
-                sleep(3000);
+                sleep(2500);
                 driveStop();
                 // turn to move cap ball
-                gyroTurn(-40);
+                gyroTurn(-35);
                 gyroTurn(40);
                 // drive onto center
                 drive(0.5, 0.5);
@@ -499,16 +503,17 @@ public class cf_NSR_beacons extends LinearOpMode {
             }
             else if(center) {
                 // drive forward into cap ball
-                drive(0.5, 0.5);
-                sleep(1000);
-                driveStop();
+                encoderDrive(/*Distance*/16, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
                 // turn to move cap ball
-                gyroTurn(-40);
+                gyroTurn(-35);
                 gyroTurn(40);
                 // drive onto center
                 encoderDrive(/*Distance*/15, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             }
-            else {
+            else if (nothing)
+            sleep(100000);
+
+            else    {
                 // turn toward ramp
                 gyroTurn(-100);
                 // drive into ramp

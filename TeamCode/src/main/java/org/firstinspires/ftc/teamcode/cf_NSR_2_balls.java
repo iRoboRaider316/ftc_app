@@ -211,6 +211,7 @@ public class cf_NSR_2_balls extends LinearOpMode {
         boolean farCorner = false;
         boolean red = false;
         boolean blue = false;
+        boolean nothing = false;
         int wait = 0;
 
         setUpGyro();
@@ -242,7 +243,7 @@ public class cf_NSR_2_balls extends LinearOpMode {
         }
         sleep(1000);
         if (near) {
-            while (!nearCenter && !nearCorner) {
+            while (!nearCenter && !nearCorner && !nothing) {
                 telemetry.addLine("Press dpad_up to park center");
                 telemetry.addLine("Press dpad_down to park ramp");
                 telemetry.update();
@@ -252,10 +253,12 @@ public class cf_NSR_2_balls extends LinearOpMode {
                     nearCenter = true;
                 else if (gamepad1.dpad_down)
                     nearCorner = true;
+                else if (gamepad1.dpad_left);
+                nothing = true;
             }
         }
         else if (far){
-            while (!farCenter && !farCorner) {
+            while (!farCenter && !farCorner && !nothing) {
                 telemetry.addLine("Press dpad_up to park center");
                 telemetry.addLine("Press dpad_down to park ramp");
                 telemetry.update();
@@ -265,6 +268,9 @@ public class cf_NSR_2_balls extends LinearOpMode {
                     farCenter = true;
                 else if (gamepad1.dpad_down)
                     farCorner = true;
+                else if (gamepad1.dpad_left);
+                nothing = true;
+
 
             }
         }
@@ -286,6 +292,8 @@ public class cf_NSR_2_balls extends LinearOpMode {
                 telemetry.addLine("Center End");
             if (farCorner)
                 telemetry.addLine("Corner End");
+            if (nothing)
+                telemetry.addLine("No End");
             if (gamepad1.y)
                 wait = wait + 1;
             sleep(100);
@@ -293,7 +301,9 @@ public class cf_NSR_2_balls extends LinearOpMode {
         }
 
         waitForStart();
+        wait = wait * 1000;
         timer.reset();
+
         if (red) {
             // Drive forward from wall
             if (far) {
@@ -319,7 +329,7 @@ public class cf_NSR_2_balls extends LinearOpMode {
             // stop sweeper
 //            sweeper.setPower(0);
             // drive forward to knock off cap ball
-            if (wait > timer.seconds())
+            sleep(wait);
 
                 if (farCenter) {
 
@@ -370,7 +380,7 @@ public class cf_NSR_2_balls extends LinearOpMode {
             // stop sweeper
             //sweeper.setPower(0);
             // drive forward to knock off cap ball
-            if (wait > timer.seconds())
+            sleep(wait);
 
                 if (farCenter) {
 
