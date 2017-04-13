@@ -5,16 +5,16 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
-@Autonomous(name="cf_4_ball_red_NSR", group="LinearOPMode")
-@Disabled
+@Autonomous(name="cf_4_ball_NSR", group="LinearOPMode")
+//@Disabled
 
 public class cf_NSR_4_ball extends LinearOpMode {
     private DcMotor catapult;
-    //private DcMotor sweeper;
     private DcMotor lDrive1;
     private DcMotor lDrive2;
     private DcMotor rDrive1;
@@ -25,6 +25,8 @@ public class cf_NSR_4_ball extends LinearOpMode {
     private Servo hopper;
     private Servo wheels;
     private TouchSensor touch;
+    private OpticalDistanceSensor fODSensor;
+    private OpticalDistanceSensor bODSensor;
 
     GyroSensor gyroSensor;
     ModernRoboticsI2cGyro gyro;
@@ -177,10 +179,10 @@ public class cf_NSR_4_ball extends LinearOpMode {
             power = error*kp;
 
             // Set minimum motor speeds
-            if (power > 0 && power < .15)
-                power = .15;
-            else if (power < 0 && power > -.15)
-                power = -.15;
+            if (power > 0 && power < .2)
+                power = .2;
+            else if (power < 0 && power > -.2)
+                power = -.2;
 
             telemetry.addData("error", error);
             telemetry.addData("power", power);
@@ -201,6 +203,29 @@ public class cf_NSR_4_ball extends LinearOpMode {
         driveStop();
     }
 
+    private void driveToLine(int direction) throws InterruptedException {
+        // drive forward until the front OD sensor detects the white line
+        if (direction == 1){
+            while (fODSensor.getRawLightDetected() < .06 && opModeIsActive()) {
+                drive(.2,.17);
+            }
+        }
+        // drive backward until the back OD sensor detects the white line
+        else if (direction == -1){
+            while (bODSensor.getRawLightDetected() < .06 && opModeIsActive()) {
+                drive(-.2,-.17);
+            }
+        }
+        else {
+            telemetry.addLine("Invalid Direction");
+            telemetry.update();
+            sleep(10000);
+        }
+
+        driveStop();
+    }
+
+
     public void runOpMode() throws InterruptedException {
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
@@ -215,6 +240,8 @@ public class cf_NSR_4_ball extends LinearOpMode {
         touch = hardwareMap.touchSensor.get("t");
         button = hardwareMap.servo.get("button");
         wheels = hardwareMap.servo.get("wheels");
+        fODSensor = hardwareMap.opticalDistanceSensor.get("fOD");
+        bODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
         hopper.setPosition(0.8);
         button.setPosition(0.5);
         belt.setPosition(.5);
@@ -233,15 +260,47 @@ public class cf_NSR_4_ball extends LinearOpMode {
                 blueSide = true;
         }
         telemetry.update();
+        while (!isStarted()){
+            if (blueSide)
+                telemetry.addLine("BLUE");
+            else if (redSide)
+                telemetry.addLine("RED");
+            telemetry.update();
+        }
         waitForStart();
 
         if (redSide){
-            encoderDrive(/*Distance*/125, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/-1);
+            encoderDrive(/*Distance*/80, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/-1);
+            gyroTurn(-8);
             fire();
-            encoderDrive(/*Distance*/100, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/1);
+            gyroTurn(8);
+            sweeper.setPower(1);
+            sleep(500);
+            sweeper.setPower(-1);
+            encoderDrive(/*Distance*/79, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/1);
+            wheels.setPosition(1);
+            gyroTurn(-18);
+            encoderDrive(/*Distance*/15, /*leftSpeed*/.7, /*rightSpeed*/.68, /*direction*/1);
+            driveToLine(1);
+            encoderDrive(/*Distance*/3, /*leftSpeed*/.7, /*rightSpeed*/.65, /*direction*/1);
+            sleep(2000);
+            encoderDrive(/*Distance*/70, /*leftSpeed*/.75, /*rightSpeed*/.72, /*direction*/-1);
+            wheels.setPosition(.62);
+            sleep(250);
+            // Turn 90 degrees left to face vortex
+            gyroTurn(-85);
+            // Drive forward into range
+            encoderDrive(/*Distance*/8, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            // Shoot both balls
+            loadBall();
+            fire();
+            sweeper.setPower(0);
+            encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            gyroTurn(-175);
+            encoderDrive(/*Distance*/20, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
         }
         else if (blueSide){
-
+            driveToLine(1);
         }
 
 

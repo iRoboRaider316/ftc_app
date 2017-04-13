@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="GyroTurn", group="Methods")
-@Disabled
+//@Disabled
 public class GyroTurnMethod extends LinearOpMode {
 
     DcMotor lDrive1;
@@ -46,7 +46,7 @@ public class GyroTurnMethod extends LinearOpMode {
         //boolean done = false;
         double error;
         double currentHeading;
-        double kp = .0025;//.0035;
+        double kp = .0055;
         double power;
         ElapsedTime runtime = new ElapsedTime();
         gyro.resetZAxisIntegrator();
@@ -55,20 +55,14 @@ public class GyroTurnMethod extends LinearOpMode {
 
         while (runtime.seconds() < time && opModeIsActive()){
             currentHeading = -gyro.getIntegratedZValue();
-
             error = (targetHeading-currentHeading);
+
             if (error > 0)
                 power = .15+(error*kp);
             else if (error < 0)
                 power = -.15+(error*kp);
             else
                 power = 0;
-
-//            error = Range.clip(error, -.3, .3);
-//            if (error > 0 && error < .15)
-//                error = .15;
-//            else if (error < 0 && error > -.15)
-//                error = -.15;
 
             drive(0+power, 0-power);
 
@@ -77,11 +71,6 @@ public class GyroTurnMethod extends LinearOpMode {
             telemetry.addData("currentHeading", currentHeading);
             telemetry.addData("targetHeading", targetHeading);
             telemetry.update();
-
-//            if (currentHeading <= targetHeading+1 && currentHeading >= targetHeading-1)
-//                done = true;
-//            else
-//                done = false;
 
         }
         driveStop();
@@ -302,15 +291,12 @@ public class GyroTurnMethod extends LinearOpMode {
 
         waitForStart();
 
-        targetHeading = -45;
-        gyroTurn(targetHeading);
+        targetHeading = 180;
+        timedGyroTurn(targetHeading, 3);
         while (opModeIsActive()){
             telemetry.addData("Heading", -gyro.getIntegratedZValue());
             telemetry.update();
         }
-//
-//        drive(.12,-.12);
-//        sleep(8000);
-//        driveStop();
+
     }
 }
