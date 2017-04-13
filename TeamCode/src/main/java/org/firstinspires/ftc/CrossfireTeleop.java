@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -7,9 +7,10 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name="CrossFire TeleOp", group="TeleOp")
+@TeleOp(name="Cross Fire TeleOp", group="TeleOp")
 
 public class CrossfireTeleop extends OpMode{
     ColorSensor color;
@@ -24,16 +25,18 @@ public class CrossfireTeleop extends OpMode{
     Servo hopper;
     Servo button;
     Servo belt;
-    Servo wheels;
     TouchSensor touch;
+    Servo wheels;
     int direction = 0;
     int power = 1;
     int sideWheels = 1;
-    int drive = 0;
     boolean wheelsDown = false;
     boolean wheelsUp = false;
     boolean halfSpeed = false;
     boolean fullSpeed = false;
+    double floorLeft;
+    double floorRight;
+    float lUl;
 
     public double getDirection(double inputPower) {
         if(inputPower == 0) {
@@ -42,7 +45,14 @@ public class CrossfireTeleop extends OpMode{
             return inputPower * Math.abs(inputPower);
         }
     }
-// ========================== INIT ================================
+    int drive = 0;
+
+    ElapsedTime timer = new ElapsedTime();
+
+    enum LaunchState {
+        Idle, Pressed, NotPressed, Load, Open
+    }
+
     public void init() {
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
@@ -64,32 +74,99 @@ public class CrossfireTeleop extends OpMode{
         belt.setPosition(.5);
         button.setPosition(.5);
         hopper.setPosition(.8);
-        wheels.setPosition(.2);
+
 
     }
 
+    private LaunchState launchState = LaunchState.Idle;
+
     public void loop() {
-        // These variables are for simplifying the code
         belt.setPosition(.5);
-        float lStick1 = gamepad1.left_stick_y;
         float rStick1 = gamepad1.right_stick_y;
+        float lStick1 = gamepad1.left_stick_y;
         float lStick2 = gamepad2.left_stick_y;
         float rStick2 = gamepad2.right_stick_y;
         boolean up = gamepad2.dpad_up;
         boolean left = gamepad2.dpad_left;
         boolean down = gamepad2.dpad_down;
         boolean y = gamepad2.y;
+        boolean x = gamepad2.x;
         boolean a = gamepad2.a;
         boolean b = gamepad2.b;
         boolean rBumper1 = gamepad1.right_bumper;
         boolean lBumper1 = gamepad1.left_bumper;
+        boolean rBumper2 = gamepad2.right_bumper;
+        boolean lBumper2 = gamepad2.left_bumper;
         double leftPower;
         double rightPower;
-        float speed;
-        double floorLeft;
-        double floorRight;
+        double lTrigger2 = gamepad2.left_trigger;
+        double speed = 1;
 
-//======================/// OPERATOR CODE \\\=================================
+        ///OPERATOR CODE\\\
+        double noPower = 0.0;
+        double firingPower = 1;
+        /*if ( gamepad2.left_bumper ) {
+            if ( touch.isPressed() ) {
+                //catapult.setPower(noPower);
+                hopper.setPosition(.5);
+            }
+            else {
+                catapult.setPower(firingPower);
+            }
+        }*/
+
+        if(!rBumper2) {
+            launchState = LaunchState.Idle;
+            if (y) {
+                catapult.setPower(1);
+            } else if (a) {
+                catapult.setPower(-1);
+            } else {
+                catapult.setPower(0);
+            }
+            if (b) {
+                hopper.setPosition(.5);
+            } else {
+                hopper.setPosition(.8);
+            }
+        }
+
+        switch(launchState) {
+            case Idle:
+                if(rBumper2) {
+                    launchState = LaunchState.Pressed;
+                    catapult.setPower(1);
+                }
+                break;
+
+            case Pressed:
+                if(touch.isPressed()) {
+                    launchState = LaunchState.NotPressed;
+                }
+                break;
+
+            case NotPressed:
+                if(!touch.isPressed()) {
+                    timer.reset();
+                    launchState = LaunchState.Load;
+                }
+                break;
+
+            case Load:
+                if(timer.milliseconds() > 150) {
+                    hopper.setPosition(0.5);
+                    timer.reset();
+                    launchState = LaunchState.Open;
+                }
+                break;
+
+            case Open:
+                if(timer.milliseconds() > 150) {
+                    hopper.setPosition(0.8);
+                    launchState = LaunchState.Idle;
+                }
+        }
+
         if (up) {
             sweeper.setPower(-1);
         } else if (down) {
@@ -97,7 +174,7 @@ public class CrossfireTeleop extends OpMode{
         } else if (left) {
             sweeper.setPower(0);
         }
-        if (y) {
+        /*if (y) {
             catapult.setPower(1);
         } else if (a) {
             catapult.setPower(-1);
@@ -108,10 +185,10 @@ public class CrossfireTeleop extends OpMode{
             hopper.setPosition(.5);
         } else {
             hopper.setPosition(.8);
-        }
+        }*/
 
-        lift1.setPower(rStick2);
-        lift2.setPower(rStick2);
+        lift1.setPower(gamepad2.right_stick_y);
+        lift2.setPower(gamepad2.right_stick_y);
 
         if (lStick2 > .5)
             belt.setPosition(0);
@@ -120,22 +197,9 @@ public class CrossfireTeleop extends OpMode{
         else
             belt.setPosition(.5);
 
-//======================///DRIVER CODE\\\=====================================
-        //This code controls the side button pusher
-        if (gamepad1.b)
-            button.setPosition(0);
-        else if (gamepad1.x)
-            button.setPosition(1);
-        else
-            button.setPosition(0.5);
 
-        if (gamepad1.dpad_left) {
-            sweeper.setPower(-1);
-        } else if (gamepad1.dpad_right) {
-            sweeper.setPower(0);
-        }
+        ///DRIVER CODE\\\
 
-        // Switch case to control wheel position
         if (lBumper1 && sideWheels == 1){
             wheelsDown = true;
         }
@@ -164,7 +228,6 @@ public class CrossfireTeleop extends OpMode{
                 wheels.setPosition(.2);
                 break;
         }
-
         // Universal drive train power switch case
         if (rBumper1 && power == 1){
             halfSpeed = true;
@@ -196,13 +259,39 @@ public class CrossfireTeleop extends OpMode{
                 speed = 1;
                 break;
         }
+        //This code controls the side button pusher
+        if (gamepad1.b)
+            button.setPosition(0);
+        else if (gamepad1.x)
+            button.setPosition(1);
+        else
+            button.setPosition(0.5);
 
-        if (gamepad1.y)
-            // robot sweeper is forward
-            direction = 1;
-        else if (gamepad1.a)
-            // robot cap ball lift is forward
-            direction = 2;
+        if (gamepad1.dpad_left) {
+            sweeper.setPower(-1);
+        } else if (gamepad1.dpad_right) {
+            sweeper.setPower(0);
+        }
+
+        // This sets the power of the drive motors to based on the joystick position using an Exponential Scale Algorithm
+        if (gamepad1.a) { // Backward 100%
+            drive = 1;
+        }
+        if (gamepad1.y) { //Forward 100%
+            drive = 2;
+        }
+        if (gamepad1.right_bumper) { //1/2 speed
+            speed = 2;
+        }
+        if (gamepad1.left_bumper) { //full speed
+            speed = 1;
+        }
+        if (gamepad1.dpad_up) { //Forward in a straight line
+            drive = 3;
+        }
+        if (gamepad1.dpad_down) { // Backward in a straight line
+            drive = 4;
+        }
 
         // This is the floor-ceiling algorithm we use to keep Crossfire moving without wearing too
         // much battery power
@@ -211,6 +300,7 @@ public class CrossfireTeleop extends OpMode{
 
         // This is the switch case that sets the motor powers of Crossfire. Floor-Ceiling algorithms
         // have been included for greater control
+
         switch (drive) {
             case 1:
                 // forward default
@@ -240,6 +330,7 @@ public class CrossfireTeleop extends OpMode{
                 rightPower = ((rStick1 * Math.abs(rStick1))/speed) + floorRight;
         }
 
+
         // Clips off the power in case it's over 1 or under -1 from the floor-ceiling function.
         leftPower = Range.clip(leftPower, -1, 1);
         rightPower = Range.clip(rightPower, -1, 1);
@@ -248,6 +339,7 @@ public class CrossfireTeleop extends OpMode{
         lDrive2.setPower(leftPower);
         rDrive1.setPower(rightPower);
         rDrive2.setPower(rightPower);
-
     }
+
+//Jims says: Gyro + rive function needs to be super exact
 }
