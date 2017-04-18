@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Autonomous(name="cf_NSR_beacons", group="LinearOpMode")
 //@Disabled
@@ -23,7 +24,8 @@ public class cf_NSR_beacons extends LinearOpMode {
     private DcMotor rDrive2;
     private Servo button;
     private Servo hopper;
-    private Servo belt;
+    Servo belt1;
+    Servo belt2;
     private Servo wheels;
     private TouchSensor touch;
     private ColorSensor color;
@@ -297,6 +299,39 @@ public class cf_NSR_beacons extends LinearOpMode {
         driveStop();
     }
 
+    private void timedGyroTurn (int targetHeading, double time){
+        //boolean done = false;
+        double error;
+        double currentHeading;
+        double kp = .0055;
+        double power;
+        ElapsedTime runtime = new ElapsedTime();
+        gyro.resetZAxisIntegrator();
+        runtime.reset();
+        sleep(250);
+
+        while (runtime.seconds() < time && opModeIsActive()){
+            currentHeading = -gyro.getIntegratedZValue();
+            error = (targetHeading-currentHeading);
+
+            if (error > 0)
+                power = .15+(error*kp);
+            else if (error < 0)
+                power = -.15+(error*kp);
+            else
+                power = 0;
+
+            drive(0+power, 0-power);
+
+            telemetry.addData("error", error);
+            telemetry.addData("power", power);
+            telemetry.addData("currentHeading", currentHeading);
+            telemetry.addData("targetHeading", targetHeading);
+            telemetry.update();
+        }
+        driveStop();
+    }
+
     public void runOpMode() throws InterruptedException {
         //##############Init##############
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
@@ -310,17 +345,19 @@ public class cf_NSR_beacons extends LinearOpMode {
         catapult = hardwareMap.dcMotor.get("catapult");
         button = hardwareMap.servo.get("button");
         hopper = hardwareMap.servo.get("hopper");
-        belt = hardwareMap.servo.get("belt");
+        belt1 = hardwareMap.servo.get("belt1");
+        belt2 = hardwareMap.servo.get("belt2");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
         wheels = hardwareMap.servo.get("wheels");
+        belt1.setPosition(.5);
+        belt2.setPosition(.5);
 
         fODSensor = hardwareMap.opticalDistanceSensor.get("fOD");
         bODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
 
         hopper.setPosition(0.8);
         button.setPosition(0.5);
-        belt.setPosition(.5);
         wheels.setPosition(.62);
 
         boolean center = false;
@@ -406,15 +443,13 @@ public class cf_NSR_beacons extends LinearOpMode {
             encoderDrive(/*Distance*/11, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
             // drive forward to the line
             driveToLine(1);
-            // drive forward correct distance for shooting
-            encoderDrive(/*Distance*/7, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // raise the side wheels
             wheels.setPosition(.62);
             sleep(250);
             // Turn 90 degrees left to face vortex
-            gyroTurn(-85);
+            gyroTurn(-80);
             // Drive forward into range
-            encoderDrive(/*Distance*/8, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            encoderDrive(/*Distance*/13, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // Shoot both balls
             fire();
 
@@ -434,12 +469,13 @@ public class cf_NSR_beacons extends LinearOpMode {
             }
             else if(center) {
                 // drive forward into cap ball
-                encoderDrive(/*Distance*/16, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                encoderDrive(/*Distance*/12, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
                 // turn to move cap ball
-                gyroTurn(35);
-                gyroTurn(-40);
+                timedGyroTurn(175,4);
+//                gyroTurn(35);
+//                gyroTurn(-40);
                 // drive onto center
-                encoderDrive(/*Distance*/15, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                encoderDrive(/*Distance*/17, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
             }
             else {
                 // turn toward ramp
@@ -475,15 +511,13 @@ public class cf_NSR_beacons extends LinearOpMode {
             encoderDrive(/*Distance*/11, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // drive forward to the line
             driveToLine(-1);
-            // drive forward correct distance for shooting
-            encoderDrive(/*Distance*/7, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
             // raise the side wheels
             wheels.setPosition(.62);
             sleep(250);
             // Turn 80 degrees left to face vortex
             gyroTurn(-75);
             // Drive forward into range
-            encoderDrive(/*Distance*/8, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            encoderDrive(/*Distance*/13, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // Shoot both balls
             fire();
 
@@ -503,12 +537,11 @@ public class cf_NSR_beacons extends LinearOpMode {
             }
             else if(center) {
                 // drive forward into cap ball
-                encoderDrive(/*Distance*/16, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                encoderDrive(/*Distance*/12, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
                 // turn to move cap ball
-                gyroTurn(-35);
-                gyroTurn(40);
+                timedGyroTurn(-170,4);
                 // drive onto center
-                encoderDrive(/*Distance*/15, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                encoderDrive(/*Distance*/17, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
             }
             else if (nothing)
             sleep(100000);

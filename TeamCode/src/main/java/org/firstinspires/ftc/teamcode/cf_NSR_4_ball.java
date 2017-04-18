@@ -20,7 +20,8 @@ public class cf_NSR_4_ball extends LinearOpMode {
     private DcMotor rDrive1;
     private DcMotor rDrive2;
     private DcMotor sweeper;
-    private Servo belt;
+    Servo belt1;
+    Servo belt2;
     private Servo button;
     private Servo hopper;
     private Servo wheels;
@@ -231,7 +232,8 @@ public class cf_NSR_4_ball extends LinearOpMode {
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
         lDrive1 = hardwareMap.dcMotor.get("lDrive1");
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
-        belt = hardwareMap.servo.get("belt");
+        belt1 = hardwareMap.servo.get("belt1");
+        belt2 = hardwareMap.servo.get("belt2");
         lDrive1.setDirection(DcMotor.Direction.REVERSE);
         lDrive2.setDirection(DcMotor.Direction.REVERSE);
         sweeper = hardwareMap.dcMotor.get("sweeper");
@@ -244,7 +246,8 @@ public class cf_NSR_4_ball extends LinearOpMode {
         bODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
         hopper.setPosition(0.8);
         button.setPosition(0.5);
-        belt.setPosition(.5);
+        belt1.setPosition(.5);
+        belt2.setPosition(.5);
         wheels.setPosition(.2);
         setUpGyro();
         boolean redSide = false;
@@ -277,7 +280,7 @@ public class cf_NSR_4_ball extends LinearOpMode {
             sweeper.setPower(1);
             sleep(500);
             sweeper.setPower(-1);
-            encoderDrive(/*Distance*/79, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/1);
+            encoderDrive(/*Distance*/83, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/1);
             wheels.setPosition(1);
             gyroTurn(-18);
             encoderDrive(/*Distance*/15, /*leftSpeed*/.7, /*rightSpeed*/.68, /*direction*/1);

@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="GyroTurn", group="Methods")
-//@Disabled
+@Disabled
 public class GyroTurnMethod extends LinearOpMode {
 
     DcMotor lDrive1;

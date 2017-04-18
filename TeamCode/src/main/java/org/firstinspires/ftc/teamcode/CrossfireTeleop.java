@@ -24,7 +24,8 @@ public class crossFireTeleOp extends OpMode{
     DcMotor lift2;
     Servo hopper;
     Servo button;
-    Servo belt;
+    Servo belt1;
+    Servo belt2;
     TouchSensor touch;
     Servo wheels;
     int direction = 0;
@@ -65,12 +66,14 @@ public class crossFireTeleOp extends OpMode{
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
         button = hardwareMap.servo.get("button");
-        belt = hardwareMap.servo.get("belt");
+        belt1 = hardwareMap.servo.get("belt1");
+        belt2 = hardwareMap.servo.get("belt2");
         wheels = hardwareMap.servo.get("wheels");
         rDrive1.setDirection(DcMotor.Direction.REVERSE);
         rDrive2.setDirection(DcMotor.Direction.REVERSE);
 
-        belt.setPosition(.5);
+        belt1.setPosition(.5);
+        belt2.setPosition(.5);
         button.setPosition(.5);
         hopper.setPosition(.8);
 
@@ -80,7 +83,8 @@ public class crossFireTeleOp extends OpMode{
     private LaunchState launchState = LaunchState.Idle;
 
     public void loop() {
-        belt.setPosition(.5);
+        belt1.setPosition(.5);
+        belt2.setPosition(.5);
         float rStick1 = gamepad1.right_stick_y;
         float lStick1 = gamepad1.left_stick_y;
         float lStick2 = gamepad2.left_stick_y;
@@ -190,12 +194,15 @@ public class crossFireTeleOp extends OpMode{
         lift1.setPower(gamepad2.right_stick_y);
         lift2.setPower(gamepad2.right_stick_y);
 
-        if (lStick2 > .5)
-            belt.setPosition(0);
-        else if (lStick2 < -.5)
-            belt.setPosition(1);
-        else
-            belt.setPosition(.5);
+        if (lStick2 > .5){
+            belt1.setPosition(0);
+            belt2.setPosition(1);}
+        else if (lStick2 < -.5){
+            belt1.setPosition(1);
+            belt2.setPosition(0);}
+        else{
+            belt1.setPosition(.5);
+            belt2.setPosition(.5);}
 
 
         ///DRIVER CODE\\\
