@@ -1,13 +1,17 @@
 package org.firstinspires.ftc.teamcode;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="cf_4_ball_NSR", group="LinearOPMode")
@@ -28,9 +32,10 @@ public class cf_NSR_4_ball extends LinearOpMode {
     private TouchSensor touch;
     private OpticalDistanceSensor fODSensor;
     private OpticalDistanceSensor bODSensor;
-
     GyroSensor gyroSensor;
     ModernRoboticsI2cGyro gyro;
+    private ColorSensor color;
+    private ColorSensor collectionColor;
 
     // Function to set up the Gyro
     // Function called in the init
@@ -52,7 +57,6 @@ public class cf_NSR_4_ball extends LinearOpMode {
         }
         // End of setting up Gyro
     }
-
     // Function that utilizes the launchPosition, handleBall, and launch functions to fire and reload the catapult
     private void fire() throws InterruptedException {
         sleep(1000);
@@ -73,7 +77,7 @@ public class cf_NSR_4_ball extends LinearOpMode {
     // Function to load the catapult
     private void loadBall() throws InterruptedException {
         hopper.setPosition(.5);
-        sleep(1000);
+        sleep(800);
         hopper.setPosition(.8);
     }
     // Fires the ball
@@ -203,6 +207,38 @@ public class cf_NSR_4_ball extends LinearOpMode {
         }
         driveStop();
     }
+    private void timedGyroTurn (int targetHeading, double time){
+        //boolean done = false;
+        double error;
+        double currentHeading;
+        double kp = .003;
+        double power;
+        ElapsedTime runtime = new ElapsedTime();
+        gyro.resetZAxisIntegrator();
+        runtime.reset();
+        sleep(250);
+
+        while (runtime.seconds() < time && opModeIsActive()){
+            currentHeading = -gyro.getIntegratedZValue();
+            error = (targetHeading-currentHeading);
+
+            if (error > 0)
+                power = .15+(error*kp);
+            else if (error < 0)
+                power = -.15+(error*kp);
+            else
+                power = 0;
+
+            drive(0+power, 0-power);
+
+            telemetry.addData("error", error);
+            telemetry.addData("power", power);
+            telemetry.addData("currentHeading", currentHeading);
+            telemetry.addData("targetHeading", targetHeading);
+            telemetry.update();
+        }
+        driveStop();
+    }
 
     private void driveToLine(int direction) throws InterruptedException {
         // drive forward until the front OD sensor detects the white line
@@ -226,6 +262,36 @@ public class cf_NSR_4_ball extends LinearOpMode {
         driveStop();
     }
 
+    public void collectRed() {
+        new Thread(new Runnable() {
+            public void run() {
+                sweeper.setPower(1);
+                try
+                {
+                    Thread.sleep(500);
+                }catch(InterruptedException ie){
+                }
+                while (opModeIsActive()){
+                    if (collectionColor.blue()>0&&collectionColor.red()<1){
+                        // reverse sweeper
+                        sweeper.setPower(1);
+                        try
+                        {
+                            Thread.sleep(1000);
+                        }catch(InterruptedException ie){
+                        }
+                    }
+                    else{
+                        // collect
+                        sweeper.setPower(-1);
+                    }
+                    telemetry.addData("Blue", collectionColor.blue());
+                    telemetry.addData("Red", collectionColor.red());
+                    telemetry.update();
+                }
+            }
+        }).start();
+    }
 
     public void runOpMode() throws InterruptedException {
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
@@ -242,6 +308,8 @@ public class cf_NSR_4_ball extends LinearOpMode {
         touch = hardwareMap.touchSensor.get("t");
         button = hardwareMap.servo.get("button");
         wheels = hardwareMap.servo.get("wheels");
+        color = hardwareMap.colorSensor.get("color");
+        collectionColor = hardwareMap.colorSensor.get("collectionColor");
         fODSensor = hardwareMap.opticalDistanceSensor.get("fOD");
         bODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
         hopper.setPosition(0.8);
@@ -252,6 +320,8 @@ public class cf_NSR_4_ball extends LinearOpMode {
         setUpGyro();
         boolean redSide = false;
         boolean blueSide = false;
+        color.setI2cAddress(I2cAddr.create7bit(0x1e));
+        collectionColor.setI2cAddress(I2cAddr.create7bit(0x1d));
 
         while (!redSide&&!blueSide){
             telemetry.addLine("Press dpad_left for RED side");
@@ -270,40 +340,44 @@ public class cf_NSR_4_ball extends LinearOpMode {
                 telemetry.addLine("RED");
             telemetry.update();
         }
+        collectionColor.enableLed(false);
         waitForStart();
+        collectionColor.enableLed(true);
 
         if (redSide){
-            encoderDrive(/*Distance*/80, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/-1);
-            gyroTurn(-8);
+            encoderDrive(/*Distance*/59, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
+//            encoderDrive(/*Distance*/5, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
+//            timedGyroTurn(-58,2);
+//            encoderDrive(/*Distance*/43, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
+            timedGyroTurn(119,2.5);
+            encoderDrive(/*Distance*/2, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
+            collectRed();
             fire();
-            gyroTurn(8);
-            sweeper.setPower(1);
-            sleep(500);
-            sweeper.setPower(-1);
-            encoderDrive(/*Distance*/83, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/1);
+            timedGyroTurn(60,2);
             wheels.setPosition(1);
-            gyroTurn(-18);
-            encoderDrive(/*Distance*/15, /*leftSpeed*/.7, /*rightSpeed*/.68, /*direction*/1);
+            encoderDrive(/*Distance*/10, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
+            encoderDrive(/*Distance*/60, /*leftSpeed*/.52, /*rightSpeed*/.75, /*direction*/1);
+            encoderDrive(/*Distance*/15, /*leftSpeed*/.8, /*rightSpeed*/.75, /*direction*/1);
             driveToLine(1);
-            encoderDrive(/*Distance*/3, /*leftSpeed*/.7, /*rightSpeed*/.65, /*direction*/1);
+            encoderDrive(/*Distance*/1, /*leftSpeed*/.8, /*rightSpeed*/.85, /*direction*/1);
             sleep(2000);
-            encoderDrive(/*Distance*/70, /*leftSpeed*/.75, /*rightSpeed*/.72, /*direction*/-1);
+            encoderDrive(/*Distance*/40, /*leftSpeed*/.8, /*rightSpeed*/.85, /*direction*/-1);
             wheels.setPosition(.62);
             sleep(250);
             // Turn 90 degrees left to face vortex
-            gyroTurn(-85);
+            timedGyroTurn(-115,2);
             // Drive forward into range
-            encoderDrive(/*Distance*/8, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            encoderDrive(/*Distance*/20, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
             // Shoot both balls
             loadBall();
             fire();
-            sweeper.setPower(0);
-            encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
-            gyroTurn(-175);
-            encoderDrive(/*Distance*/20, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
+            encoderDrive(/*Distance*/10, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
+            timedGyroTurn(-160,3);
+            encoderDrive(/*Distance*/10, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/-1);
         }
         else if (blueSide){
-            driveToLine(1);
+            collectRed();
+            sleep(30000);
         }
 
 

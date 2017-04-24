@@ -20,7 +20,8 @@ public class cf_NSR_2_balls extends LinearOpMode {
     private DcMotor rDrive1;
     private DcMotor rDrive2;
     private DcMotor sweeper;
-    private Servo belt;
+    private Servo belt1;
+    private Servo belt2;
     private Servo button;
     private Servo hopper;
     private Servo wheels;
@@ -125,41 +126,35 @@ public class cf_NSR_2_balls extends LinearOpMode {
         catapult.setPower(0);
     }
 
-    private void gyroTurn(int targetHeading) {
-        boolean done = false;
+    private void timedGyroTurn (int targetHeading, double time){
+        //boolean done = false;
         double error;
         double currentHeading;
-        double kp = .0035;
+        double kp = .003;
         double power;
+        ElapsedTime runtime = new ElapsedTime();
         gyro.resetZAxisIntegrator();
+        runtime.reset();
         sleep(250);
 
-        while (!done && opModeIsActive()) {
+        while (runtime.seconds() < time && opModeIsActive()){
             currentHeading = -gyro.getIntegratedZValue();
+            error = (targetHeading-currentHeading);
 
-            error = (targetHeading - currentHeading);
-            power = error * kp;
+            if (error > 0)
+                power = .15+(error*kp);
+            else if (error < 0)
+                power = -.15+(error*kp);
+            else
+                power = 0;
 
-            error = Range.clip(error, -.3, .3);
-            if (power > 0 && power < .18)
-                power = .18;
-            else if (power < 0 && power > -.18)
-                power = -.18;
+            drive(0+power, 0-power);
 
             telemetry.addData("error", error);
             telemetry.addData("power", power);
             telemetry.addData("currentHeading", currentHeading);
             telemetry.addData("targetHeading", targetHeading);
             telemetry.update();
-
-            if (currentHeading <= targetHeading + 1 && currentHeading >= targetHeading - 1) {
-                done = true;
-                driveStop();
-            } else {
-                done = false;
-                drive(0 + power, 0 - power);
-            }
-
         }
         driveStop();
     }
@@ -186,7 +181,8 @@ public class cf_NSR_2_balls extends LinearOpMode {
         rDrive2 = hardwareMap.dcMotor.get("rDrive2");
         lDrive1 = hardwareMap.dcMotor.get("lDrive1");
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
-        belt = hardwareMap.servo.get("belt");
+        belt1 = hardwareMap.servo.get("belt1");
+        belt2 = hardwareMap.servo.get("belt2");
         lDrive1.setDirection(DcMotor.Direction.REVERSE);
         lDrive2.setDirection(DcMotor.Direction.REVERSE);
         sweeper = hardwareMap.dcMotor.get("sweeper");
@@ -197,7 +193,8 @@ public class cf_NSR_2_balls extends LinearOpMode {
         wheels = hardwareMap.servo.get("wheels");
         hopper.setPosition(0.8);
         button.setPosition(0.5);
-        belt.setPosition(.5);
+        belt1.setPosition(.5);
+        belt2.setPosition(.5);
         wheels.setPosition(.2);
         double distance;
         double leftSpeed;
@@ -253,8 +250,8 @@ public class cf_NSR_2_balls extends LinearOpMode {
                     nearCenter = true;
                 else if (gamepad1.dpad_down)
                     nearCorner = true;
-                else if (gamepad1.dpad_left);
-                nothing = true;
+                else if (gamepad1.dpad_left)
+                    nothing = true;
             }
         }
         else if (far){
@@ -268,8 +265,8 @@ public class cf_NSR_2_balls extends LinearOpMode {
                     farCenter = true;
                 else if (gamepad1.dpad_down)
                     farCorner = true;
-                else if (gamepad1.dpad_left);
-                nothing = true;
+                else if (gamepad1.dpad_left)
+                    nothing = true;
 
 
             }
@@ -308,7 +305,7 @@ public class cf_NSR_2_balls extends LinearOpMode {
             // Drive forward from wall
             if (far) {
 
-                encoderDrive(/*distance*/25, /*leftSpeed*/0.5, /*rightSpeed*/0.5, /*direction*/1);
+                encoderDrive(/*distance*/35, /*leftSpeed*/0.5, /*rightSpeed*/0.5, /*direction*/1);
                 sleep(1000);
             }
             if (near) {
@@ -332,14 +329,15 @@ public class cf_NSR_2_balls extends LinearOpMode {
             sleep(wait);
 
                 if (farCenter) {
-
-                    encoderDrive(/*distance*/40, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                    encoderDrive(/*distance*/11, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                    timedGyroTurn(-135,4);
+                    encoderDrive(/*distance*/12, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/-1);
                 }
             if (farCorner) {
-                gyroTurn(-45);
+                timedGyroTurn(-45,2);
 
                 encoderDrive(/*distance*/50, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
-                gyroTurn(-45);
+                timedGyroTurn(-45,2);
                 encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
             }
 
@@ -348,7 +346,7 @@ public class cf_NSR_2_balls extends LinearOpMode {
                 encoderDrive(/*distance*/40, /*leftSpeed*/0.8, /*rightSpeed*/0.8, /*direction*/1);
             }
             if (nearCorner) {
-                gyroTurn(-70);
+                timedGyroTurn(-70,2);
 
                 encoderDrive(/*distance*/20, /*leftSpeed*/0.8, /*rightSpeed*/1, /*direction*/1);
             }
@@ -358,8 +356,7 @@ public class cf_NSR_2_balls extends LinearOpMode {
         if (blue) {
             // Drive forward from wall
             if (far) {
-
-                encoderDrive(/*distance*/25, /*leftSpeed*/0.5, /*rightSpeed*/0.5, /*direction*/1);
+                encoderDrive(/*distance*/35, /*leftSpeed*/0.5, /*rightSpeed*/0.5, /*direction*/1);
                 sleep(1000);
             }
             if (near) {
@@ -383,14 +380,14 @@ public class cf_NSR_2_balls extends LinearOpMode {
             sleep(wait);
 
                 if (farCenter) {
-
-                    encoderDrive(/*distance*/40, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                    encoderDrive(/*distance*/11, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                    timedGyroTurn(135,4);
+                    encoderDrive(/*distance*/12, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/-1);
                 }
             if (farCorner) {
-                gyroTurn(45);
-
+                timedGyroTurn(45,2);
                 encoderDrive(/*distance*/50, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
-                gyroTurn(45);
+                timedGyroTurn(50,2);
                 encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
             }
 
@@ -399,7 +396,7 @@ public class cf_NSR_2_balls extends LinearOpMode {
                 encoderDrive(/*distance*/40, /*leftSpeed*/0.8, /*rightSpeed*/0.8, /*direction*/1);
             }
             if (nearCorner) {
-                gyroTurn(70);
+                timedGyroTurn(70,2);
 
                 encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/0.8, /*direction*/1);
             }

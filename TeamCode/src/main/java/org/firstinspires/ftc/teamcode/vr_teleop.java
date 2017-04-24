@@ -59,10 +59,10 @@ public class vr_teleop extends OpMode {
                 rightPower = (-gamepad1.right_stick_y * Math.abs(gamepad1.right_stick_y));
         }
         // Fires or reverses catapult based on a and y buttons
-        if (gamepad2.y) {
+        if (gamepad1.right_bumper) {
             catapult.setPower(.5);
         }
-        else if (gamepad2.a) {
+        else if (gamepad1.left_bumper) {
             catapult.setPower(-.5);
         }
         else {
@@ -89,7 +89,7 @@ public class vr_teleop extends OpMode {
             paddle.setPower(0);
         }
         // Sets the feeder servo position to allow balls to enter the catapult when b is pressed
-        if (gamepad2.b) {
+        if (gamepad1.b) {
             feeder.setPosition(.3);
         }
         else {

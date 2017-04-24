@@ -5,15 +5,16 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name="Cross Fire TeleOp", group="TeleOp")
+@TeleOp(name="cf_teleop_blue", group="TeleOp")
 
-public class crossFireTeleOp extends OpMode{
-    ColorSensor color;
+public class cf_teleop_blue extends OpMode{
+    ColorSensor collectionColor;
     DcMotor rDrive1;
     DcMotor rDrive2;
     DcMotor lDrive1;
@@ -37,14 +38,34 @@ public class crossFireTeleOp extends OpMode{
     boolean fullSpeed = false;
     double floorLeft;
     double floorRight;
+    boolean eject = false;
+    boolean ledEnabled = false;
+    int blue;
+    int red;
 
-    public double getDirection(double inputPower) {
+    private double getDirection(double inputPower) {
         if(inputPower == 0) {
             return 1;
         } else {
             return inputPower * Math.abs(inputPower);
         }
     }
+    private void ejectBall() {
+        new Thread(new Runnable() {
+            public void run() {
+                // reverse sweeper
+                sweeper.setPower(1);
+                try
+                {
+                    Thread.sleep(1000);
+                }catch(InterruptedException ie){
+                }
+                eject = false;
+                sweeper.setPower(-1);
+            }
+        }).start();
+    }
+
     int drive = 0;
 
     ElapsedTime timer = new ElapsedTime();
@@ -64,20 +85,19 @@ public class crossFireTeleOp extends OpMode{
         lift2 = hardwareMap.dcMotor.get("lift2");
         hopper = hardwareMap.servo.get("hopper");
         touch = hardwareMap.touchSensor.get("t");
-        color = hardwareMap.colorSensor.get("color");
+        collectionColor = hardwareMap.colorSensor.get("collectionColor");
+        collectionColor.setI2cAddress(I2cAddr.create7bit(0x1d));
         button = hardwareMap.servo.get("button");
         belt1 = hardwareMap.servo.get("belt1");
         belt2 = hardwareMap.servo.get("belt2");
         wheels = hardwareMap.servo.get("wheels");
         rDrive1.setDirection(DcMotor.Direction.REVERSE);
         rDrive2.setDirection(DcMotor.Direction.REVERSE);
-
         belt1.setPosition(.5);
         belt2.setPosition(.5);
         button.setPosition(.5);
         hopper.setPosition(.8);
-
-
+        collectionColor.enableLed(false);
     }
 
     private LaunchState launchState = LaunchState.Idle;
@@ -105,21 +125,16 @@ public class crossFireTeleOp extends OpMode{
         double lTrigger2 = gamepad2.left_trigger;
         double speed = 1;
 
+        if (!ledEnabled) {
+            collectionColor.enableLed(true);
+            ledEnabled = true;
+        }
+        telemetry.addData("ledOn", ledEnabled);
         ///OPERATOR CODE\\\
         double noPower = 0.0;
         double firingPower = 1;
-        /*if ( gamepad2.left_bumper ) {
-            if ( touch.isPressed() ) {
-                //catapult.setPower(noPower);
-                hopper.setPosition(.5);
 
-            }
-            else {
-                catapult.setPower(firingPower);
-            }
-        }*/
-
-        if(!rBumper2) {
+        if (!rBumper2) {
             launchState = LaunchState.Idle;
             if (y) {
                 catapult.setPower(1);
@@ -135,29 +150,29 @@ public class crossFireTeleOp extends OpMode{
             }
         }
 
-        switch(launchState) {
+        switch (launchState) {
             case Idle:
-                if(rBumper2) {
+                if (rBumper2) {
                     launchState = LaunchState.Pressed;
                     catapult.setPower(1);
                 }
                 break;
 
             case Pressed:
-                if(touch.isPressed()) {
+                if (touch.isPressed()) {
                     launchState = LaunchState.NotPressed;
                 }
                 break;
 
             case NotPressed:
-                if(!touch.isPressed()) {
+                if (!touch.isPressed()) {
                     timer.reset();
                     launchState = LaunchState.Load;
                 }
                 break;
 
             case Load:
-                if(timer.milliseconds() > 100) {
+                if (timer.milliseconds() > 100) {
                     hopper.setPosition(0.5);
                     timer.reset();
                     launchState = LaunchState.Open;
@@ -165,10 +180,22 @@ public class crossFireTeleOp extends OpMode{
                 break;
 
             case Open:
-                if(timer.milliseconds() > 200) {
+                if (timer.milliseconds() > 200) {
                     hopper.setPosition(0.8);
                     launchState = LaunchState.Idle;
                 }
+        }
+
+        blue = collectionColor.blue();
+        red = collectionColor.red();
+        telemetry.addData("Blue", blue);
+        telemetry.addData("Red", red);
+        telemetry.addData("eject", eject);
+        telemetry.update();
+
+        if (red > 0 && blue < 1) {
+            eject = true;
+            ejectBall();
         }
 
         if (up) {
@@ -178,51 +205,37 @@ public class crossFireTeleOp extends OpMode{
         } else if (left) {
             sweeper.setPower(0);
         }
-        /*if (y) {
-            catapult.setPower(1);
-        } else if (a) {
-            catapult.setPower(-1);
-        } else {
-            catapult.setPower(0);
-        }
-        if (b) {
-            hopper.setPosition(.5);
-        } else {
-            hopper.setPosition(.8);
-        }*/
 
         lift1.setPower(gamepad2.right_stick_y);
         lift2.setPower(gamepad2.right_stick_y);
 
-        if (lStick2 > .5){
+        if (lStick2 > .5) {
             belt1.setPosition(0);
-            belt2.setPosition(1);}
-        else if (lStick2 < -.5){
+            belt2.setPosition(1);
+        } else if (lStick2 < -.5) {
             belt1.setPosition(1);
-            belt2.setPosition(0);}
-        else{
+            belt2.setPosition(0);
+        } else {
             belt1.setPosition(.5);
-            belt2.setPosition(.5);}
+            belt2.setPosition(.5);
+        }
 
 
         ///DRIVER CODE\\\
 
-        if (lBumper1 && sideWheels == 1){
+        if (lBumper1 && sideWheels == 1) {
             wheelsDown = true;
-        }
-        else if (wheelsDown && !lBumper1){
+        } else if (wheelsDown && !lBumper1) {
             sideWheels = 2;
             wheelsDown = false;
-        }
-        else if (lBumper1 && sideWheels == 2){
+        } else if (lBumper1 && sideWheels == 2) {
             wheelsUp = true;
-        }
-        else if (wheelsUp && !lBumper1){
+        } else if (wheelsUp && !lBumper1) {
             sideWheels = 1;
             wheelsUp = false;
         }
 
-        switch (sideWheels){
+        switch (sideWheels) {
             case 1:
                 wheels.setPosition(.62);
                 sideWheels = 1;
@@ -236,22 +249,19 @@ public class crossFireTeleOp extends OpMode{
                 break;
         }
         // Universal drive train power switch case
-        if (rBumper1 && power == 1){
+        if (rBumper1 && power == 1) {
             halfSpeed = true;
-        }
-        else if (halfSpeed && !rBumper1){
+        } else if (halfSpeed && !rBumper1) {
             power = 2;
             halfSpeed = false;
-        }
-        else if (rBumper1 && power == 2){
+        } else if (rBumper1 && power == 2) {
             fullSpeed = true;
-        }
-        else if (fullSpeed && !rBumper1){
+        } else if (fullSpeed && !rBumper1) {
             power = 1;
             fullSpeed = false;
         }
 
-        switch (power){
+        switch (power) {
             case 1:
                 // divide all powers by 1 (full speed)
                 speed = 1;
@@ -311,14 +321,14 @@ public class crossFireTeleOp extends OpMode{
         switch (drive) {
             case 1:
                 // forward default
-                rightPower = ((-lStick1 * Math.abs(lStick1))/speed) - floorLeft;
-                leftPower = ((-rStick1 * Math.abs(rStick1))/speed) - floorRight;
+                rightPower = ((-lStick1 * Math.abs(lStick1)) / speed) - floorLeft;
+                leftPower = ((-rStick1 * Math.abs(rStick1)) / speed) - floorRight;
                 drive = 1;
                 break;
             case 2:
                 // backward
-                rightPower = ((rStick1 * Math.abs(rStick1))/speed) + floorRight;
-                leftPower = ((lStick1 * Math.abs(lStick1))/speed) + floorLeft;
+                rightPower = ((rStick1 * Math.abs(rStick1)) / speed) + floorRight;
+                leftPower = ((lStick1 * Math.abs(lStick1)) / speed) + floorLeft;
                 drive = 2;
                 break;
             case 3:
@@ -333,8 +343,8 @@ public class crossFireTeleOp extends OpMode{
                 break;
 
             default:
-                leftPower = ((lStick1 * Math.abs(lStick1))/speed) + floorLeft;
-                rightPower = ((rStick1 * Math.abs(rStick1))/speed) + floorRight;
+                leftPower = ((lStick1 * Math.abs(lStick1)) / speed) + floorLeft;
+                rightPower = ((rStick1 * Math.abs(rStick1)) / speed) + floorRight;
         }
 
 
@@ -347,6 +357,4 @@ public class crossFireTeleOp extends OpMode{
         rDrive1.setPower(rightPower);
         rDrive2.setPower(rightPower);
     }
-
-
 }

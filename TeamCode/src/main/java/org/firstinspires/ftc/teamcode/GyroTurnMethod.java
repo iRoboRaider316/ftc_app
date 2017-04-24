@@ -9,17 +9,22 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="GyroTurn", group="Methods")
-@Disabled
+//@Disabled
 public class GyroTurnMethod extends LinearOpMode {
 
     DcMotor lDrive1;
     DcMotor lDrive2;
     DcMotor rDrive1;
     DcMotor rDrive2;
-
+    double[]pastError = new double[5];
     //ColorSensor colorSensor;
     GyroSensor gyroSensor;
     ModernRoboticsI2cGyro gyro;
+    double sum = 0;
+    double lastTime = 0;
+    double lastError = 0;
+    double speed = 0;
+    double time = 0;
 
     // Function to set up the Gyro
     // Function called in the init
@@ -76,6 +81,81 @@ public class GyroTurnMethod extends LinearOpMode {
         driveStop();
     }
 
+    private void PIDGyroTurn (int targetHeading, double time){
+        double error;
+        double currentHeading;
+        double kp = .005;
+        double ki = 0.00025;
+        double kd = 0.002;
+        double power;
+        ElapsedTime runtime = new ElapsedTime();
+        gyro.resetZAxisIntegrator();
+        runtime.reset();
+        sleep(250);
+        lastError = targetHeading;
+        lastTime = runtime.seconds();
+
+        while (runtime.seconds() < time && opModeIsActive()){
+            // positive angles are to the right, negative to the left.
+            currentHeading = -gyro.getIntegratedZValue();
+            // calculate error
+            error = (targetHeading-currentHeading);
+
+            if (error > 0)
+                power = .15+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
+            else if (error < 0)
+                power = -.15+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
+            else
+                power = 0;
+
+            power = Range.clip(power, -1, 1);
+            drive(0+power, 0-power);
+
+            telemetry.addData("error", error);
+            telemetry.addData("currentHeading", currentHeading);
+            telemetry.addData("targetHeading", targetHeading);
+            telemetry.addData("proportional",(error*kp));
+            telemetry.addData("integral",(integral(error)*ki));
+            telemetry.addData("derivative",(derivative(error,runtime.seconds())*kd));
+            telemetry.addData("power", power);
+            telemetry.update();
+            sleep(100);
+        }
+        driveStop();
+    }
+    private double integral(double error){
+        sum = 0;
+//        telemetry.addData("pastError 0", pastError[0]);
+//        telemetry.addData("pastError 1", pastError[1]);
+//        telemetry.addData("pastError 2", pastError[2]);
+//        telemetry.addData("pastError 3", pastError[3]);
+//        telemetry.addData("pastError 4", pastError[4]);
+//        telemetry.addData("error sum", sum);
+//        telemetry.update();
+        pastError[4] = pastError[3];
+        pastError[3] = pastError[2];
+        pastError[2] = pastError[1];
+        pastError[1] = pastError[0];
+        pastError[0] = error;
+        for( double i : pastError) {
+            sum += i;
+        }
+        return
+                sum;
+    }
+
+    private double derivative(double error, double time){
+        speed = (error-lastError)/(time-lastTime);
+//        telemetry.addData("speed",speed);
+//        telemetry.addData("lastError", lastError);
+//        telemetry.addData("lastTime", lastTime);
+//        telemetry.update();
+        lastError = error;
+        lastTime = time;
+        return
+                speed;
+    }
+
     private void gyroTurn (int targetHeading){
         boolean done = false;
         double error;
@@ -116,8 +196,6 @@ public class GyroTurnMethod extends LinearOpMode {
         driveStop();
     }
 
-
-
     private void drive(double leftSpeed, double rightSpeed){
         lDrive1.setPower(leftSpeed);
         lDrive2.setPower(leftSpeed);
@@ -131,135 +209,6 @@ public class GyroTurnMethod extends LinearOpMode {
         rDrive1.setPower(0);
         rDrive2.setPower(0);
     }
-    /*// Function to use the gyro to do a spinning turn in place.
-    // It points the robot at an absolute heading, not a relative turn.  0 will point robot to same
-    // direction we were at the start of program.
-    // Pass:
-    // targetHeading = the new heading we want to point robot at,
-    // maxSpeed = the max speed the motor can run in the range of 0 to 1
-    // direction = the direction we will turn, 1 is clockwise, -1 is counter-clockwise
-    // Returns:
-    // heading = the new heading the gyro reports
-    public void gyroTurn(int targetHeading, double maxSpeed, int direction) {
-        int error;
-        int currentHeading;
-        double oldSpeed;
-        double speed = 0;
-        double minSpeed = 0.05;
-        double acceleration = 0.01;
-        double kp = 0.01;             // Proportional error constant
-
-        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        // Calls turnCompeted function to determine if we need to keep turning
-        while ((!turnCompleted(gyroSensor.getHeading(), targetHeading, 5, direction) && opModeIsActive())) {
-
-            // Calculate the speed we should be moving at
-            oldSpeed = speed;           // save our old speed for use later.
-
-            currentHeading = gyroSensor.getHeading();
-            // Reuses the degreesToTurn function by passing different values to obtain our error
-            error = degreesToTurn(targetHeading, currentHeading, direction);
-
-            speed = error * kp * direction;
-
-            // Limit the acceleration of the motors speed at beginning of turns.
-            if( Math.abs(speed) > Math.abs(oldSpeed))
-                speed = oldSpeed + (direction * acceleration);
-
-            // Set a minimum power for the motors to make sure they move
-            if (Math.abs(speed) < minSpeed)
-                speed = minSpeed * direction;
-
-            // Don't exceed the maximium speed requested
-            if (Math.abs(speed) > maxSpeed)
-                speed = maxSpeed * direction;
-
-            // Set the motor speeds
-            lDrive1.setPower(speed);
-            lDrive2.setPower(speed);
-            rDrive1.setPower(-speed);
-            rDrive2.setPower(-speed);
-            telemetry.addData("Current Heading", gyroSensor.getHeading());
-            telemetry.addData("Current Speed", speed);
-            updateTelemetry(telemetry);
-        }
-        // Done with the turn so shut off motors
-        lDrive1.setPower(0);
-        lDrive2.setPower(0);
-        rDrive1.setPower(0);
-        rDrive2.setPower(0);
-
-    }
-
-    // Function used by the turnCompleted function (which is used by the gyroTurn function) to determine the degrees to turn.
-    // Also used to determine error for proportional speed control in the gyroTurn function
-    // by passing targetHeading and currentHeading instead of startHeading and targetHeading, respectively
-    // Pass:
-    // startHeading = heading that we are at before we turn
-    // targetHeading = heading we want to turn to
-    // direction = the direction we want to turn (1 for right, -1 for left)
-    public static int degreesToTurn(int startHeading, int targetHeading, int direction) {
-
-        int degreesToTurn;
-
-        // Turning right
-        if (direction == 1)
-            degreesToTurn = targetHeading - startHeading;
-            // Turning left
-        else
-            degreesToTurn = startHeading - targetHeading;
-
-        if (degreesToTurn < 0) // Changed from "while"
-            degreesToTurn = degreesToTurn + 360;
-        else if (degreesToTurn > 360) // Changed from "while"
-            degreesToTurn = degreesToTurn + 360;
-
-        return (degreesToTurn);
-    }
-
-    // Function used by the GyroTurn function to determine if we have turned far enough.
-    // Pulls from degreesToTurn function to determine degrees to turn.
-    // Pass:
-    // currentHeading = the heading the robot is currently at (live value, changes during the turn)
-    // targetHeading = the heading we want the robot to be at once the turn is completed
-    // range = the degrees of error we are allowing so that the robot doesn't spin in circles
-    // if it overshoots by a small amount
-    // direction = direction the robot is turning (1 for right, -1 for left)
-    // Returns:
-    // result = true if we have reached target heading, false if we haven't
-    public static boolean turnCompleted(int currentHeading, int targetHeading, int range, int direction)  {
-
-        // Value we want to stop at
-        int stop;
-        // Will be sent to the GyroTurn function; robot stops turning when true
-        boolean result;
-
-        // Turn right
-        if (direction >= 1) {
-            stop = targetHeading - range;
-            if (stop >= 0){
-                result = (currentHeading >= stop && currentHeading <= targetHeading);
-            }
-            else{
-                result = ((currentHeading >= (stop+360) && currentHeading <=359)|| (currentHeading >= 0 && currentHeading <= targetHeading));
-            }
-        }
-        // Turn left
-        else {
-            stop = targetHeading + range;
-            if (stop <=359){
-                result = (currentHeading <= stop && currentHeading >= targetHeading);
-            }
-            else{
-                result = (currentHeading >= targetHeading && currentHeading <= 359) || (currentHeading >=0 && currentHeading <= (stop-360));
-            }
-        }
-        return (result);
-    }*/
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -268,6 +217,8 @@ public class GyroTurnMethod extends LinearOpMode {
         int direction;
         double maxSpeed;
         int targetHeading;
+        double error;
+        double currentHeading;
 
         lDrive1 = hardwareMap.dcMotor.get("lDrive1");
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
@@ -291,12 +242,10 @@ public class GyroTurnMethod extends LinearOpMode {
 
         waitForStart();
 
-        targetHeading = 180;
-        timedGyroTurn(targetHeading, 3);
-        while (opModeIsActive()){
-            telemetry.addData("Heading", -gyro.getIntegratedZValue());
-            telemetry.update();
-        }
+        PIDGyroTurn(90,2.5);
+
+        // 2.5 seconds for a 90 degree turn
+        // 3 seconds for a 170 degree turn
 
     }
 }

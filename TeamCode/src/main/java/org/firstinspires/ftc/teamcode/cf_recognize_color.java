@@ -11,14 +11,14 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 @Autonomous(name="cf_recognize_color", group="LinearOpMode")
-//@Disabled
+@Disabled
 
 public class cf_recognize_color extends LinearOpMode {
 
     ColorSensor color;
 
-    public void recognizeColor() {
 
+    public void recognizeColor() {
         //if the beacon is red
         if (color.red() > color.blue()){
             //insert code here

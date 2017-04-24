@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
@@ -17,7 +18,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class cf_NSR_beacons extends LinearOpMode {
 
     private DcMotor catapult;
-    //private DcMotor sweeper;
+    private DcMotor sweeper;
     private DcMotor lDrive1;
     private DcMotor lDrive2;
     private DcMotor rDrive1;
@@ -29,6 +30,7 @@ public class cf_NSR_beacons extends LinearOpMode {
     private Servo wheels;
     private TouchSensor touch;
     private ColorSensor color;
+    private ColorSensor collectionColor;
     private OpticalDistanceSensor fODSensor;
     private OpticalDistanceSensor bODSensor;
 
@@ -65,12 +67,10 @@ public class cf_NSR_beacons extends LinearOpMode {
     // Function that utilizes the launchPosition, handleBall, and launch functions to fire and reload the catapult
     private void fire() throws InterruptedException {
         sleep(1000);
-        launchPosition();
         launchBall();
+        launchPosition();
         loadBall();
-        launchPosition();
         launchBall();
-        launchPosition();
     }
     // Resets catapult to the launch position
     private void launchPosition() throws InterruptedException{
@@ -82,7 +82,7 @@ public class cf_NSR_beacons extends LinearOpMode {
     // Function to load the catapult
     private void loadBall() throws InterruptedException {
         hopper.setPosition(.5);
-        sleep(1000);
+        sleep(800);
         hopper.setPosition(.8);
     }
     // Fires the ball
@@ -303,7 +303,7 @@ public class cf_NSR_beacons extends LinearOpMode {
         //boolean done = false;
         double error;
         double currentHeading;
-        double kp = .0055;
+        double kp = .0025;
         double power;
         ElapsedTime runtime = new ElapsedTime();
         gyro.resetZAxisIntegrator();
@@ -332,6 +332,67 @@ public class cf_NSR_beacons extends LinearOpMode {
         driveStop();
     }
 
+    public void collectRed() {
+        new Thread(new Runnable() {
+            public void run() {
+                sweeper.setPower(1);
+                try
+                {
+                    Thread.sleep(500);
+                }catch(InterruptedException ie){
+                }
+                while (opModeIsActive()){
+                    if (collectionColor.blue()>0&&collectionColor.red()<1){
+                        // reverse sweeper
+                        sweeper.setPower(1);
+                        try
+                        {
+                            Thread.sleep(1000);
+                        }catch(InterruptedException ie){
+                        }
+                    }
+                    else{
+                        // collect
+                        sweeper.setPower(-1);
+                    }
+                    telemetry.addData("Blue", collectionColor.blue());
+                    telemetry.addData("Red", collectionColor.red());
+                    telemetry.update();
+                }
+            }
+        }).start();
+    }
+    public void collectBlue() {
+        new Thread(new Runnable() {
+            public void run() {
+                sweeper.setPower(1);
+                try
+                {
+                    Thread.sleep(500);
+                }catch(InterruptedException ie){
+                }
+                while (opModeIsActive()){
+                    if (collectionColor.red()>0&&collectionColor.blue()<1){
+                        // reverse sweeper
+                        sweeper.setPower(1);
+                        try
+                        {
+                            Thread.sleep(1000);
+                        }catch(InterruptedException ie){
+                        }
+                    }
+                    else{
+                        // collect
+                        sweeper.setPower(-1);
+                    }
+                    telemetry.addData("Blue", collectionColor.blue());
+                    telemetry.addData("Red", collectionColor.red());
+                    telemetry.update();
+                }
+            }
+        }).start();
+    }
+
     public void runOpMode() throws InterruptedException {
         //##############Init##############
         rDrive1 = hardwareMap.dcMotor.get("rDrive1");
@@ -340,8 +401,7 @@ public class cf_NSR_beacons extends LinearOpMode {
         lDrive2 = hardwareMap.dcMotor.get("lDrive2");
         lDrive1.setDirection(DcMotor.Direction.REVERSE);
         lDrive2.setDirection(DcMotor.Direction.REVERSE);
-
-        //sweeper = hardwareMap.dcMotor.get("sweeper");
+        sweeper = hardwareMap.dcMotor.get("sweeper");
         catapult = hardwareMap.dcMotor.get("catapult");
         button = hardwareMap.servo.get("button");
         hopper = hardwareMap.servo.get("hopper");
@@ -349,6 +409,9 @@ public class cf_NSR_beacons extends LinearOpMode {
         belt2 = hardwareMap.servo.get("belt2");
         touch = hardwareMap.touchSensor.get("t");
         color = hardwareMap.colorSensor.get("color");
+        collectionColor = hardwareMap.colorSensor.get("collectionColor");
+        color.setI2cAddress(I2cAddr.create7bit(0x1e));
+        collectionColor.setI2cAddress(I2cAddr.create7bit(0x1d));
         wheels = hardwareMap.servo.get("wheels");
         belt1.setPosition(.5);
         belt2.setPosition(.5);
@@ -363,6 +426,8 @@ public class cf_NSR_beacons extends LinearOpMode {
         boolean center = false;
         boolean ramp = false;
         boolean vortex = false;
+        boolean threeBall = false;
+        boolean twoBall = false;
 
         resetEncoders();
         idle();
@@ -378,6 +443,18 @@ public class cf_NSR_beacons extends LinearOpMode {
                 redSide = true;
             else if (gamepad1.dpad_right)
                 blueSide = true;
+        }
+        telemetry.update();
+        sleep(1000);
+
+        while (!threeBall&&!twoBall){
+            telemetry.addLine("Press dpad_left for 3 ball");
+            telemetry.addLine("Press dpad_right for 2 ball");
+            telemetry.update();
+            if (gamepad1.dpad_left)
+                threeBall = true;
+            else if (gamepad1.dpad_right)
+                twoBall = true;
         }
         telemetry.update();
         sleep(1000);
@@ -411,14 +488,26 @@ public class cf_NSR_beacons extends LinearOpMode {
             telemetry.addLine("No Park");
             else
                 telemetry.addLine("Turning vortex");
+            if (threeBall)
+                telemetry.addLine("3 balls");
+            else if (twoBall)
+                telemetry.addLine("2 balls");
             telemetry.update();
         }
 
         waitForStart();
 
         if (redSide){
-            // drive forward for clearance
-            encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
+            if (twoBall){
+                // drive forward for clearance
+                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
+            }
+            else if (threeBall){
+                collectRed();
+                sleep(1500);
+                // drive forward for clearance
+                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
+            }
             // lower side wheels
             wheels.setPosition(1);
             // curve until parallel with wall
@@ -446,12 +535,17 @@ public class cf_NSR_beacons extends LinearOpMode {
             // raise the side wheels
             wheels.setPosition(.62);
             sleep(250);
-            // Turn 90 degrees left to face vortex
-            gyroTurn(-80);
+            // Turn left to face vortex
+            timedGyroTurn(-83,3.5);
             // Drive forward into range
             encoderDrive(/*Distance*/13, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // Shoot both balls
             fire();
+            if (threeBall){
+                launchPosition();
+                loadBall();
+                launchBall();
+            }
 
             if(vortex) {
                 // drive forward into cap ball
@@ -471,22 +565,31 @@ public class cf_NSR_beacons extends LinearOpMode {
                 // drive forward into cap ball
                 encoderDrive(/*Distance*/12, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
                 // turn to move cap ball
-                timedGyroTurn(175,4);
-//                gyroTurn(35);
-//                gyroTurn(-40);
+                timedGyroTurn(160,4);
                 // drive onto center
-                encoderDrive(/*Distance*/17, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
+                encoderDrive(/*Distance*/22, /*leftSpeed*/.5, /*rightSpeed*/.6, /*direction*/-1);
+                //gyroTurn(4);
             }
             else {
                 // turn toward ramp
-                gyroTurn(100);
+                timedGyroTurn(100,2.5);
                 // drive into ramp
-                encoderDrive(/*Distance*/24, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                encoderDrive(/*Distance*/30, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             }
         }
         else if (blueSide){
-            // drive forward for clearance
-            encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            if (twoBall){
+                // drive forward for clearance
+                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            }
+            else if (threeBall){
+                collectBlue();
+                sleep(1500);
+                // drive forward for clearance
+                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
+                gyroTurn(80);
+                gyroTurn(78);
+            }
             // lower side wheels
             wheels.setPosition(1);
             // curve until parallel with wall
@@ -515,11 +618,16 @@ public class cf_NSR_beacons extends LinearOpMode {
             wheels.setPosition(.62);
             sleep(250);
             // Turn 80 degrees left to face vortex
-            gyroTurn(-75);
+            timedGyroTurn(-80,3.5);
             // Drive forward into range
             encoderDrive(/*Distance*/13, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // Shoot both balls
             fire();
+            if (threeBall){
+                launchPosition();
+                loadBall();
+                launchBall();
+            }
 
             if(vortex) {
                 // drive forward into cap ball
@@ -536,21 +644,27 @@ public class cf_NSR_beacons extends LinearOpMode {
                 driveStop();
             }
             else if(center) {
-                // drive forward into cap ball
-                encoderDrive(/*Distance*/12, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
-                // turn to move cap ball
-                timedGyroTurn(-170,4);
-                // drive onto center
-                encoderDrive(/*Distance*/17, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
+                if (twoBall) {
+                    // drive forward into cap ball
+                    encoderDrive(/*Distance*/12, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                    // turn to move cap ball
+                    timedGyroTurn(-174, 4);
+                    // drive onto center
+                    encoderDrive(/*Distance*/22, /*leftSpeed*/.6, /*rightSpeed*/.5, /*direction*/-1);
+                    gyroTurn(-4);
+                }
+                else if (threeBall){
+                    encoderDrive(/*Distance*/30, /*leftSpeed*/.6, /*rightSpeed*/.7, /*direction*/1);
+                }
             }
             else if (nothing)
             sleep(100000);
 
             else    {
                 // turn toward ramp
-                gyroTurn(-100);
+                timedGyroTurn(-100,2.5);
                 // drive into ramp
-                encoderDrive(/*Distance*/24, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                encoderDrive(/*Distance*/30, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             }
         }
     }
