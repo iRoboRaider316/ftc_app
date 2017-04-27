@@ -11,11 +11,12 @@ import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
-@Autonomous(name="cf_NSR_beacons", group="LinearOpMode")
+@Autonomous(name="cf_beacons_Worlds", group="LinearOpMode")
 //@Disabled
 
-public class cf_NSR_beacons extends LinearOpMode {
+public class cf_beacons_Worlds extends LinearOpMode {
 
     private DcMotor catapult;
     private DcMotor sweeper;
@@ -37,6 +38,12 @@ public class cf_NSR_beacons extends LinearOpMode {
     GyroSensor gyroSensor;
     ModernRoboticsI2cGyro gyro;
 
+    double[]pastError = new double[5];
+    double sum = 0;
+    double lastTime = 0;
+    double lastError = 0;
+    double speed = 0;
+    double time = 0;
     boolean blue = true;
     boolean red = false;
     boolean redSide = false;
@@ -48,7 +55,6 @@ public class cf_NSR_beacons extends LinearOpMode {
     // Calibrates and does other preparations for the gyro sensor before autonomous
     // Needs nothing passed to it
     private void setUpGyro() throws InterruptedException {
-
         // setup the Gyro
         // write some device information (connection info, name and type)
         // to the log file.
@@ -74,6 +80,7 @@ public class cf_NSR_beacons extends LinearOpMode {
     }
     // Resets catapult to the launch position
     private void launchPosition() throws InterruptedException{
+        // reset catapult to the firing position
         while (!touch.isPressed()){
             catapult.setPower(0.5);
         }
@@ -81,12 +88,14 @@ public class cf_NSR_beacons extends LinearOpMode {
     }
     // Function to load the catapult
     private void loadBall() throws InterruptedException {
+        // load a ball into the catapult
         hopper.setPosition(.5);
         sleep(800);
         hopper.setPosition(.8);
     }
     // Fires the ball
     private void launchBall() throws InterruptedException {
+        // fire the catapult
         catapult.setPower(1);
         sleep(800);
         catapult.setPower(0);
@@ -110,7 +119,6 @@ public class cf_NSR_beacons extends LinearOpMode {
             telemetry.update();
             sleep(10000);
         }
-
         driveStop();
     }
 
@@ -193,27 +201,18 @@ public class cf_NSR_beacons extends LinearOpMode {
         lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        while(lDrive1.isBusy()){
-            sleep(10);
-        }
     }
     private void useEncoders(){
         rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        while(lDrive1.isBusy()){
-            sleep(10);
-        }
     }
     private void resetEncoders(){
         lDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        while(lDrive1.isBusy()){
-            sleep(10);
-        }
     }
 
     private void encoderDrive(double distance, double leftSpeed, double rightSpeed, int direction) throws InterruptedException {
@@ -228,7 +227,6 @@ public class cf_NSR_beacons extends LinearOpMode {
             rDrive1.setTargetPosition(rDrive1.getCurrentPosition() + (int) COUNTS);
         else if (direction ==-1)
             rDrive1.setTargetPosition(rDrive1.getCurrentPosition() - (int) COUNTS);
-
 
         if (direction == 1) {
             // drive forward until we reach the encoder target
@@ -257,96 +255,97 @@ public class cf_NSR_beacons extends LinearOpMode {
         }
     }
 
-    private void gyroTurn (int targetHeading){
-        boolean done = false;
+    private void PIDGyroTurn (int targetHeading, double time){
         double error;
         double currentHeading;
-        double kp = .0035;
-        double power;
-        gyro.resetZAxisIntegrator();
-        sleep(250);
-
-        while (!done && opModeIsActive()){
-            currentHeading = -gyro.getIntegratedZValue();
-
-            // calculate the difference between where we are
-            // and where we want to be
-            error = (targetHeading-currentHeading);
-            power = error*kp;
-
-            // Set minimum motor speeds
-            if (power > 0 && power < .15)
-                power = .15;
-            else if (power < 0 && power > -.15)
-                power = -.15;
-
-            telemetry.addData("error", error);
-            telemetry.addData("power", power);
-            telemetry.addData("currentHeading", currentHeading);
-            telemetry.addData("targetHeading", targetHeading);
-            telemetry.update();
-
-            if (currentHeading <= targetHeading+1 && currentHeading >= targetHeading-1){
-                done = true;
-                driveStop();
-            }
-            else{
-                done = false;
-                drive(0+power, 0-power);
-            }
-
-        }
-        driveStop();
-    }
-
-    private void timedGyroTurn (int targetHeading, double time){
-        //boolean done = false;
-        double error;
-        double currentHeading;
-        double kp = .0025;
+        double kp = .006;
+        double ki = 0.0001;
+        double kd = 0.002;
         double power;
         ElapsedTime runtime = new ElapsedTime();
         gyro.resetZAxisIntegrator();
         runtime.reset();
         sleep(250);
+        lastError = targetHeading;
+        lastTime = runtime.seconds();
 
         while (runtime.seconds() < time && opModeIsActive()){
+            // positive angles are to the right, negative to the left.
             currentHeading = -gyro.getIntegratedZValue();
+            // calculate error
             error = (targetHeading-currentHeading);
 
+            // Set the power using PID control based off of the error.
+            // Also uses a power offset of 0.2 to account for motor stall torque
             if (error > 0)
-                power = .15+(error*kp);
+                power = .2+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
             else if (error < 0)
-                power = -.15+(error*kp);
+                power = -.2+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
             else
                 power = 0;
 
+            power = Range.clip(power, -1, 1);
             drive(0+power, 0-power);
 
             telemetry.addData("error", error);
-            telemetry.addData("power", power);
             telemetry.addData("currentHeading", currentHeading);
             telemetry.addData("targetHeading", targetHeading);
+            telemetry.addData("proportional",(error*kp));
+            telemetry.addData("integral",(integral(error)*ki));
+            telemetry.addData("derivative",(derivative(error,runtime.seconds())*kd));
+            telemetry.addData("power", power);
             telemetry.update();
+            // Wait to account for i2c bus lag for the gyro
+            sleep(100);
         }
         driveStop();
     }
 
+    private double integral(double error){
+        sum = 0;
+        pastError[4] = pastError[3];
+        pastError[3] = pastError[2];
+        pastError[2] = pastError[1];
+        pastError[1] = pastError[0];
+        pastError[0] = error;
+        // Sum the past 5 error values
+        // (Essentially take the integral of error vs time for the past 5 readings)
+        for( double i : pastError) {
+            sum += i;
+        }
+        return
+                sum;
+    }
+
+    private double derivative(double error, double time){
+        // Calculate the negative slope of the error vs time curve
+        speed = (error-lastError)/(time-lastTime);
+        lastError = error;
+        lastTime = time;
+        return
+                speed;
+    }
+
     public void collectRed() {
+        // Create a new thread so the collection can be run parallel to everything else
         new Thread(new Runnable() {
             public void run() {
+                // Reverse the ball collector to deploy it
                 sweeper.setPower(1);
                 try
                 {
+                    // wait for the ball collector to deploy
                     Thread.sleep(500);
                 }catch(InterruptedException ie){
                 }
                 while (opModeIsActive()){
+                    // if we collect a blue ball (on red alliance)
                     if (collectionColor.blue()>0&&collectionColor.red()<1){
                         // reverse sweeper
                         sweeper.setPower(1);
                         try
                         {
+                            // wait for ball to be ejected
                             Thread.sleep(1000);
                         }catch(InterruptedException ie){
                         }
@@ -362,21 +361,27 @@ public class cf_NSR_beacons extends LinearOpMode {
             }
         }).start();
     }
+
     public void collectBlue() {
+        // Create a new thread so the collection can be run parallel to everything else
         new Thread(new Runnable() {
             public void run() {
+                // Reverse the ball collector to deploy it
                 sweeper.setPower(1);
                 try
                 {
+                    // wait for the ball collector to deploy
                     Thread.sleep(500);
                 }catch(InterruptedException ie){
                 }
                 while (opModeIsActive()){
+                    // if we collect a red ball (on blue alliance)
                     if (collectionColor.red()>0&&collectionColor.blue()<1){
                         // reverse sweeper
                         sweeper.setPower(1);
                         try
                         {
+                            // wait for ball to be ejected
                             Thread.sleep(1000);
                         }catch(InterruptedException ie){
                         }
@@ -413,28 +418,26 @@ public class cf_NSR_beacons extends LinearOpMode {
         color.setI2cAddress(I2cAddr.create7bit(0x1e));
         collectionColor.setI2cAddress(I2cAddr.create7bit(0x1d));
         wheels = hardwareMap.servo.get("wheels");
-        belt1.setPosition(.5);
-        belt2.setPosition(.5);
-
         fODSensor = hardwareMap.opticalDistanceSensor.get("fOD");
         bODSensor = hardwareMap.opticalDistanceSensor.get("bOD");
-
+        belt1.setPosition(.5);
+        belt2.setPosition(.5);
         hopper.setPosition(0.8);
         button.setPosition(0.5);
         wheels.setPosition(.62);
 
         boolean center = false;
         boolean ramp = false;
-        boolean vortex = false;
         boolean threeBall = false;
         boolean twoBall = false;
 
         resetEncoders();
-        idle();
+        sleep(500);
         useEncoders();
-        idle();
+        sleep(500);
         setUpGyro();
 
+        // Menu to select alliance color
         while (!redSide&&!blueSide){
             telemetry.addLine("Press dpad_left for RED side");
             telemetry.addLine("Press dpad_right for BLUE side");
@@ -447,6 +450,7 @@ public class cf_NSR_beacons extends LinearOpMode {
         telemetry.update();
         sleep(1000);
 
+        // Select if we are collecting our alliance partner's ball at the start
         while (!threeBall&&!twoBall){
             telemetry.addLine("Press dpad_left for 3 ball");
             telemetry.addLine("Press dpad_right for 2 ball");
@@ -459,22 +463,21 @@ public class cf_NSR_beacons extends LinearOpMode {
         telemetry.update();
         sleep(1000);
 
-        while (!center && !ramp && !vortex && !nothing){
+        // Select where to park
+        while (!center && !ramp && !nothing){
             telemetry.addLine("Press dpad_up to park center");
             telemetry.addLine("Press dpad_left to park ramp");
-            telemetry.addLine("Press dpad_right to turn vortex");
             telemetry.addLine("Press dpad_down to not park");
             telemetry.update();
             if (gamepad1.dpad_up)
                 center = true;
             else if (gamepad1.dpad_left)
                 ramp = true;
-            else if (gamepad1.dpad_right)
-                vortex = true;
             else if (gamepad1.dpad_down)
                 nothing = true;
         }
 
+        // Read back telemetry of menu choices
         while (!isStarted()){
             if (blueSide)
                 telemetry.addLine("BLUE");
@@ -486,8 +489,6 @@ public class cf_NSR_beacons extends LinearOpMode {
                 telemetry.addLine("Parking ramp");
             else if (nothing)
             telemetry.addLine("No Park");
-            else
-                telemetry.addLine("Turning vortex");
             if (threeBall)
                 telemetry.addLine("3 balls");
             else if (twoBall)
@@ -495,7 +496,9 @@ public class cf_NSR_beacons extends LinearOpMode {
             telemetry.update();
         }
 
+        collectionColor.enableLed(false);
         waitForStart();
+        collectionColor.enableLed(true);
 
         if (redSide){
             if (twoBall){
@@ -503,6 +506,7 @@ public class cf_NSR_beacons extends LinearOpMode {
                 encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
             }
             else if (threeBall){
+                // collect our alliance partner's ball
                 collectRed();
                 sleep(1500);
                 // drive forward for clearance
@@ -511,70 +515,59 @@ public class cf_NSR_beacons extends LinearOpMode {
             // lower side wheels
             wheels.setPosition(1);
             // curve until parallel with wall
-            encoderDrive(/*Distance*/60, /*leftSpeed*/.62, /*rightSpeed*/.75, /*direction*/-1);
+            // left: 0.62, right: 0.75
+            encoderDrive(/*Distance*/60, /*leftSpeed*/.60, /*rightSpeed*/.75, /*direction*/-1);
             // Drive backward
             encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.45, /*direction*/-1);
             // Drive backward until we reach the far white line
             driveToLine(-1);
             // drive backward until we see red strong enough, then push the button
             huntBeacon(-1, red);
-            // double check to make sure we hit the right color
-            //wrongColor(red);
             // Drive forward past the line
             encoderDrive(/*Distance*/38, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/1);
             // Track forward along the wall until the next white line
             driveToLine(1);
             // Push the button for red
             huntBeacon(1, red);
-            // double check to make sure we hit the right color
-            //wrongColor(red);
             // drive back past line
             encoderDrive(/*Distance*/11, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
             // drive forward to the line
             driveToLine(1);
             // raise the side wheels
             wheels.setPosition(.62);
-            sleep(250);
+            noEncoders();
+            sleep(500);
             // Turn left to face vortex
-            timedGyroTurn(-83,3.5);
+            PIDGyroTurn(-90,2.5);
             // Drive forward into range
-            encoderDrive(/*Distance*/13, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            encoderDrive(/*Distance*/14, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // Shoot both balls
             fire();
+            // Shoot our alliance partner's 3rd ball
             if (threeBall){
                 launchPosition();
                 loadBall();
                 launchBall();
             }
-
-            if(vortex) {
+            if(center) {
                 // drive forward into cap ball
-                drive(0.5, 0.5);
-                // wait until vortex rotates
-                sleep(2500);
-                driveStop();
+                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
                 // turn to move cap ball
-                gyroTurn(35);
-                gyroTurn(-40);
-                // drive onto center
-                drive(0.5, 0.5);
-                sleep(1000);
-                driveStop();
-            }
-            else if(center) {
-                // drive forward into cap ball
-                encoderDrive(/*Distance*/12, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
-                // turn to move cap ball
-                timedGyroTurn(160,4);
+                PIDGyroTurn(160,3);
                 // drive onto center
                 encoderDrive(/*Distance*/22, /*leftSpeed*/.5, /*rightSpeed*/.6, /*direction*/-1);
-                //gyroTurn(4);
+                // Turn to fully park
+                drive(.5,-.5);
+                sleep(300);
+                driveStop();
             }
+            else if (nothing)
+                sleep(100000);
             else {
                 // turn toward ramp
-                timedGyroTurn(100,2.5);
+                PIDGyroTurn(100,2.5);
                 // drive into ramp
-                encoderDrive(/*Distance*/30, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                encoderDrive(/*Distance*/35, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             }
         }
         else if (blueSide){
@@ -583,88 +576,69 @@ public class cf_NSR_beacons extends LinearOpMode {
                 encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             }
             else if (threeBall){
+                // collect our alliance partner's ball
                 collectBlue();
                 sleep(1500);
                 // drive forward for clearance
                 encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
-                gyroTurn(80);
-                gyroTurn(78);
+                // Turn around
+                PIDGyroTurn(175,4);
             }
             // lower side wheels
             wheels.setPosition(1);
             // curve until parallel with wall
-            encoderDrive(/*Distance*/60, /*leftSpeed*/.62, /*rightSpeed*/.75, /*direction*/1);
+            encoderDrive(/*Distance*/60, /*leftSpeed*/.60, /*rightSpeed*/.75, /*direction*/1);
             // Drive backward
             encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.45, /*direction*/1);
             // Drive backward until we reach the far white line
             driveToLine(1);
             // drive backward until we see red strong enough, then push the button
             huntBeacon(1, blue);
-            // double check to make sure we hit the right color
-            //wrongColor(red);
             // Drive forward past the line
             encoderDrive(/*Distance*/38, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/-1);
             // Track forward along the wall until the next white line
             driveToLine(-1);
             // Push the button for red
             huntBeacon(-1, blue);
-            // double check to make sure we hit the right color
-            //wrongColor(red);
             // drive back past line
             encoderDrive(/*Distance*/11, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // drive forward to the line
             driveToLine(-1);
             // raise the side wheels
             wheels.setPosition(.62);
-            sleep(250);
+            noEncoders();
+            sleep(500);
             // Turn 80 degrees left to face vortex
-            timedGyroTurn(-80,3.5);
+            PIDGyroTurn(-88,2.5);
             // Drive forward into range
-            encoderDrive(/*Distance*/13, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            encoderDrive(/*Distance*/14, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // Shoot both balls
             fire();
             if (threeBall){
+                // shoot our alliance partner's ball
                 launchPosition();
                 loadBall();
                 launchBall();
             }
-
-            if(vortex) {
+            if(center) {
                 // drive forward into cap ball
-                drive(0.5, 0.5);
-                // wait until vortex rotates
-                sleep(2500);
-                driveStop();
+                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
                 // turn to move cap ball
-                gyroTurn(-35);
-                gyroTurn(40);
+                PIDGyroTurn(-160,3);
                 // drive onto center
-                drive(0.5, 0.5);
-                sleep(1000);
+                encoderDrive(/*Distance*/22, /*leftSpeed*/.5, /*rightSpeed*/.6, /*direction*/-1);
+                // turn to fully park
+                drive(-.5,.5);
+                sleep(300);
                 driveStop();
-            }
-            else if(center) {
-                if (twoBall) {
-                    // drive forward into cap ball
-                    encoderDrive(/*Distance*/12, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
-                    // turn to move cap ball
-                    timedGyroTurn(-174, 4);
-                    // drive onto center
-                    encoderDrive(/*Distance*/22, /*leftSpeed*/.6, /*rightSpeed*/.5, /*direction*/-1);
-                    gyroTurn(-4);
-                }
-                else if (threeBall){
-                    encoderDrive(/*Distance*/30, /*leftSpeed*/.6, /*rightSpeed*/.7, /*direction*/1);
-                }
             }
             else if (nothing)
             sleep(100000);
-
             else    {
                 // turn toward ramp
-                timedGyroTurn(-100,2.5);
+                PIDGyroTurn(-100,2.5);
                 // drive into ramp
-                encoderDrive(/*Distance*/30, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                encoderDrive(/*Distance*/35, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             }
         }
     }

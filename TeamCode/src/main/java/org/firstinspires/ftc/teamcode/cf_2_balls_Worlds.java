@@ -9,9 +9,9 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-@Autonomous(name="cf_NSR_2_balls", group="LinearOPMode")
+@Autonomous(name="cf_2_balls_Worlds", group="LinearOPMode")
 
-public class cf_NSR_2_balls extends LinearOpMode {
+public class cf_2_balls_Worlds extends LinearOpMode {
     ElapsedTime timer = new ElapsedTime();
     private DcMotor catapult;
     //private DcMotor sweeper;
@@ -196,16 +196,8 @@ public class cf_NSR_2_balls extends LinearOpMode {
         belt1.setPosition(.5);
         belt2.setPosition(.5);
         wheels.setPosition(.2);
-        double distance;
-        double leftSpeed;
-        double rightSpeed;
-        int direction;
-        boolean far = false;
-        boolean farCenter = false;
-        boolean nearCenter = false;
-        boolean near = false;
-        boolean nearCorner = false;
-        boolean farCorner = false;
+        boolean center = false;
+        boolean corner = false;
         boolean red = false;
         boolean blue = false;
         boolean nothing = false;
@@ -229,47 +221,18 @@ public class cf_NSR_2_balls extends LinearOpMode {
         }
         sleep(1000);
 
-        while (!near && !far){
-            telemetry.addLine("Press dpad_up to start far corner");
-            telemetry.addLine("Press dpad_down to start near ramp");
+        while (!center && !corner && !nothing) {
+            telemetry.addLine("Press dpad_up to park center");
+            telemetry.addLine("Press dpad_down to park ramp");
+            telemetry.addLine("Press dpad_left to not park");
             telemetry.update();
+
             if (gamepad1.dpad_up)
-                far = true;
+                center = true;
             else if (gamepad1.dpad_down)
-                near = true;
-        }
-        sleep(1000);
-        if (near) {
-            while (!nearCenter && !nearCorner && !nothing) {
-                telemetry.addLine("Press dpad_up to park center");
-                telemetry.addLine("Press dpad_down to park ramp");
-                telemetry.update();
-
-                telemetry.update();
-                if (gamepad1.dpad_up)
-                    nearCenter = true;
-                else if (gamepad1.dpad_down)
-                    nearCorner = true;
-                else if (gamepad1.dpad_left)
-                    nothing = true;
-            }
-        }
-        else if (far){
-            while (!farCenter && !farCorner && !nothing) {
-                telemetry.addLine("Press dpad_up to park center");
-                telemetry.addLine("Press dpad_down to park ramp");
-                telemetry.update();
-
-                telemetry.update();
-                if (gamepad1.dpad_up)
-                    farCenter = true;
-                else if (gamepad1.dpad_down)
-                    farCorner = true;
-                else if (gamepad1.dpad_left)
-                    nothing = true;
-
-
-            }
+                corner = true;
+            else if (gamepad1.dpad_left)
+                nothing = true;
         }
 
         while (!isStarted()){
@@ -277,22 +240,16 @@ public class cf_NSR_2_balls extends LinearOpMode {
                 telemetry.addLine("Blue alliance");
             if (red)
                 telemetry.addLine("Red alliance");
-            if (near)
-                telemetry.addLine("Near start");
-            if (far)
-                telemetry.addLine("far start");
-            if (nearCenter)
+            if (center)
                 telemetry.addLine("Center End");
-            if (nearCorner)
-                telemetry.addLine("Corner End");
-            if (farCenter)
-                telemetry.addLine("Center End");
-            if (farCorner)
+            if (corner)
                 telemetry.addLine("Corner End");
             if (nothing)
                 telemetry.addLine("No End");
-            if (gamepad1.y)
+            if (gamepad1.y) {
                 wait = wait + 1;
+                telemetry.addData("Wait time", wait*1000);
+            }
             sleep(100);
             telemetry.update();
         }
@@ -303,104 +260,45 @@ public class cf_NSR_2_balls extends LinearOpMode {
 
         if (red) {
             // Drive forward from wall
-            if (far) {
-
-                encoderDrive(/*distance*/35, /*leftSpeed*/0.5, /*rightSpeed*/0.5, /*direction*/1);
-                sleep(1000);
-            }
-            if (near) {
-                encoderDrive(/*distance*/4, /*leftSpeed*/0.5, /*rightSpeed*/0.5, /*direction*/1);
-                sleep(1000);
-            }
-//            // deploy sweeper
-//            sweeper.setPower(1);
-//            sleep(500);
-//            sweeper.setPower(-1);
-//            // fire balls
-//            fire();
-//            sleep(5000);
-//            // load any balls that have been picked up
-//            loadBall();
-//            // fire balls
+            encoderDrive(/*distance*/35, /*leftSpeed*/0.5, /*rightSpeed*/0.5, /*direction*/1);
+            sleep(1000);
+            // shoot both balls
             fire();
-            // stop sweeper
-//            sweeper.setPower(0);
-            // drive forward to knock off cap ball
             sleep(wait);
 
-                if (farCenter) {
-                    encoderDrive(/*distance*/11, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
-                    timedGyroTurn(-135,4);
-                    encoderDrive(/*distance*/12, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/-1);
-                }
-            if (farCorner) {
+            if (center) {
+                encoderDrive(/*distance*/11, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                timedGyroTurn(-135,4);
+                encoderDrive(/*distance*/12, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/-1);
+            }
+            if (corner) {
                 timedGyroTurn(-45,2);
 
                 encoderDrive(/*distance*/50, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
                 timedGyroTurn(-45,2);
                 encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
-            }
-
-            if (nearCenter) {
-
-                encoderDrive(/*distance*/40, /*leftSpeed*/0.8, /*rightSpeed*/0.8, /*direction*/1);
-            }
-            if (nearCorner) {
-                timedGyroTurn(-70,2);
-
-                encoderDrive(/*distance*/20, /*leftSpeed*/0.8, /*rightSpeed*/1, /*direction*/1);
             }
 
         }
 
         if (blue) {
             // Drive forward from wall
-            if (far) {
-                encoderDrive(/*distance*/35, /*leftSpeed*/0.5, /*rightSpeed*/0.5, /*direction*/1);
-                sleep(1000);
-            }
-            if (near) {
-                encoderDrive(/*distance*/4, /*leftSpeed*/0.5, /*rightSpeed*/0.5, /*direction*/1);
-                sleep(1000);
-            }
-            // deploy sweeper
-//            sweeper.setPower(1);
-//            sleep(500);
-//            sweeper.setPower(-1);
-//            // fire balls
+            encoderDrive(/*distance*/35, /*leftSpeed*/0.5, /*rightSpeed*/0.5, /*direction*/1);
+            sleep(1000);
             fire();
-//            sleep(5000);
-//            // load any balls that have been picked up
-//            loadBall();
-//            // fire balls
-//            fire();
-            // stop sweeper
-            //sweeper.setPower(0);
-            // drive forward to knock off cap ball
             sleep(wait);
 
-                if (farCenter) {
-                    encoderDrive(/*distance*/11, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
-                    timedGyroTurn(135,4);
-                    encoderDrive(/*distance*/12, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/-1);
-                }
-            if (farCorner) {
+            if (center) {
+                encoderDrive(/*distance*/11, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
+                timedGyroTurn(135,4);
+                encoderDrive(/*distance*/12, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/-1);
+            }
+            if (corner) {
                 timedGyroTurn(45,2);
                 encoderDrive(/*distance*/50, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
                 timedGyroTurn(50,2);
                 encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
             }
-
-            if (nearCenter) {
-
-                encoderDrive(/*distance*/40, /*leftSpeed*/0.8, /*rightSpeed*/0.8, /*direction*/1);
-            }
-            if (nearCorner) {
-                timedGyroTurn(70,2);
-
-                encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/0.8, /*direction*/1);
-            }
-
         }
     }
 }

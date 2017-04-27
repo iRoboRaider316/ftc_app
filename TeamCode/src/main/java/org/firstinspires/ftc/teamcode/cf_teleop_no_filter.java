@@ -11,9 +11,9 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name="cf_teleop_red", group="TeleOp")
+@TeleOp(name="cf_teleop_no_filter", group="TeleOp")
 
-public class cf_teleop_red extends OpMode{
+public class cf_teleop_no_filter extends OpMode{
     ColorSensor collectionColor;
     DcMotor rDrive1;
     DcMotor rDrive2;
@@ -38,7 +38,6 @@ public class cf_teleop_red extends OpMode{
     boolean fullSpeed = false;
     double floorLeft;
     double floorRight;
-    boolean eject = false;
     boolean ledEnabled = false;
     int blue;
     int red;
@@ -49,23 +48,6 @@ public class cf_teleop_red extends OpMode{
         } else {
             return inputPower * Math.abs(inputPower);
         }
-    }
-    private void ejectBall() {
-        // start a new thread so we can control the sweeper without effecting everything else
-        new Thread(new Runnable() {
-            public void run() {
-                        // reverse sweeper
-                        sweeper.setPower(1);
-                        try
-                        {
-                            // wait for ball to be ejected
-                            Thread.sleep(1000);
-                        }catch(InterruptedException ie){
-                        }
-                    eject = false;
-                sweeper.setPower(-1);
-            }
-        }).start();
     }
 
     int drive = 0;
@@ -127,8 +109,6 @@ public class cf_teleop_red extends OpMode{
         double lTrigger2 = gamepad2.left_trigger;
         double speed = 1;
 
-        // enable the LED so the color sensor can read the color
-        // of balls in the collection
         if (!ledEnabled) {
             collectionColor.enableLed(true);
             ledEnabled = true;
@@ -138,7 +118,6 @@ public class cf_teleop_red extends OpMode{
         double noPower = 0.0;
         double firingPower = 1;
 
-        // Automated firing
         if (!rBumper2) {
             launchState = LaunchState.Idle;
             if (y) {
@@ -191,21 +170,6 @@ public class cf_teleop_red extends OpMode{
                 }
         }
 
-        blue = collectionColor.blue();
-        red = collectionColor.red();
-        telemetry.addData("Blue", blue);
-        telemetry.addData("Red", red);
-        telemetry.addData("eject", eject);
-        telemetry.update();
-
-        // If a wrong color ball is collected
-        // automatically eject it
-        if (blue > 0 && red < 1) {
-            eject = true;
-            ejectBall();
-        }
-
-        // Ball collector controls
         if (up) {
             sweeper.setPower(-1);
         } else if (down) {
@@ -214,11 +178,9 @@ public class cf_teleop_red extends OpMode{
             sweeper.setPower(0);
         }
 
-        // Cap Ball lift controls
         lift1.setPower(gamepad2.right_stick_y);
         lift2.setPower(gamepad2.right_stick_y);
 
-        // Cap Ball intake controls
         if (lStick2 > .5) {
             belt1.setPosition(0);
             belt2.setPosition(1);
@@ -233,7 +195,6 @@ public class cf_teleop_red extends OpMode{
 
         ///DRIVER CODE\\\
 
-        // Toggle for setting side wheels to up or down position
         if (lBumper1 && sideWheels == 1) {
             wheelsDown = true;
         } else if (wheelsDown && !lBumper1) {
@@ -259,7 +220,6 @@ public class cf_teleop_red extends OpMode{
                 wheels.setPosition(.62);
                 break;
         }
-
         // Universal drive train power switch case
         if (rBumper1 && power == 1) {
             halfSpeed = true;
@@ -288,8 +248,7 @@ public class cf_teleop_red extends OpMode{
                 speed = 1;
                 break;
         }
-
-        // Side button pusher controls
+        //This code controls the side button pusher
         if (gamepad1.b)
             button.setPosition(0);
         else if (gamepad1.x)
@@ -297,7 +256,6 @@ public class cf_teleop_red extends OpMode{
         else
             button.setPosition(0.5);
 
-        // Driver control of ball collector
         if (gamepad1.dpad_left) {
             sweeper.setPower(-1);
         } else if (gamepad1.dpad_right) {
@@ -324,13 +282,14 @@ public class cf_teleop_red extends OpMode{
             drive = 4;
         }
 
-        // Floor-ceiling algorithm to account for motor stall torque and
-        // increase the resolution of driving
+        // This is the floor-ceiling algorithm we use to keep Crossfire moving without wearing too
+        // much battery power
         floorLeft = lStick1 <= 0.01 && lStick1 >= -0.01 ? 0 : 0.13 * getDirection(lStick1);
         floorRight = rStick1 <= 0.01 && rStick1 >= -0.01 ? 0 : 0.13 * getDirection(rStick1);
 
-        // Switchcase for drivetrain direction and power. Floor-Ceiling algorithms
+        // This is the switch case that sets the motor powers of Crossfire. Floor-Ceiling algorithms
         // have been included for greater control
+
         switch (drive) {
             case 1:
                 // forward default

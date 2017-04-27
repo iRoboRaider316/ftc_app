@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 @Autonomous(name="GyroTurn", group="Methods")
-//@Disabled
+@Disabled
 public class GyroTurnMethod extends LinearOpMode {
 
     DcMotor lDrive1;
@@ -82,11 +82,12 @@ public class GyroTurnMethod extends LinearOpMode {
     }
 
     private void PIDGyroTurn (int targetHeading, double time){
+
         double error;
         double currentHeading;
-        double kp = .005;
-        double ki = 0.00025;
-        double kd = 0.002;
+        double kp = 0.003; // 0.005 without encoders
+        double ki = 0.000; // 0.00025 without encoders
+        double kd = 0.002; // 0.002 without encoders
         double power;
         ElapsedTime runtime = new ElapsedTime();
         gyro.resetZAxisIntegrator();
@@ -119,19 +120,12 @@ public class GyroTurnMethod extends LinearOpMode {
             telemetry.addData("derivative",(derivative(error,runtime.seconds())*kd));
             telemetry.addData("power", power);
             telemetry.update();
-            sleep(100);
+            //sleep(50);
         }
         driveStop();
     }
     private double integral(double error){
         sum = 0;
-//        telemetry.addData("pastError 0", pastError[0]);
-//        telemetry.addData("pastError 1", pastError[1]);
-//        telemetry.addData("pastError 2", pastError[2]);
-//        telemetry.addData("pastError 3", pastError[3]);
-//        telemetry.addData("pastError 4", pastError[4]);
-//        telemetry.addData("error sum", sum);
-//        telemetry.update();
         pastError[4] = pastError[3];
         pastError[3] = pastError[2];
         pastError[2] = pastError[1];
@@ -146,10 +140,6 @@ public class GyroTurnMethod extends LinearOpMode {
 
     private double derivative(double error, double time){
         speed = (error-lastError)/(time-lastTime);
-//        telemetry.addData("speed",speed);
-//        telemetry.addData("lastError", lastError);
-//        telemetry.addData("lastTime", lastTime);
-//        telemetry.update();
         lastError = error;
         lastTime = time;
         return
@@ -234,15 +224,15 @@ public class GyroTurnMethod extends LinearOpMode {
         rDrive1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rDrive2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         idle();
-        lDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        lDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rDrive1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rDrive2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rDrive2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         idle();
 
         waitForStart();
 
-        PIDGyroTurn(90,2.5);
+        PIDGyroTurn(90,5);
 
         // 2.5 seconds for a 90 degree turn
         // 3 seconds for a 170 degree turn
