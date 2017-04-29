@@ -259,76 +259,76 @@ public class cf_4_ball_Worlds extends LinearOpMode {
         driveStop();
     }
 
-    private void PIDGyroTurn (int targetHeading, double time){
-        double error;
-        double currentHeading;
-        double kp = .006;
-        double ki = 0.0001;
-        double kd = 0.002;
-        double power;
-        ElapsedTime runtime = new ElapsedTime();
-        gyro.resetZAxisIntegrator();
-        runtime.reset();
-        sleep(250);
-        lastError = targetHeading;
-        lastTime = runtime.seconds();
-
-        while (runtime.seconds() < time && opModeIsActive()){
-            // positive angles are to the right, negative to the left.
-            currentHeading = -gyro.getIntegratedZValue();
-            // calculate error
-            error = (targetHeading-currentHeading);
-
-            // Set the power using PID control based off of the error.
-            // Also uses a power offset of 0.2 to account for motor stall torque
-            if (error > 0)
-                power = .2+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
-            else if (error < 0)
-                power = -.2+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
-            else
-                power = 0;
-
-            power = Range.clip(power, -1, 1);
-            drive(0+power, 0-power);
-
-            telemetry.addData("error", error);
-            telemetry.addData("currentHeading", currentHeading);
-            telemetry.addData("targetHeading", targetHeading);
-            telemetry.addData("proportional",(error*kp));
-            telemetry.addData("integral",(integral(error)*ki));
-            telemetry.addData("derivative",(derivative(error,runtime.seconds())*kd));
-            telemetry.addData("power", power);
-            telemetry.update();
-            // Wait to account for i2c bus lag for the gyro
-            sleep(100);
-        }
-        driveStop();
-    }
-
-    private double integral(double error){
-        sum = 0;
-        pastError[4] = pastError[3];
-        pastError[3] = pastError[2];
-        pastError[2] = pastError[1];
-        pastError[1] = pastError[0];
-        pastError[0] = error;
-        // Sum the past 5 error values
-        // (Essentially take the integral of error vs time for the past 5 readings)
-        for( double i : pastError) {
-            sum += i;
-        }
-        return
-                sum;
-    }
-
-    private double derivative(double error, double time){
-        // Calculate the negative slope of the error vs time curve
-        speed = (error-lastError)/(time-lastTime);
-        lastError = error;
-        lastTime = time;
-        return
-                speed;
-    }
+//    private void PIDGyroTurn (int targetHeading, double time){
+//        double error;
+//        double currentHeading;
+//        double kp = .006;
+//        double ki = 0.0001;
+//        double kd = 0.002;
+//        double power;
+//        ElapsedTime runtime = new ElapsedTime();
+//        gyro.resetZAxisIntegrator();
+//        runtime.reset();
+//        sleep(250);
+//        lastError = targetHeading;
+//        lastTime = runtime.seconds();
+//
+//        while (runtime.seconds() < time && opModeIsActive()){
+//            // positive angles are to the right, negative to the left.
+//            currentHeading = -gyro.getIntegratedZValue();
+//            // calculate error
+//            error = (targetHeading-currentHeading);
+//
+//            // Set the power using PID control based off of the error.
+//            // Also uses a power offset of 0.2 to account for motor stall torque
+//            if (error > 0)
+//                power = .2+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
+//            else if (error < 0)
+//                power = -.2+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
+//            else
+//                power = 0;
+//
+//            power = Range.clip(power, -1, 1);
+//            drive(0+power, 0-power);
+//
+//            telemetry.addData("error", error);
+//            telemetry.addData("currentHeading", currentHeading);
+//            telemetry.addData("targetHeading", targetHeading);
+//            telemetry.addData("proportional",(error*kp));
+//            telemetry.addData("integral",(integral(error)*ki));
+//            telemetry.addData("derivative",(derivative(error,runtime.seconds())*kd));
+//            telemetry.addData("power", power);
+//            telemetry.update();
+//            // Wait to account for i2c bus lag for the gyro
+//            sleep(100);
+//        }
+//        driveStop();
+//    }
+//
+//    private double integral(double error){
+//        sum = 0;
+//        pastError[4] = pastError[3];
+//        pastError[3] = pastError[2];
+//        pastError[2] = pastError[1];
+//        pastError[1] = pastError[0];
+//        pastError[0] = error;
+//        // Sum the past 5 error values
+//        // (Essentially take the integral of error vs time for the past 5 readings)
+//        for( double i : pastError) {
+//            sum += i;
+//        }
+//        return
+//                sum;
+//    }
+//
+//    private double derivative(double error, double time){
+//        // Calculate the negative slope of the error vs time curve
+//        speed = (error-lastError)/(time-lastTime);
+//        lastError = error;
+//        lastTime = time;
+//        return
+//                speed;
+//    }
 
 
     public void collectRed() {
@@ -463,41 +463,46 @@ public class cf_4_ball_Worlds extends LinearOpMode {
             // Drive between the corner and center vortexes
             encoderDrive(/*Distance*/59, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
             // Turn to face vortex
-            PIDGyroTurn(119,2.5);
+            timedGyroTurn(120,2.5);
             // Drive forward into firing range
-            encoderDrive(/*Distance*/2, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
+            //encoderDrive(/*Distance*/1, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
             // Start thread to control ball collector and check ball color
             collectRed();
             // Shoot both balls
             fire();
             // Turn toward close wall
-            PIDGyroTurn(65,2.5);
+            timedGyroTurn(65,2);
             // Lower side wheels
             wheels.setPosition(1);
             // Drive forward
             //encoderDrive(/*Distance*/10, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
             // Curve into wall
-            encoderDrive(/*Distance*/70, /*leftSpeed*/.5, /*rightSpeed*/.75, /*direction*/1);
+            encoderDrive(/*Distance*/33, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
+            timedGyroTurn(-40,2);
             // Drive forward
-            encoderDrive(/*Distance*/15, /*leftSpeed*/.8, /*rightSpeed*/.75, /*direction*/1);
+            encoderDrive(/*Distance*/30, /*leftSpeed*/.8, /*rightSpeed*/.77, /*direction*/1);
             // Drive until we see the red/blue tape
             driveToLine(1);
             // Drive forward
-            encoderDrive(/*Distance*/1, /*leftSpeed*/.8, /*rightSpeed*/.85, /*direction*/1);
+            //encoderDrive(/*Distance*/1, /*leftSpeed*/.8, /*rightSpeed*/.85, /*direction*/1);
             // Wait for balls to be collected from corner
-            sleep(2000);
+            sleep(1100);
             // Drive back out of corner
-            encoderDrive(/*Distance*/40, /*leftSpeed*/.8, /*rightSpeed*/.85, /*direction*/-1);
+            encoderDrive(/*Distance*/40, /*leftSpeed*/.82, /*rightSpeed*/.85, /*direction*/-1);
             // Raise side wheels
             wheels.setPosition(.62);
             sleep(250);
             // Turn left to face vortex
-            PIDGyroTurn(-115,2);
+            timedGyroTurn(-110,2);
             // Drive forward into range
             encoderDrive(/*Distance*/20, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
             // Shoot balls
+            sleep(800);
             loadBall();
-            fire();
+            launchPosition();
+            launchBall();
+            loadBall();
+            launchBall();
             // Drive forward onto center base
             encoderDrive(/*Distance*/20, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
         }
@@ -505,7 +510,7 @@ public class cf_4_ball_Worlds extends LinearOpMode {
             // Drive between the corner and center vortexes
             encoderDrive(/*Distance*/62, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
             // Turn to face vortex
-            PIDGyroTurn(-119,2.5);
+            timedGyroTurn(-119,2.5);
             // Drive forward into firing range
             encoderDrive(/*Distance*/2, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
             // Start thread to control ball collector and check ball color
@@ -513,7 +518,7 @@ public class cf_4_ball_Worlds extends LinearOpMode {
             // Shoot both balls
             fire();
             // Turn toward close wall
-            PIDGyroTurn(65,2.5);
+            timedGyroTurn(65,2.5);
             // Lower side wheels
             wheels.setPosition(1);
             // Drive forward
@@ -530,14 +535,14 @@ public class cf_4_ball_Worlds extends LinearOpMode {
             wheels.setPosition(.62);
             sleep(250);
             // Turn around to face corner
-            PIDGyroTurn(-175,3);
+            timedGyroTurn(-175,3);
             // Wait for balls to be collected from corner
             sleep(2000);
             // Drive back out of corner
             encoderDrive(/*Distance*/20, /*leftSpeed*/.8, /*rightSpeed*/.85, /*direction*/-1);
             sleep(250);
             // Turn left to face vortex
-            PIDGyroTurn(-115,2);
+            timedGyroTurn(-115,2);
             // Drive forward into range
             encoderDrive(/*Distance*/20, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
             // Shoot balls
