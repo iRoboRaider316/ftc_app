@@ -258,9 +258,9 @@ public class cf_beacons_Worlds extends LinearOpMode {
     private void PIDGyroTurn (int targetHeading, double time){
         double error;
         double currentHeading;
-        double kp = .006;
+        double kp = .005;
         double ki = 0.0001;
-        double kd = 0.002;
+        double kd = 0.0035;
         double power;
         ElapsedTime runtime = new ElapsedTime();
         gyro.resetZAxisIntegrator();
@@ -278,9 +278,9 @@ public class cf_beacons_Worlds extends LinearOpMode {
             // Set the power using PID control based off of the error.
             // Also uses a power offset of 0.2 to account for motor stall torque
             if (error > 0)
-                power = .2+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
+                power = .15+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
             else if (error < 0)
-                power = -.2+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
+                power = -.15+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
             else
                 power = 0;
 
@@ -514,9 +514,16 @@ public class cf_beacons_Worlds extends LinearOpMode {
             }
             // lower side wheels
             wheels.setPosition(1);
+
+            encoderDrive(/*Distance*/20, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/-1);
             // curve until parallel with wall
             // left: 0.62, right: 0.75
-            encoderDrive(/*Distance*/60, /*leftSpeed*/.60, /*rightSpeed*/.75, /*direction*/-1);
+            //encoderDrive(/*Distance*/60, /*leftSpeed*/.60, /*rightSpeed*/.75, /*direction*/-1);
+//            encoderDrive(/*Distance*/23, /*leftSpeed*/.65, /*rightSpeed*/.65, /*direction*/-1);
+            encoderDrive(/*Distance*/23, /*leftSpeed*/.35, /*rightSpeed*/.75, /*direction*/-1);
+            encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.45, /*direction*/-1);
+//            PIDGyroTurn(37,1.5);
+//            encoderDrive(/*Distance*/35, /*leftSpeed*/.65, /*rightSpeed*/.65, /*direction*/-1);
             // Drive backward
             encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.45, /*direction*/-1);
             // Drive backward until we reach the far white line
@@ -533,14 +540,15 @@ public class cf_beacons_Worlds extends LinearOpMode {
             encoderDrive(/*Distance*/11, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
             // drive forward to the line
             driveToLine(1);
+            encoderDrive(/*Distance*/5, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
             // raise the side wheels
             wheels.setPosition(.62);
             noEncoders();
             sleep(500);
             // Turn left to face vortex
-            PIDGyroTurn(-90,2.5);
+            PIDGyroTurn(-80,3);
             // Drive forward into range
-            encoderDrive(/*Distance*/14, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+            encoderDrive(/*Distance*/17, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // Shoot both balls
             fire();
             // Shoot our alliance partner's 3rd ball
@@ -550,24 +558,30 @@ public class cf_beacons_Worlds extends LinearOpMode {
                 launchBall();
             }
             if(center) {
-                // drive forward into cap ball
                 encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
-                // turn to move cap ball
-                PIDGyroTurn(160,3);
-                // drive onto center
-                encoderDrive(/*Distance*/22, /*leftSpeed*/.5, /*rightSpeed*/.6, /*direction*/-1);
-                // Turn to fully park
+                PIDGyroTurn(155,3);
+                encoderDrive(/*Distance*/20, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
                 drive(.5,-.5);
                 sleep(300);
                 driveStop();
+//                // drive forward into cap ball
+//                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+//                // turn to move cap ball
+//                PIDGyroTurn(155,3);
+//                // drive onto center
+//                encoderDrive(/*Distance*/22, /*leftSpeed*/.5, /*rightSpeed*/.6, /*direction*/-1);
+//                // Turn to fully park
+//                drive(.5,-.5);
+//                sleep(300);
+//                driveStop();
             }
             else if (nothing)
                 sleep(100000);
             else {
                 // turn toward ramp
-                PIDGyroTurn(100,2.5);
+                PIDGyroTurn(96,2.5);
                 // drive into ramp
-                encoderDrive(/*Distance*/35, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                encoderDrive(/*Distance*/37, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             }
         }
         else if (blueSide){
@@ -586,10 +600,19 @@ public class cf_beacons_Worlds extends LinearOpMode {
             }
             // lower side wheels
             wheels.setPosition(1);
-            // curve until parallel with wall
-            encoderDrive(/*Distance*/60, /*leftSpeed*/.60, /*rightSpeed*/.75, /*direction*/1);
-            // Drive backward
+
+            encoderDrive(/*Distance*/20, /*leftSpeed*/.6, /*rightSpeed*/.6, /*direction*/1);
+            encoderDrive(/*Distance*/23, /*leftSpeed*/.35, /*rightSpeed*/.75, /*direction*/1);
             encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.45, /*direction*/1);
+            encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.45, /*direction*/1);
+
+//            // curve until parallel with wall
+//            //encoderDrive(/*Distance*/60, /*leftSpeed*/.60, /*rightSpeed*/.75, /*direction*/1);
+//            encoderDrive(/*Distance*/23, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+//            PIDGyroTurn(-37,1.5);
+//            encoderDrive(/*Distance*/35, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+//            // Drive backward
+//            encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.45, /*direction*/1);
             // Drive backward until we reach the far white line
             driveToLine(1);
             // drive backward until we see red strong enough, then push the button
@@ -604,12 +627,13 @@ public class cf_beacons_Worlds extends LinearOpMode {
             encoderDrive(/*Distance*/11, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // drive forward to the line
             driveToLine(-1);
+            encoderDrive(/*Distance*/5, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // raise the side wheels
             wheels.setPosition(.62);
             noEncoders();
             sleep(500);
             // Turn 80 degrees left to face vortex
-            PIDGyroTurn(-88,2.5);
+            PIDGyroTurn(-100,3);
             // Drive forward into range
             encoderDrive(/*Distance*/14, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
             // Shoot both balls
@@ -621,16 +645,22 @@ public class cf_beacons_Worlds extends LinearOpMode {
                 launchBall();
             }
             if(center) {
-                // drive forward into cap ball
-                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
-                // turn to move cap ball
-                PIDGyroTurn(-160,3);
-                // drive onto center
-                encoderDrive(/*Distance*/22, /*leftSpeed*/.5, /*rightSpeed*/.6, /*direction*/-1);
-                // turn to fully park
+                encoderDrive(/*Distance*/12, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+                PIDGyroTurn(-155,2.5);
+                encoderDrive(/*Distance*/25, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/-1);
                 drive(-.5,.5);
                 sleep(300);
                 driveStop();
+//                // drive forward into cap ball
+//                encoderDrive(/*Distance*/10, /*leftSpeed*/.5, /*rightSpeed*/.5, /*direction*/1);
+//                // turn to move cap ball
+//                PIDGyroTurn(-160,3);
+//                // drive onto center
+//                encoderDrive(/*Distance*/22, /*leftSpeed*/.5, /*rightSpeed*/.6, /*direction*/-1);
+//                // turn to fully park
+//                drive(-.5,.5);
+//                sleep(300);
+//                driveStop();
             }
             else if (nothing)
             sleep(100000);

@@ -28,6 +28,12 @@ public class cf_2_balls_Worlds extends LinearOpMode {
     private TouchSensor touch;
     GyroSensor gyroSensor;
     ModernRoboticsI2cGyro gyro;
+    double[]pastError = new double[5];
+    double sum = 0;
+    double lastTime = 0;
+    double lastError = 0;
+    double speed = 0;
+    double time = 0;
 
     private void useEncoders() {
         rDrive1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -126,38 +132,109 @@ public class cf_2_balls_Worlds extends LinearOpMode {
         catapult.setPower(0);
     }
 
-    private void timedGyroTurn (int targetHeading, double time){
-        //boolean done = false;
+    private void PIDGyroTurn (int targetHeading, double time){
         double error;
         double currentHeading;
-        double kp = .003;
+        double kp = .0045;
+        double ki = 0.0001;
+        double kd = 0.002;
         double power;
         ElapsedTime runtime = new ElapsedTime();
         gyro.resetZAxisIntegrator();
         runtime.reset();
         sleep(250);
+        lastError = targetHeading;
+        lastTime = runtime.seconds();
 
         while (runtime.seconds() < time && opModeIsActive()){
+            // positive angles are to the right, negative to the left.
             currentHeading = -gyro.getIntegratedZValue();
+            // calculate error
             error = (targetHeading-currentHeading);
 
+            // Set the power using PID control based off of the error.
+            // Also uses a power offset of 0.2 to account for motor stall torque
             if (error > 0)
-                power = .15+(error*kp);
+                power = .15+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
             else if (error < 0)
-                power = -.15+(error*kp);
+                power = -.15+(error*kp)+(integral(error)*ki)+(derivative(error,runtime.seconds())*kd);
             else
                 power = 0;
 
+            power = Range.clip(power, -1, 1);
             drive(0+power, 0-power);
 
             telemetry.addData("error", error);
-            telemetry.addData("power", power);
             telemetry.addData("currentHeading", currentHeading);
             telemetry.addData("targetHeading", targetHeading);
+            telemetry.addData("proportional",(error*kp));
+            telemetry.addData("integral",(integral(error)*ki));
+            telemetry.addData("derivative",(derivative(error,runtime.seconds())*kd));
+            telemetry.addData("power", power);
             telemetry.update();
+            // Wait to account for i2c bus lag for the gyro
+            sleep(100);
         }
         driveStop();
     }
+
+    private double integral(double error){
+        sum = 0;
+        pastError[4] = pastError[3];
+        pastError[3] = pastError[2];
+        pastError[2] = pastError[1];
+        pastError[1] = pastError[0];
+        pastError[0] = error;
+        // Sum the past 5 error values
+        // (Essentially take the integral of error vs time for the past 5 readings)
+        for( double i : pastError) {
+            sum += i;
+        }
+        return
+                sum;
+    }
+
+    private double derivative(double error, double time){
+        // Calculate the negative slope of the error vs time curve
+        speed = (error-lastError)/(time-lastTime);
+        lastError = error;
+        lastTime = time;
+        return
+                speed;
+    }
+
+//    private void timedGyroTurn (int targetHeading, double time){
+//        //boolean done = false;
+//        double error;
+//        double currentHeading;
+//        double kp = .003;
+//        double power;
+//        ElapsedTime runtime = new ElapsedTime();
+//        gyro.resetZAxisIntegrator();
+//        runtime.reset();
+//        sleep(250);
+//
+//        while (runtime.seconds() < time && opModeIsActive()){
+//            currentHeading = -gyro.getIntegratedZValue();
+//            error = (targetHeading-currentHeading);
+//
+//            if (error > 0)
+//                power = .15+(error*kp);
+//            else if (error < 0)
+//                power = -.15+(error*kp);
+//            else
+//                power = 0;
+//
+//            drive(0+power, 0-power);
+//
+//            telemetry.addData("error", error);
+//            telemetry.addData("power", power);
+//            telemetry.addData("currentHeading", currentHeading);
+//            telemetry.addData("targetHeading", targetHeading);
+//            telemetry.update();
+//        }
+//        driveStop();
+//    }
 
     private void setUpGyro() throws InterruptedException {
 
@@ -249,8 +326,8 @@ public class cf_2_balls_Worlds extends LinearOpMode {
             if (gamepad1.y) {
                 wait = wait + 1;
                 telemetry.addData("Wait time", wait*1000);
+                sleep(100);
             }
-            sleep(100);
             telemetry.update();
         }
 
@@ -268,14 +345,14 @@ public class cf_2_balls_Worlds extends LinearOpMode {
 
             if (center) {
                 encoderDrive(/*distance*/11, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
-                timedGyroTurn(-135,4);
+                PIDGyroTurn(-135,4);
                 encoderDrive(/*distance*/12, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/-1);
             }
             if (corner) {
-                timedGyroTurn(-45,2);
+                PIDGyroTurn(-45,2);
 
                 encoderDrive(/*distance*/50, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
-                timedGyroTurn(-45,2);
+                PIDGyroTurn(-45,2);
                 encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
             }
 
@@ -290,13 +367,13 @@ public class cf_2_balls_Worlds extends LinearOpMode {
 
             if (center) {
                 encoderDrive(/*distance*/11, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
-                timedGyroTurn(135,4);
+                PIDGyroTurn(135,4);
                 encoderDrive(/*distance*/12, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/-1);
             }
             if (corner) {
-                timedGyroTurn(45,2);
+                PIDGyroTurn(45,2);
                 encoderDrive(/*distance*/50, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
-                timedGyroTurn(50,2);
+                PIDGyroTurn(50,2);
                 encoderDrive(/*distance*/20, /*leftSpeed*/1, /*rightSpeed*/1, /*direction*/1);
             }
         }

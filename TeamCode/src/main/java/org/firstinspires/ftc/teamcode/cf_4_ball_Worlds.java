@@ -457,6 +457,8 @@ public class cf_4_ball_Worlds extends LinearOpMode {
         waitForStart();
         collectionColor.enableLed(true);
 
+        sleep(2000);
+
         if (redSide){
             // Drive between the corner and center vortexes
             encoderDrive(/*Distance*/59, /*leftSpeed*/.7, /*rightSpeed*/.7, /*direction*/1);
