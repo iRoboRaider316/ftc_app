@@ -1,15 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name="pushbot", group="Opmode")
+@TeleOp(name="pushbotNG", group="Opmode")
 
-public class pushbot extends OpMode {
+public class pushbotNG extends OpMode {
     public DcMotor l1, r1;
 //    private Servo sweeper, wiper;
 
@@ -26,9 +23,9 @@ public class pushbot extends OpMode {
 
     public void loop() {
 
-//        setDriveMotorSpeeds(gamepad1.left_stick_y, gamepad1.right_stick_y);
-        l1.setPower(gamepad1.left_stick_y/4);
-        r1.setPower(-gamepad1.right_stick_y/4);
+        setDriveMotorSpeeds(gamepad1.left_stick_y, gamepad1.right_stick_y);
+//        l1.setPower(-gamepad1.left_stick_y/4);
+//        r1.setPower(gamepad1.right_stick_y/4);
 //        if (gamepad1.x) {
 //            engageWiper();
 //        } else {
@@ -43,10 +40,10 @@ public class pushbot extends OpMode {
 
     }
 
-//    public void setDriveMotorSpeeds(double left, double right) {
-//        l1.setPower(left/4);
-//        r1.setPower(-right/4);
-//    }
+    public void setDriveMotorSpeeds(double left, double right) {
+        l1.setPower(-left/4);
+        r1.setPower(right/4);
+    }
 
 //    public void engageWiper() {
 //        wiper.setPosition(1.0);
