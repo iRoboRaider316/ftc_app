@@ -49,7 +49,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
+/*
  * This 2016-2017 OpMode illustrates the basics of using the Vuforia localizer to determine
  * positioning and orientation of robot on the FTC field.
  * The code is structured as a LinearOpMode
@@ -127,7 +127,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
         this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
 
-        /**
+        /*
          * Load the data sets that for the trackable objects we wish to track. These particular data
          * sets are stored in the 'assets' part of our application (you'll see them in the Android
          * Studio 'Project' view over there on the left of the screen). You can make your own datasets
@@ -142,11 +142,11 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         VuforiaTrackable blueTarget  = stonesAndChips.get(1);
         blueTarget.setName("BlueTarget");  // Chips
 
-        /** For convenience, gather together all the trackable objects in one easily-iterable collection */
+        /* For convenience, gather together all the trackable objects in one easily-iterable collection */
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
         allTrackables.addAll(stonesAndChips);
 
-        /**
+        /*
          * We use units of mm here because that's the recommended units of measurement for the
          * size values specified in the XML for the ImageTarget trackables in data sets. E.g.:
          *      <ImageTarget name="stones" size="247 173"/>
@@ -157,7 +157,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         float mmBotWidth       = 18 * mmPerInch;            // ... or whatever is right for your robot
         float mmFTCFieldWidth  = (12*12 - 2) * mmPerInch;   // the FTC field is ~11'10" center-to-center of the glass panels
 
-        /**
+        /*
          * In order for localization to work, we need to tell the system where each target we
          * wish to use for navigation resides on the field, and we need to specify where on the robot
          * the phone resides. These specifications are in the form of <em>transformation matrices.</em>
@@ -240,7 +240,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         blueTarget.setLocation(blueTargetLocationOnField);
         RobotLog.ii(TAG, "Blue Target=%s", format(blueTargetLocationOnField));
 
-        /**
+        /*
          * Create a transformation matrix describing where the phone is on the robot. Here, we
          * put the phone on the right hand side of the robot with the screen facing in (see our
          * choice of BACK camera above) and in landscape mode. Starting from alignment between the
@@ -259,7 +259,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                         AngleUnit.DEGREES, -90, 0, 0));
         RobotLog.ii(TAG, "phone=%s", format(phoneLocationOnRobot));
 
-        /**
+        /*
          * Let the trackable listeners we care about know where the phone is. We know that each
          * listener is a {@link VuforiaTrackableDefaultListener} and can so safely cast because
          * we have not ourselves installed a listener of a different type.
@@ -267,7 +267,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         ((VuforiaTrackableDefaultListener)redTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
         ((VuforiaTrackableDefaultListener)blueTarget.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
 
-        /**
+        /*
          * A brief tutorial: here's how all the math is going to work:
          *
          * C = phoneLocationOnRobot  maps   phone coords -> robot coords
@@ -286,18 +286,18 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * @see VuforiaTrackableDefaultListener#getRobotLocation()
          */
 
-        /** Wait for the game to begin */
+        /* Wait for the game to begin */
         telemetry.addData(">", "Press Play to start tracking");
         telemetry.update();
         waitForStart();
 
-        /** Start tracking the data sets we care about. */
+        /* Start tracking the data sets we care about. */
         stonesAndChips.activate();
 
         while (opModeIsActive()) {
 
             for (VuforiaTrackable trackable : allTrackables) {
-                /**
+                /*
                  * getUpdatedRobotLocation() will return null if no new information is available since
                  * the last time that call was made, or if the trackable is not currently visible.
                  * getRobotLocation() will return null if the trackable is not currently visible.
@@ -309,7 +309,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                     lastLocation = robotLocationTransform;
                 }
             }
-            /**
+            /*
              * Provide feedback as to where the robot was last located (if we know).
              */
             if (lastLocation != null) {
@@ -322,7 +322,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         }
     }
 
-    /**
+    /*
      * A simple utility that extracts positioning information from a transformation matrix
      * and formats it in a form palatable to a human being.
      */
