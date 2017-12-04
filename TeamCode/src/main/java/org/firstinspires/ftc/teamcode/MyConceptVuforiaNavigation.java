@@ -135,19 +135,19 @@ public class MyConceptVuforiaNavigation extends LinearOpMode {
          * example "StonesAndChips", datasets can be found in in this project in the
          * documentation directory.
          */
-        VuforiaTrackables stonesAndChips = this.vuforia.loadTrackablesFromAsset("RelicVuMark");
-        VuforiaTrackable leftTarget = stonesAndChips.get(0);
+        VuforiaTrackables Cryptokey = this.vuforia.loadTrackablesFromAsset("RelicVuMark");
+        VuforiaTrackable leftTarget = Cryptokey.get(0);
         leftTarget.setName("Left");  // Left
 
-        VuforiaTrackable centerTarget  = stonesAndChips.get(1);
+        VuforiaTrackable centerTarget  = Cryptokey.get(1);
         centerTarget.setName("Center");  // Center
 
-        VuforiaTrackable rightTarget  = stonesAndChips.get(2);
+        VuforiaTrackable rightTarget  = Cryptokey.get(2);
         rightTarget.setName("Right");  // Right
 
         /** For convenience, gather together all the trackable objects in one easily-iterable collection */
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
-        allTrackables.addAll(stonesAndChips);
+        allTrackables.addAll(Cryptokey);
 
         /**
          * We use units of mm here because that's the recommended units of measurement for the
@@ -307,7 +307,7 @@ public class MyConceptVuforiaNavigation extends LinearOpMode {
         waitForStart();
 
         /** Start tracking the data sets we care about. */
-        stonesAndChips.activate();
+        Cryptokey.activate();
 
         while (opModeIsActive()) {
 
