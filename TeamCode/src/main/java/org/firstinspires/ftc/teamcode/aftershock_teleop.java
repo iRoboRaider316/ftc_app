@@ -22,6 +22,13 @@ public class aftershock_teleop extends OpMode{
     double floorLeft;
     double floorRight;
 
+    private double lGlyphSInit = .73;                     //Glyph arms will initialize in the open position.
+    private double rGlyphSInit = .1;
+    private double lGlyphSGrasp = .43;                    //After testing, these positions were optimal for grasping the glyphs.
+    private double rGlyphSGrasp = .50;
+    private double lGlyphSAlmostGrasp = .50;
+    private double rGlyphSAlmostGrasp = .43;
+
     private double getDirection(double inputPower) {
         if(inputPower == 0) {
             return 1;
@@ -64,6 +71,41 @@ public class aftershock_teleop extends OpMode{
         double leftPower;
         double rightPower;
         double speed;
+
+        ///OPERATOR CODE
+
+        if (gamepad2.dpad_up) {
+            glyphLiftM.setPower(1);
+        }
+        else if (gamepad2.dpad_down) {
+            glyphLiftM.setPower(-1);
+        }
+        else {
+            glyphLiftM.setPower(0);
+        }
+        if (gamepad2.dpad_up) {
+            glyphLiftM.setPower(1);
+        }
+        else if (gamepad2.dpad_down) {
+            glyphLiftM.setPower(-1);
+        }
+        else {
+            glyphLiftM.setPower(0);
+        }
+
+        if (gamepad2.b) { //hitting the "b" button on Gamepad 2 will cause the glypher servos to grasp the glyph
+            lGlyphS.setPosition(lGlyphSGrasp);
+            rGlyphS.setPosition(rGlyphSGrasp);
+        }
+        if (gamepad2.x) { //hitting the "x" button on Gamepad 2 will cause the glypher servos to return to their original position
+            lGlyphS.setPosition(lGlyphSInit);
+            rGlyphS.setPosition(rGlyphSInit);
+        }
+
+        if (gamepad2.y) {   //hitting the "y" button on Gamepad 2 will cause the glypher servos to expand slightly larger than grasping the glyphs.
+            lGlyphS.setPosition(lGlyphSAlmostGrasp);
+            rGlyphS.setPosition(rGlyphSAlmostGrasp);
+        }
 
         ///DRIVER CODE\\\
 
