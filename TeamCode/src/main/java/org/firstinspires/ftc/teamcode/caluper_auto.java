@@ -50,7 +50,7 @@ public class caluper_auto extends LinearOpMode {
     public Servo lArmS,          // Left Glyph Grabber Arm
             rArmS;               // Right Glyph Grabber Arm
 
-    public CRServo jewelArmS;    // Jewel Bumper
+    //public CRServo jewelArmS;    // Jewel Bumper - Commented out because it isn't working right now
 
     ColorSensor sensorColor;     // Color Sensor on Jewel Bumper
 
@@ -98,10 +98,10 @@ public class caluper_auto extends LinearOpMode {
     }
 
     public void jewelBumper(DcMotorSimple.Direction direction, long time) throws InterruptedException { // Move Jewel Bumper
-        jewelArmS.setDirection(direction);                 // when pos is 0, jewel bumper is lowered
+        /*jewelArmS.setDirection(direction);                 // when pos is 0, jewel bumper is lowered
         jewelArmS.setPower(1);
         sleep(time);                               // when pos is 1, jewel bumper is raised
-        jewelArmS.setPower(0);
+        jewelArmS.setPower(0);*/
     }
 
     public void bumpRedJewel(int direction) throws InterruptedException {  // Knock the red jewel off. For blue side only.
@@ -261,20 +261,21 @@ public class caluper_auto extends LinearOpMode {
      * angles.firstAngle is used for currentRotation.
      */
 
-    public void imuTurn(float degreesToTurn, float currentRotation) {
+    public void imuTurn(float degreesToTurn) {
         updateIMU();                                    // Update the IMU to see where we are,
                                                         // rotation-wise.
         /*
          * These operations account for when the robot would cross the IMU rotation line, which
          * separates -180 from 180. Adding or subtracting the degreesToTurn by 360 here isn't
          * always necessary, however, so we skip this operation in those cases*/
-        if(degreesToTurn + currentRotation > 180) {
+        if(degreesToTurn + angles.firstAngle > 180) {
             degreesToTurn -= 360;
         }
 
-        if(degreesToTurn - currentRotation < -180) {
+        if(degreesToTurn - angles.firstAngle < -180) {
             degreesToTurn += 360;
         }
+
 
         /*
          * For us, the IMU has had us turn just a bit more than what we intend. The operation
@@ -282,15 +283,23 @@ public class caluper_auto extends LinearOpMode {
          */
         degreesToTurn *= (8.0F / 9.0F);
 
-        if (degreesToTurn > 0) {                             // For counterclockwise turns
-            while (currentRotation < degreesToTurn) {
-                updateIMU();
-                drive(-0.18, 0.18);
-            }
-        } else {
-            while (currentRotation > degreesToTurn) {        // For clockwise turns
+        float targetHeading = degreesToTurn + angles.firstAngle;
+
+        if (targetHeading > angles.firstAngle) {
+            while (targetHeading > angles.firstAngle) {
                 updateIMU();
                 drive(0.18, -0.18);
+                telemetry.addData("Gyro", angles.firstAngle);
+                telemetry.addData("Target", targetHeading);
+                telemetry.update();
+            }
+        } else {
+            while (targetHeading < angles.firstAngle) {
+                updateIMU();
+                drive(-0.18, 0.18);
+                telemetry.addData("Gyro", angles.firstAngle);
+                telemetry.addData("Target", targetHeading);
+                telemetry.update();
             }
         }
 
@@ -308,7 +317,7 @@ public class caluper_auto extends LinearOpMode {
 
         lArmS = hardwareMap.servo.get("lArmS"); //Left servo arm, Hub 1, port 2
         rArmS = hardwareMap.servo.get("rArmS"); //Right servo arm, Hub 2, port 1
-        jewelArmS = hardwareMap.crservo.get("jewelArmS");
+        //jewelArmS = hardwareMap.crservo.get("jewelArmS"); - Commented out because it isn't working right now
 
         sensorColor = hardwareMap.get(ColorSensor.class, "sensorColor");
 
@@ -392,6 +401,7 @@ public class caluper_auto extends LinearOpMode {
         decryptKey(Targets);
         waitForStart();
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+        updateIMU();
         // =======================================AUTONOMOUS========================================
         if (red) {
             if (leftStone) {
@@ -401,7 +411,7 @@ public class caluper_auto extends LinearOpMode {
                 driveStop();
                 drive(0.25, 0.25);                              // Drive to Cryptobox
                 sleep(1100);
-                imuTurn(-90, angles.firstAngle);              // Turn with IMU!
+                imuTurn(-90);              // Turn with IMU!
                 sleep(700); // just to see what is happening
                 placeGlyph(crypto);                             // Place Glyph in column depending on pictograph
             } else if (rightStone) {
@@ -413,7 +423,7 @@ public class caluper_auto extends LinearOpMode {
                 drive(0.15, 0.15);    //Back into Safe Zone
                 sleep(1200);
                 driveStop();
-                imuTurn(120, angles.firstAngle);
+                imuTurn(120);
                 drive(0.1, 0.1);
                 sleep(1200);
                 driveStop();
@@ -425,8 +435,8 @@ public class caluper_auto extends LinearOpMode {
                 sleep(300);
                 driveStop();
                 drive(-0.25, -0.25);                            // Drive to Cryptobox
-                sleep(1190);
-                imuTurn(90, angles.firstAngle);              // Turn with IMU!
+                sleep(1140);
+                imuTurn(90);              // Turn with IMU!
                 sleep(700); // just to see what is happening
                 placeGlyph(crypto);                             // Place Glyph in column depending on pictograph
             } else if (leftStone) {
@@ -436,7 +446,7 @@ public class caluper_auto extends LinearOpMode {
                 driveStop();
                 drive(-0.7, -0.2);                              // Drive to Cryptobox while curving
                 sleep(1000);
-                imuTurn(-90, angles.firstAngle);             // Turn with IMU!
+                imuTurn(-90);             // Turn with IMU!
                 driveStop();
                 sleep(700); // just to see what is happening
                 placeGlyph(crypto);                             // Place Glyph in column depending on pictograph
