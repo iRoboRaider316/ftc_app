@@ -50,14 +50,15 @@ public class caluper_auto extends LinearOpMode {
     public Servo lArmS,          // Left Glyph Grabber Arm
             rArmS;               // Right Glyph Grabber Arm
 
-    //public CRServo jewelArmS;    // Jewel Bumper - Commented out because it isn't working right now
+    public CRServo jewelArmS;    // Jewel Bumper
 
-    ColorSensor sensorColor;     // Color Sensor on Jewel Bumper
+    ColorSensor sensorColorFwd;     // Front Color Sensor on Jewel Bumper
+    ColorSensor sensorColorBck;     // Back Color Sensor on Jewel Bumper
 
-    private double lArmSGrasp = .43;
-    private double rArmSGrasp = .50;
-    private double lArmSRelease = .63;
-    private double rArmSRelease = .30;
+    private double lArmSGrasp = 0;
+    private double rArmSGrasp = 1;
+    private double lArmSRelease = 1;
+    private double rArmSRelease = 0;
 
     DcMotorSimple.Direction FORWARD = DcMotorSimple.Direction.FORWARD;
     DcMotorSimple.Direction BACKWARD = DcMotorSimple.Direction.REVERSE;
@@ -98,48 +99,62 @@ public class caluper_auto extends LinearOpMode {
     }
 
     public void jewelBumper(DcMotorSimple.Direction direction, long time) throws InterruptedException { // Move Jewel Bumper
-        /*jewelArmS.setDirection(direction);                 // when pos is 0, jewel bumper is lowered
+        jewelArmS.setDirection(direction);                 // when pos is 0, jewel bumper is lowered
         jewelArmS.setPower(1);
         sleep(time);                               // when pos is 1, jewel bumper is raised
-        jewelArmS.setPower(0);*/
+        jewelArmS.setPower(0);
     }
 
     public void bumpRedJewel(int direction) throws InterruptedException {  // Knock the red jewel off. For blue side only.
         jewelBumper(BACKWARD, 2700);                              // Lower jewel bumper
-        telemetry.addData("Red", sensorColor.red());
-        telemetry.addData("Blue", sensorColor.blue());
+        telemetry.addData("Red Fwd", sensorColorFwd.red());
+        telemetry.addData("Blue Fwd", sensorColorFwd.blue());
+        telemetry.addData("Red Bck", sensorColorBck.red());
+        telemetry.addData("Blue Bck", sensorColorBck.blue());
         telemetry.update();
-        if (sensorColor.red() > sensorColor.blue()) {       // Is detected jewel red?
+        if (sensorColorFwd.red() > sensorColorFwd.blue() || sensorColorBck.blue() > sensorColorBck.red()) {       // Is detected jewel red?
             drive(0.25 * direction, 0.25 * direction);       // Drive to knock it off.
             sleep(300);
             driveStop();
-            jewelBumper(FORWARD, 2300);                          // Raise Jewel Bumper
-        } else if (sensorColor.blue() > sensorColor.red()) {// Is detected jewel blue?
+            jewelBumper(FORWARD, 2600);                          // Raise Jewel Bumper
+        } else if (sensorColorBck.red() > sensorColorBck.blue() || sensorColorFwd.blue() > sensorColorFwd.red()) {// Is detected jewel blue?
             drive(-0.25 * direction, -0.25 * direction);   // Drive to knock off red jewel
-            sleep(500);                                    // it's called indirect proof
+            sleep(400);                                    // it's called indirect proof
             driveStop();
-            jewelBumper(FORWARD, 2300);                          // Raise Jewel Bumper
+            jewelBumper(FORWARD, 2600);                          // Raise Jewel Bumper
             drive(0.5 * direction, 0.5 * direction);       // Drive back on stone (We won't need it later on)
-            sleep(600);
+            sleep(350);
             driveStop();
+        } else {
+            jewelBumper(FORWARD, 2600);
+            drive(0.25 * direction, 0.25 * direction);       // Drive to knock it off.
+            sleep(300);
+            driveStop();
+            sleep(500);
         }
     }
 
     public void bumpBlueJewel(int direction) throws InterruptedException {              // Knock the blue jewel off. For red side only.
         jewelBumper(BACKWARD, 2700);                               // Lower Jewel Bumper
-        if (sensorColor.blue() > sensorColor.red()) {        // Is detected jewel blue?
+        if (sensorColorBck.red() > sensorColorBck.blue() || sensorColorFwd.blue() > sensorColorFwd.red()) {        // Is detected jewel blue?
             drive(-0.25 * direction, -0.25 * direction);    // Drive to knock off blue jewel
-            sleep(300);                                     // it's called indirect proof
+            sleep(400);                                     // it's called indirect proof
             driveStop();
-            jewelBumper(FORWARD, 2300);                           // Raise Jewel Bumper
+            jewelBumper(FORWARD, 2600);                           // Raise Jewel Bumper
             drive(0.5 * direction, 0.5 * direction);        // Drive back on stone (We won't need it later on)
-            sleep(600);
+            sleep(350);
             driveStop();
-        } else if (sensorColor.red() > sensorColor.blue()) { // Is detected jewel red?
+        } else if (sensorColorFwd.red() > sensorColorFwd.blue() || sensorColorBck.blue() > sensorColorBck.red()) { // Is detected jewel red?
             drive(0.25 * direction, 0.25 * direction);      // Drive to knock it off.
-            sleep(600);
+            sleep(300);
             driveStop();
-            jewelBumper(FORWARD, 2300);                           // Raise the Jewel Bumper
+            jewelBumper(FORWARD, 2600);                           // Raise the Jewel Bumper
+        } else {
+            jewelBumper(FORWARD, 2600);
+            drive(0.25 * direction, 0.25 * direction);       // Drive to knock it off.
+            sleep(300);
+            driveStop();
+            sleep(500);
         }
     }
 
@@ -276,7 +291,6 @@ public class caluper_auto extends LinearOpMode {
             degreesToTurn += 360;
         }
 
-
         /*
          * For us, the IMU has had us turn just a bit more than what we intend. The operation
          * below accounts for this by dividing the current degreesToTurn value by 8/9.
@@ -288,7 +302,7 @@ public class caluper_auto extends LinearOpMode {
         if (targetHeading > angles.firstAngle) {
             while (targetHeading > angles.firstAngle) {
                 updateIMU();
-                drive(0.18, -0.18);
+                drive(0.2, -0.2);
                 telemetry.addData("Gyro", angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
                 telemetry.update();
@@ -296,7 +310,7 @@ public class caluper_auto extends LinearOpMode {
         } else {
             while (targetHeading < angles.firstAngle) {
                 updateIMU();
-                drive(-0.18, 0.18);
+                drive(-0.2, 0.2);
                 telemetry.addData("Gyro", angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
                 telemetry.update();
@@ -317,9 +331,10 @@ public class caluper_auto extends LinearOpMode {
 
         lArmS = hardwareMap.servo.get("lArmS"); //Left servo arm, Hub 1, port 2
         rArmS = hardwareMap.servo.get("rArmS"); //Right servo arm, Hub 2, port 1
-        //jewelArmS = hardwareMap.crservo.get("jewelArmS"); - Commented out because it isn't working right now
+        jewelArmS = hardwareMap.crservo.get("jewelArmS");
 
-        sensorColor = hardwareMap.get(ColorSensor.class, "sensorColor");
+        sensorColorFwd = hardwareMap.get(ColorSensor.class, "sensorColorFwd");
+        sensorColorBck = hardwareMap.get(ColorSensor.class, "sensorColorBck");
 
         driveStop();
         liftM.setPower(0);
@@ -335,6 +350,8 @@ public class caluper_auto extends LinearOpMode {
         rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        lArmS.scaleRange(0, 0.8);
+        rArmS.scaleRange(0.2, 1);
         grabbers(lArmSGrasp, rArmSGrasp);
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().
@@ -405,20 +422,14 @@ public class caluper_auto extends LinearOpMode {
         // =======================================AUTONOMOUS========================================
         if (red) {
             if (leftStone) {
-                //bumpBlueJewel(1);
-                drive(0.25, 0.25);                              // Drive to knock it off. (TEMPORARY)
-                sleep(300);
-                driveStop();
+                bumpBlueJewel(1);
                 drive(0.25, 0.25);                              // Drive to Cryptobox
                 sleep(1100);
                 imuTurn(-90);              // Turn with IMU!
                 sleep(700); // just to see what is happening
                 placeGlyph(crypto);                             // Place Glyph in column depending on pictograph
             } else if (rightStone) {
-                //bumpBlueJewel(1);
-                drive(0.25, 0.25);                              // Drive to knock it off. (TEMPORARY)
-                sleep(300);
-                driveStop();
+                bumpBlueJewel(1);
                 sleep(1200);
                 drive(0.15, 0.15);    //Back into Safe Zone
                 sleep(1200);
@@ -430,20 +441,14 @@ public class caluper_auto extends LinearOpMode {
             }
         } else if (blue) {
             if (rightStone) {
-                //bumpRedJewel(-1);                               // Bump the Red Jewel
-                drive(-0.25, -0.25);       // Drive to knock it off.
-                sleep(300);
-                driveStop();
+                bumpRedJewel(-1);
                 drive(-0.25, -0.25);                            // Drive to Cryptobox
-                sleep(1140);
+                sleep(1100);
                 imuTurn(90);              // Turn with IMU!
                 sleep(700); // just to see what is happening
                 placeGlyph(crypto);                             // Place Glyph in column depending on pictograph
             } else if (leftStone) {
-                //bumpRedJewel(-1);                               // Bump the Red Jewel
-                drive(-0.25, -0.25);       // Drive to knock it off.
-                sleep(300);
-                driveStop();
+                bumpRedJewel(-1);
                 drive(-0.7, -0.2);                              // Drive to Cryptobox while curving
                 sleep(1000);
                 imuTurn(-90);             // Turn with IMU!
