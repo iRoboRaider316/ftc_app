@@ -142,7 +142,7 @@ public class caluper_auto extends LinearOpMode {
             driveStop();
             jewelBumper(FORWARD, 2600);                           // Raise Jewel Bumper
             drive(0.5 * direction, 0.5 * direction);        // Drive back on stone (We won't need it later on)
-            sleep(350);
+            sleep(500);
             driveStop();
         } else if (sensorColorFwd.red() > sensorColorFwd.blue() || sensorColorBck.blue() > sensorColorBck.red()) { // Is detected jewel red?
             drive(0.25 * direction, 0.25 * direction);      // Drive to knock it off.
@@ -422,12 +422,12 @@ public class caluper_auto extends LinearOpMode {
         // =======================================AUTONOMOUS========================================
         if (red) {
             if (leftStone) {
-                bumpBlueJewel(1);
-                drive(0.25, 0.25);                              // Drive to Cryptobox
-                sleep(1100);
-                imuTurn(-90);              // Turn with IMU!
-                sleep(700); // just to see what is happening
-                placeGlyph(crypto);                             // Place Glyph in column depending on pictograph
+                bumpBlueJewel(1);                  // Bump Red Jewel
+                drive(0.25, 0.25);                 // Drive to Cryptobox...
+                sleep(600);                       // ...for 1.1 seconds
+                imuTurn(90);                       // Turn to Cryptobox!
+                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                placeGlyph(crypto);                // Place Glyph in column depending on pictograph
             } else if (rightStone) {
                 bumpBlueJewel(1);
                 sleep(1200);
@@ -441,12 +441,12 @@ public class caluper_auto extends LinearOpMode {
             }
         } else if (blue) {
             if (rightStone) {
-                bumpRedJewel(-1);
-                drive(-0.25, -0.25);                            // Drive to Cryptobox
-                sleep(1100);
-                imuTurn(90);              // Turn with IMU!
-                sleep(700); // just to see what is happening
-                placeGlyph(crypto);                             // Place Glyph in column depending on pictograph
+                bumpRedJewel(-1);                  // Bump Red Jewel
+                drive(-0.25, -0.25);               // Drive to Cryptobox...
+                sleep(1100);                       // ...for 1.1 seconds
+                imuTurn(90);                       // Turn to Cryptobox!
+                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                placeGlyph(crypto);                // Place Glyph in column depending on pictograph
             } else if (leftStone) {
                 bumpRedJewel(-1);
                 drive(-0.7, -0.2);                              // Drive to Cryptobox while curving
