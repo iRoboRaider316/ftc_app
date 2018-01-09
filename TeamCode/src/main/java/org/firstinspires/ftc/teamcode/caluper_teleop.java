@@ -3,7 +3,9 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -17,19 +19,22 @@ import com.qualcomm.robotcore.util.Range;
 public class caluper_teleop extends OpMode {
 
     public DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, liftM;  //Left front drive, right front drive, left back drive, right back drive.
-    public Servo lArmS, rArmS, jewelArmS;            //lServoArm in port 5, rServoArm in port 4
+    public Servo lArmS, rArmS;
+    public CRServo jewelArmS;            //lServoArm in port 5, rServoArm in port 4
 
-    private double lServoArmInit = .73;                     //Glyph arms will initialize in the open position.
-    private double rServoArmInit = .1;
-    private double lServoArmGrasp = .43;                    //After testing, these positions were optimal for grasping the glyphs.
-    private double rServoArmGrasp = .50;
-    private double lServoArmAlmostGrasp = .50;
-    private double rServoArmAlmostGrasp = .43;
+    private double lServoArmInit = 1;                     //Glyph arms will initialize in the open position.
+    private double rServoArmInit = 0;
+    private double lServoArmGrasp = 0;                    //After testing, these positions were optimal for grasping the glyphs.
+    private double rServoArmGrasp = 1;
+    private double lServoArmAlmostGrasp = .5;
+    private double rServoArmAlmostGrasp = .5;
 
     boolean rightBackwardBrake = false;                      //These four variables initiate an abrupt stop (see below).
     boolean rightForwardBrake = false;
     boolean leftBackwardBrake = false;
     boolean leftForwardBrake = false;
+
+    boolean liftBrake = false;
 
 
     private double speedFactor = .5;
@@ -59,8 +64,8 @@ public class caluper_teleop extends OpMode {
         rArmS = hardwareMap.servo.get("rArmS");     //Right servo arm, Hub 2, port 1
         rArmS.setPosition(rServoArmInit);
 
-        jewelArmS = hardwareMap.servo.get("jewelArmS");       //Jewel Arm, Hub 2, port 3
-        jewelArmS.setPosition(.5);
+        jewelArmS = hardwareMap.crservo.get("jewelArmS");       //Jewel Arm, Hub 2, port 3
+        jewelArmS.setPower(0);
     }
 
     public void loop() {
@@ -186,6 +191,7 @@ public class caluper_teleop extends OpMode {
         }
         else {
             liftM.setPower(0);
+            liftM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
         if (gamepad2.dpad_up) {
             liftM.setPower(1);
@@ -197,16 +203,21 @@ public class caluper_teleop extends OpMode {
             liftM.setPower(0);
         }
 
-        /*
-        if (gamepad1.b) { //hitting the "b" button on Gamepad 2 will cause the glypher servos to grasp the glyph
-            lServoArm.setPosition(lServoArmGrasp);
-            rServoArm.setPosition(rServoArmGrasp);
+
+
+        if (gamepad1.right_stick_y == 0 && rightBackwardBrake == true) {
+            timer.reset();
+            rfDriveM.setPower(-.3);          //If the brake variable is true and the joystick resets to 0, the robot will reverse power briefly to cause an abrupt stop.
+            rbDriveM.setPower(-.3);
+
+            if (timer.milliseconds() > 150) {
+                rfDriveM.setPower(0);
+                rbDriveM.setPower(0);
+            }
+            rightBackwardBrake = false;     //As soon as the robot stops, reset the brake variable to false.
         }
-        if (gamepad1.x) { //hitting the "x" button on Gamepad 2 will cause the glypher servos to return to their original position
-            lServoArm.setPosition(lServoArmInit);
-            rServoArm.setPosition(rServoArmInit);
-        }
-        */
+
+
 
         if (gamepad2.b) { //hitting the "b" button on Gamepad 2 will cause the glypher servos to grasp the glyph
             lArmS.setPosition(lServoArmGrasp);
@@ -217,29 +228,19 @@ public class caluper_teleop extends OpMode {
             rArmS.setPosition(rServoArmInit);
         }
 
-        /*
-        if (gamepad1.y) {   //hitting the "y" button on Gamepad 1 will cause the glypher servos to expand slightly larger than grasping the glyphs.
-            lServoArm.setPosition(lServoArmAlmostGrasp);
-            rServoArm.setPosition(rServoArmAlmostGrasp);
-        }
-        */
-
         if (gamepad2.y) {   //hitting the "y" button on Gamepad 2 will cause the glypher servos to expand slightly larger than grasping the glyphs.
             lArmS.setPosition(lServoArmAlmostGrasp);
             rArmS.setPosition(rServoArmAlmostGrasp);
         }
 
         if (gamepad2.dpad_right) {
-            jewelArmS.setPosition(1);
-        }
-        else {
-            jewelArmS.setPosition(.5);
-        }
-        if (gamepad2.dpad_left) {
-            jewelArmS.setPosition(0);
-        }
-        else {
-            jewelArmS.setPosition(.5);
+            jewelArmS.setDirection(DcMotorSimple.Direction.FORWARD);
+            jewelArmS.setPower(1);
+        } else if (gamepad2.left_bumper) {
+            jewelArmS.setDirection(DcMotorSimple.Direction.REVERSE);
+            jewelArmS.setPower(1);
+        } else {
+            jewelArmS.setPower(0);
         }
 
     }

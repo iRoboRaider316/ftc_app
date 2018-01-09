@@ -3,7 +3,9 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
@@ -13,6 +15,7 @@ public class aftershock_teleop extends OpMode{
 
     public DcMotor lfDriveM, lbDriveM, rfDriveM, rbDriveM, glyphLiftM;
     public Servo lGlyphS, rGlyphS, jewelExtendS, jewelKnockS;
+    public CRServo glyphSlideS;
 
     int power = 1;
 
@@ -22,12 +25,12 @@ public class aftershock_teleop extends OpMode{
     double floorLeft;
     double floorRight;
 
-    private double lGlyphSInit = .73;                     //Glyph arms will initialize in the open position.
-    private double rGlyphSInit = .1;
-    private double lGlyphSGrasp = .43;                    //After testing, these positions were optimal for grasping the glyphs.
-    private double rGlyphSGrasp = .50;
-    private double lGlyphSAlmostGrasp = .50;
-    private double rGlyphSAlmostGrasp = .43;
+    private double lGlyphSInit = .39;               //Glyph arms will initialize in the open position.
+    private double rGlyphSInit = .61;
+    private double lGlyphSGrasp = 0;              //After testing, these positions were optimal for grasping the glyphs.
+    private double rGlyphSGrasp = 1;
+    private double lGlyphSAlmostGrasp = .2;
+    private double rGlyphSAlmostGrasp = .8;
 
     private double getDirection(double inputPower) {
         if(inputPower == 0) {
@@ -42,55 +45,75 @@ public class aftershock_teleop extends OpMode{
 
 
     public void init() {
+        //Drive motors
         lfDriveM = hardwareMap.dcMotor.get("lfDriveM");
+        lfDriveM.setPower(0);
         lbDriveM = hardwareMap.dcMotor.get("lbDriveM");
+        lbDriveM.setPower(0);
         rfDriveM = hardwareMap.dcMotor.get("rfDriveM");
+        rfDriveM.setPower(0);
         rbDriveM = hardwareMap.dcMotor.get("rbDriveM");
+        rbDriveM.setPower(0);
 
+        //Lifting glypher motor
         glyphLiftM = hardwareMap.dcMotor.get("glyphLiftM");
+        glyphLiftM.setPower(0);
+
+        //Glypher left-to-right motor
+        glyphSlideS = hardwareMap.crservo.get("glyphSlideS");
+        glyphSlideS.setPower(0);
 
         lGlyphS = hardwareMap.servo.get("lGlyphS");
+        lGlyphS.setPosition(lGlyphSInit);
         rGlyphS = hardwareMap.servo.get("rGlyphS");
+        rGlyphS.setPosition(rGlyphSInit);
 
 
 //        jewelExtendS = hardwareMap.servo.get("jewelExtendS");
 //        jewelKnockS = hardwareMap.servo.get("jewelKnockS");
 
 
-        rfDriveM.setDirection(DcMotor.Direction.REVERSE);
+        rfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the right side of the drive train for intuitive human interface
         rbDriveM.setDirection(DcMotor.Direction.REVERSE);
     }
 
     public void loop() {
-        float rStick1 = gamepad1.right_stick_y;
+        float rStick1 = gamepad1.right_stick_y;     //Simplify names in the code.
         float lStick1 = gamepad1.left_stick_y;
 
         boolean lBumper1 = gamepad1.left_bumper;
         boolean rBumper1 = gamepad1.right_bumper;
 
-        double leftPower;
+        double leftPower;       //Used for switch-case (see below).
         double rightPower;
         double speed;
 
         ///OPERATOR CODE
 
-        if (gamepad2.dpad_up) {
+        if (gamepad2.dpad_up) {            //Hit up on the d-pad to lift the glypher.
             glyphLiftM.setPower(1);
-        }
-        else if (gamepad2.dpad_down) {
+        } else if (gamepad2.dpad_down) {   //Hit down on the d-pad to lower the glypher.
             glyphLiftM.setPower(-1);
-        }
-        else {
+        } else {                           //If neither button is pressed, stop the motor.
             glyphLiftM.setPower(0);
         }
+
         if (gamepad2.dpad_up) {
             glyphLiftM.setPower(1);
-        }
-        else if (gamepad2.dpad_down) {
+        } else if (gamepad2.dpad_down) {
             glyphLiftM.setPower(-1);
-        }
-        else {
+        } else {
             glyphLiftM.setPower(0);
+        }
+
+        if (gamepad2.left_trigger > 0.1) {     //If left trigger is pushed, set power to full forward.
+            glyphSlideS.setDirection(DcMotorSimple.Direction.FORWARD);
+            glyphSlideS.setPower(1);
+        } else if (gamepad2.right_trigger > 0.1) {  //If right trigger is pushed, set power to full forward.0
+            glyphSlideS.setDirection(DcMotorSimple.Direction.REVERSE);
+            glyphSlideS.setPower(1);
+        } else {
+            glyphSlideS.setPower(0);            //Otherwise, set power to 0 (stationary).
         }
 
         if (gamepad2.b) { //hitting the "b" button on Gamepad 2 will cause the glypher servos to grasp the glyph
@@ -206,4 +229,3 @@ public class aftershock_teleop extends OpMode{
         rbDriveM.setPower(rightPower);
     }
 }
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
