@@ -63,22 +63,13 @@ public class caluper_auto extends LinearOpMode {
     DcMotorSimple.Direction FORWARD = DcMotorSimple.Direction.FORWARD;
     DcMotorSimple.Direction BACKWARD = DcMotorSimple.Direction.REVERSE;
 
-    boolean blue = false;
-    boolean red = false;
-    boolean rightStone = false;
-    boolean leftStone = false;
+    String stone = "";
+    String stoneAndKey = "";
 
+    VuforiaLocalizer vuforia;    // The Vuforia camera
     BNO055IMU imu;               // IMU Gyro sensor inside of REV Hub
     Orientation angles;          // variables of the IMU that get the rotation of the robot
     Acceleration gravity;
-
-    enum Cryptokey {             // Cryptokey Enumerations for determining what the camera saw
-        LEFT, CENTER, RIGHT, NONE
-    }
-
-    Cryptokey crypto = Cryptokey.NONE;  // Grabs what the camera saw from the pictograph
-
-    VuforiaLocalizer vuforia;           // The actual Vuforia camera
 
     // =======================================METHODS===============================================
     public void drive(double leftPower, double rightPower) {    // Turns on motors. The reason
@@ -138,21 +129,23 @@ public class caluper_auto extends LinearOpMode {
         jewelBumper(BACKWARD, 2700);                               // Lower Jewel Bumper
         if (sensorColorBck.red() > sensorColorBck.blue() || sensorColorFwd.blue() > sensorColorFwd.red()) {        // Is detected jewel blue?
             drive(-0.25 * direction, -0.25 * direction);    // Drive to knock off blue jewel
-            sleep(400);                                     // it's called indirect proof
+            sleep(350);                                     // it's called indirect proof
             driveStop();
-            jewelBumper(FORWARD, 2600);                           // Raise Jewel Bumper
+            jewelBumper(FORWARD, 2700);                           // Raise Jewel Bumper
             drive(0.5 * direction, 0.5 * direction);        // Drive back on stone (We won't need it later on)
-            sleep(500);
+            sleep(800);
             driveStop();
+            sleep(5000);
         } else if (sensorColorFwd.red() > sensorColorFwd.blue() || sensorColorBck.blue() > sensorColorBck.red()) { // Is detected jewel red?
             drive(0.25 * direction, 0.25 * direction);      // Drive to knock it off.
-            sleep(300);
+            sleep(900);
             driveStop();
-            jewelBumper(FORWARD, 2600);                           // Raise the Jewel Bumper
+            jewelBumper(FORWARD, 2700);                           // Raise the Jewel Bumper
+            sleep(5000);
         } else {
-            jewelBumper(FORWARD, 2600);
+            jewelBumper(FORWARD, 2700);
             drive(0.25 * direction, 0.25 * direction);       // Drive to knock it off.
-            sleep(300);
+            sleep(600);
             driveStop();
             sleep(500);
         }
@@ -195,36 +188,34 @@ public class caluper_auto extends LinearOpMode {
 
     public void decryptKey(VuforiaTrackable cryptokeys) {
         RelicRecoveryVuMark vuMark;
-        while (true) {
+        while (!isStarted()) {
             vuMark = RelicRecoveryVuMark.from(cryptokeys);
 
             if (vuMark == RelicRecoveryVuMark.LEFT) {
-                crypto = Cryptokey.LEFT;
+                stoneAndKey = stone + "KeyLeft";
                 telemetry.addData("Spotted Key", "Left!");
                 telemetry.update();
-                return;
             } else if (vuMark == RelicRecoveryVuMark.CENTER) {
-                crypto = Cryptokey.CENTER;
+                stoneAndKey = stone + "KeyCenter";
                 telemetry.addData("Spotted Key", "Center!");
                 telemetry.update();
-                return;
             } else if (vuMark == RelicRecoveryVuMark.RIGHT) {
-                crypto = Cryptokey.RIGHT;
+                stoneAndKey = stone + "KeyRight";
                 telemetry.addData("Spotted Key", "Right!");
                 telemetry.update();
-                return;
-            } else {
-                telemetry.addData("Spotted Key", "searching...");
-                telemetry.update();
             }
+
+            if(isStopRequested()) {             // Found this one boolean in LinearOpMode
+                break;                          // that checks if STOP is hit.
+            }                                   // Could help with the OpModeStuckInStop issues.
         }
     }
 
-    public void placeGlyph(Cryptokey key) {
-        switch (key) {
-            case LEFT:
+    public void placeGlyph(String StoneWithKey) {
+        switch (StoneWithKey) {
+            case "redLeftKeyLeft":
                 drive(0.25, -0.25);
-                sleep(400);
+                sleep(300);
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -232,7 +223,7 @@ public class caluper_auto extends LinearOpMode {
                 drive(0.2, 0.2);
                 sleep(500);
                 break;
-            case CENTER:
+            case "redLeftKeyCenter":
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -240,9 +231,9 @@ public class caluper_auto extends LinearOpMode {
                 drive(0.2, 0.2);
                 sleep(500);
                 break;
-            case RIGHT:
+            case "redLeftKeyRight":
                 drive(-0.25, 0.25);
-                sleep(400);
+                sleep(300);
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -250,7 +241,27 @@ public class caluper_auto extends LinearOpMode {
                 drive(0.2, 0.2);
                 sleep(500);
                 break;
-            default:
+            case "blueRightKeyLeft":
+                drive(0.25, -0.25);
+                sleep(300);
+                drive(-0.25, -0.25);
+                sleep(2000);
+                driveStop();
+                grabbers(lArmSRelease, rArmSRelease);
+                drive(0.2, 0.2);
+                sleep(500);
+                break;
+            case "blueRightKeyCenter":
+                drive(-0.25, -0.25);
+                sleep(2000);
+                driveStop();
+                grabbers(lArmSRelease, rArmSRelease);
+                drive(0.2, 0.2);
+                sleep(500);
+                break;
+            case "blueRightKeyRight":
+                drive(-0.25, 0.25);
+                sleep(300);
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -306,6 +317,9 @@ public class caluper_auto extends LinearOpMode {
                 telemetry.addData("Gyro", angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
                 telemetry.update();
+                if(isStopRequested()) {             // Found this one boolean in LinearOpMode
+                    break;                          // that checks if STOP is hit.
+                }                                   // Could help with the OpModeStuckInStop issues.
             }
         } else {
             while (targetHeading < angles.firstAngle) {
@@ -314,6 +328,9 @@ public class caluper_auto extends LinearOpMode {
                 telemetry.addData("Gyro", angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
                 telemetry.update();
+                if(isStopRequested()) {             // Found this one boolean in LinearOpMode
+                    break;                          // that checks if STOP is hit.
+                }                                   // Could help with the OpModeStuckInStop issues.
             }
         }
 
@@ -354,8 +371,7 @@ public class caluper_auto extends LinearOpMode {
         rArmS.scaleRange(0.2, 1);
         grabbers(lArmSGrasp, rArmSGrasp);
 
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().
-                getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName()); // Get the camera!
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName()); // Get the camera!
         VuforiaLocalizer.Parameters parameters_Vuf = new VuforiaLocalizer.Parameters(cameraMonitorViewId);    // Prepare the parameters
         parameters_Vuf.vuforiaLicenseKey = "Ae3H91v/////AAAAGT+4TPU5r02VnQxesioVLr0qQzNtgdYskxP7aL6/" +       // This is long...
                 "yt9VozCBUcQrSjwec5opfpOWEuc55kDXNNSRJjLAnjGPeaku9j4nOfe7tWxio/xj/uNdPX7fEHD0j5b" +
@@ -382,53 +398,63 @@ public class caluper_auto extends LinearOpMode {
         // =======================BEGIN SELECTION===================================================
         telemetry.addData("Selection", "X for Blue, B for Red");        // Which side are you on?
         telemetry.update();
-        while (!blue && !red) {
+        while (stone == "") {
             if (gamepad1.x) {
-                blue = true;
+                stone = "blue";
             } else if (gamepad1.b) {
-                red = true;
+                stone = "red";
             }
         }
         sleep(500);
         telemetry.addData("Selection", "X for Left, B for Right");  // Which stone is the robot on?
         telemetry.update();
-        while (!leftStone && !rightStone) {
+        while (stone == "blue" || stone == "red") {
             if (gamepad1.x) {
-                leftStone = true;
+                stone += "Left";
             } else if (gamepad1.b) {
-                rightStone = true;
+                stone += "Right";
             }
         }
-        // Now we display what choices were made.
-        if (blue) {
-            telemetry.addData("Team", "Blue");  // Delay isn't necessary for now.
-        } else if (red) {
-            telemetry.addData("Team", "Red");
+
+        switch(stone) {
+            case "redLeft":
+                telemetry.addData("Team", "Red");  // Delay isn't necessary for now.
+                telemetry.addData("Stone", "Left"); // without any cryptoboxes.
+                break;
+            case "redRight":
+                telemetry.addData("Team", "Red");  // Delay isn't necessary for now.
+                telemetry.addData("Stone", "Right"); // without any cryptoboxes.
+                break;
+            case "blueLeft":
+                telemetry.addData("Team", "Blue");  // Delay isn't necessary for now.
+                telemetry.addData("Stone", "Left"); // without any cryptoboxes.
+                break;
+            case "blueRight":
+                telemetry.addData("Team", "Blue");  // Delay isn't necessary for now.
+                telemetry.addData("Stone", "Right"); // without any cryptoboxes.
+                break;
         }
 
-        if (leftStone) {                         // The display here is based on the field edge
-            telemetry.addData("Stone", "Left"); // without any cryptoboxes.
-        } else if (rightStone) {                 // If you're red, it's on your left.
-            telemetry.addData("Stone", "Right");// If you're blue, it's on your right.
-        }
+        telemetry.addData("Searching For Key", "...");
+        telemetry.update();
 
         telemetry.update();
         Cryptokey.activate();
-        //AutoTransitioner.transitionOnStop(this, "caluper_teleop");     // Once Auto is done, quickly switch to our Teleop (Thank you KNO3!)
         decryptKey(Targets);
         waitForStart();
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
         updateIMU();
         // =======================================AUTONOMOUS========================================
-        if (red) {
-            if (leftStone) {
-                bumpBlueJewel(1);                  // Bump Red Jewel
+        switch(stone) {
+            case "redLeft":
+                bumpBlueJewel(1);                  // Bump Blue Jewel
                 drive(0.25, 0.25);                 // Drive to Cryptobox...
-                sleep(600);                       // ...for 1.1 seconds
+                sleep(850);                        // ...for 0.7 seconds
                 imuTurn(90);                       // Turn to Cryptobox!
                 sleep(700);                        // wait 0.7 seconds just to see what is happening
-                placeGlyph(crypto);                // Place Glyph in column depending on pictograph
-            } else if (rightStone) {
+                placeGlyph(stoneAndKey);           // Place Glyph in column depending on pictograph
+                break;
+            case "redRight":
                 bumpBlueJewel(1);
                 sleep(1200);
                 drive(0.15, 0.15);    //Back into Safe Zone
@@ -438,24 +464,24 @@ public class caluper_auto extends LinearOpMode {
                 drive(0.1, 0.1);
                 sleep(1200);
                 driveStop();
-            }
-        } else if (blue) {
-            if (rightStone) {
-                bumpRedJewel(-1);                  // Bump Red Jewel
-                drive(-0.25, -0.25);               // Drive to Cryptobox...
-                sleep(1100);                       // ...for 1.1 seconds
-                imuTurn(90);                       // Turn to Cryptobox!
-                sleep(700);                        // wait 0.7 seconds just to see what is happening
-                placeGlyph(crypto);                // Place Glyph in column depending on pictograph
-            } else if (leftStone) {
+                break;
+            case "blueLeft":
                 bumpRedJewel(-1);
                 drive(-0.7, -0.2);                              // Drive to Cryptobox while curving
                 sleep(1000);
                 imuTurn(-90);             // Turn with IMU!
                 driveStop();
                 sleep(700); // just to see what is happening
-                placeGlyph(crypto);                             // Place Glyph in column depending on pictograph
-            }
+                placeGlyph(stoneAndKey);                             // Place Glyph in column depending on pictograph
+                break;
+            case "blueRight":
+                bumpRedJewel(-1);                  // Bump Red Jewel
+                drive(-0.25, -0.25);               // Drive to Cryptobox...
+                sleep(1100);                       // ...for 1.1 seconds
+                imuTurn(90);                       // Turn to Cryptobox!
+                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                placeGlyph(stoneAndKey);           // Place Glyph in column depending on pictograph
+                break;
         }
         driveStop();
     }
