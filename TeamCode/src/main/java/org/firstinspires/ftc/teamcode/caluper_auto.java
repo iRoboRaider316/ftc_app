@@ -107,17 +107,17 @@ public class caluper_auto extends LinearOpMode {
             drive(0.25 * direction, 0.25 * direction);       // Drive to knock it off.
             sleep(300);
             driveStop();
-            jewelBumper(FORWARD, 2600);                          // Raise Jewel Bumper
+            jewelBumper(FORWARD, 2700);                          // Raise Jewel Bumper
         } else if (sensorColorBck.red() > sensorColorBck.blue() || sensorColorFwd.blue() > sensorColorFwd.red()) {// Is detected jewel blue?
             drive(-0.25 * direction, -0.25 * direction);   // Drive to knock off red jewel
             sleep(400);                                    // it's called indirect proof
             driveStop();
-            jewelBumper(FORWARD, 2600);                          // Raise Jewel Bumper
+            jewelBumper(FORWARD, 2700);                          // Raise Jewel Bumper
             drive(0.5 * direction, 0.5 * direction);       // Drive back on stone (We won't need it later on)
             sleep(350);
             driveStop();
         } else {
-            jewelBumper(FORWARD, 2600);
+            jewelBumper(FORWARD, 2700);
             drive(0.25 * direction, 0.25 * direction);       // Drive to knock it off.
             sleep(300);
             driveStop();
@@ -241,6 +241,34 @@ public class caluper_auto extends LinearOpMode {
                 drive(0.2, 0.2);
                 sleep(500);
                 break;
+            case "redRightKeyLeft":
+                drive(0.25, -0.25);
+                sleep(500);
+                drive(-0.25, -0.25);
+                sleep(2000);
+                driveStop();
+                grabbers(lArmSRelease, rArmSRelease);
+                drive(0.2, 0.2);
+                sleep(500);
+                break;
+            case "redRightKeyCenter":
+                drive(-0.25, -0.25);
+                sleep(2000);
+                driveStop();
+                grabbers(lArmSRelease, rArmSRelease);
+                drive(0.2, 0.2);
+                sleep(500);
+                break;
+            case "redRightKeyRight":
+                drive(-0.25, 0.25);
+                sleep(500);
+                drive(-0.25, -0.25);
+                sleep(2000);
+                driveStop();
+                grabbers(lArmSRelease, rArmSRelease);
+                drive(0.2, 0.2);
+                sleep(500);
+                break;
             case "blueRightKeyLeft":
                 drive(0.25, -0.25);
                 sleep(300);
@@ -269,6 +297,34 @@ public class caluper_auto extends LinearOpMode {
                 drive(0.2, 0.2);
                 sleep(500);
                 break;
+            case "blueLeftKeyLeft":
+                drive(0.25, -0.25);
+                sleep(500);
+                drive(-0.25, -0.25);
+                sleep(2000);
+                driveStop();
+                grabbers(lArmSRelease, rArmSRelease);
+                drive(0.2, 0.2);
+                sleep(500);
+                break;
+            case "blueLeftKeyCenter":
+                drive(-0.25, -0.25);
+                sleep(2000);
+                driveStop();
+                grabbers(lArmSRelease, rArmSRelease);
+                drive(0.2, 0.2);
+                sleep(500);
+                break;
+            case "blueLeftKeyRight":
+                drive(-0.25, 0.25);
+                sleep(500);
+                drive(-0.25, -0.25);
+                sleep(2000);
+                driveStop();
+                grabbers(lArmSRelease, rArmSRelease);
+                drive(0.2, 0.2);
+                sleep(500);
+                break;
         }
     }
 
@@ -279,6 +335,19 @@ public class caluper_auto extends LinearOpMode {
     public void updateIMU() {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         gravity = imu.getGravity();
+    }
+
+    public boolean shouldKeepTurning(float desiredHeading, float afterHeading, float currentHeading) {
+        if(desiredHeading > 160) {
+            if(currentHeading > afterHeading + 100) {
+                return false;
+            }
+        } else if(desiredHeading < -160){
+            if(afterHeading + 100 < currentHeading) {
+                return false;
+            }
+        }
+        return true;             // If we made it this far, yes we should keep turning
     }
 
     /*
@@ -309,25 +378,28 @@ public class caluper_auto extends LinearOpMode {
         degreesToTurn *= (8.0F / 9.0F);
 
         float targetHeading = degreesToTurn + angles.firstAngle;
+        float foreHeading = angles.firstAngle;
 
         if (targetHeading > angles.firstAngle) {
-            while (targetHeading > angles.firstAngle) {
+            while (targetHeading > angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, angles.firstAngle)) {
                 updateIMU();
                 drive(0.2, -0.2);
                 telemetry.addData("Gyro", angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
                 telemetry.update();
+                foreHeading = angles.firstAngle;
                 if(isStopRequested()) {             // Found this one boolean in LinearOpMode
                     break;                          // that checks if STOP is hit.
                 }                                   // Could help with the OpModeStuckInStop issues.
             }
         } else {
-            while (targetHeading < angles.firstAngle) {
+            while (targetHeading < angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, angles.firstAngle)) {
                 updateIMU();
                 drive(-0.2, 0.2);
                 telemetry.addData("Gyro", angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
                 telemetry.update();
+                foreHeading = angles.firstAngle;
                 if(isStopRequested()) {             // Found this one boolean in LinearOpMode
                     break;                          // that checks if STOP is hit.
                 }                                   // Could help with the OpModeStuckInStop issues.
@@ -416,22 +488,22 @@ public class caluper_auto extends LinearOpMode {
             }
         }
 
-        switch(stone) {
+        switch(stone) {                                             // Display the input
             case "redLeft":
-                telemetry.addData("Team", "Red");  // Delay isn't necessary for now.
-                telemetry.addData("Stone", "Left"); // without any cryptoboxes.
+                telemetry.addData("Team", "Red");
+                telemetry.addData("Stone", "Left");
                 break;
             case "redRight":
-                telemetry.addData("Team", "Red");  // Delay isn't necessary for now.
-                telemetry.addData("Stone", "Right"); // without any cryptoboxes.
+                telemetry.addData("Team", "Red");
+                telemetry.addData("Stone", "Right");
                 break;
             case "blueLeft":
-                telemetry.addData("Team", "Blue");  // Delay isn't necessary for now.
-                telemetry.addData("Stone", "Left"); // without any cryptoboxes.
+                telemetry.addData("Team", "Blue");
+                telemetry.addData("Stone", "Left");
                 break;
             case "blueRight":
-                telemetry.addData("Team", "Blue");  // Delay isn't necessary for now.
-                telemetry.addData("Stone", "Right"); // without any cryptoboxes.
+                telemetry.addData("Team", "Blue");
+                telemetry.addData("Stone", "Right");
                 break;
         }
 
@@ -446,34 +518,42 @@ public class caluper_auto extends LinearOpMode {
         updateIMU();
         // =======================================AUTONOMOUS========================================
         switch(stone) {
+            /*---------------------Red Left Autonomous--------------------------*/
             case "redLeft":
                 bumpBlueJewel(1);                  // Bump Blue Jewel
                 drive(0.25, 0.25);                 // Drive to Cryptobox...
-                sleep(850);                        // ...for 0.7 seconds
+                sleep(850);                        // ...for 0.85 seconds  (about 14")
                 imuTurn(90);                       // Turn to Cryptobox!
                 sleep(700);                        // wait 0.7 seconds just to see what is happening
                 placeGlyph(stoneAndKey);           // Place Glyph in column depending on pictograph
                 break;
+            /*---------------------Red Right Autonomous--------------------------*/
             case "redRight":
-                bumpBlueJewel(1);
-                sleep(1200);
-                drive(0.15, 0.15);    //Back into Safe Zone
-                sleep(1200);
-                driveStop();
-                imuTurn(120);
-                drive(0.1, 0.1);
-                sleep(1200);
-                driveStop();
+                bumpBlueJewel(1);                  // Bump Blue Jewel
+                drive(0.25, 0.25);                 // Drive to Cryptobox...
+                sleep(120);                        // ...for 0.12 seconds  (about 2")
+                imuTurn(-90);                      // Turn to Cryptobox!
+                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                drive(-0.25, -0.25);               // Drive out in front of Cryptobox...
+                sleep(730);                        // ...for 0.73 seconds  (about 12")
+                imuTurn(-90);                      // Turn to Cryptobox!
+                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                placeGlyph(stoneAndKey);           // Place Glyph in column depending on pictograph
                 break;
+            /*---------------------Blue Left Autonomous--------------------------*/
             case "blueLeft":
-                bumpRedJewel(-1);
-                drive(-0.7, -0.2);                              // Drive to Cryptobox while curving
-                sleep(1000);
-                imuTurn(-90);             // Turn with IMU!
-                driveStop();
-                sleep(700); // just to see what is happening
-                placeGlyph(stoneAndKey);                             // Place Glyph in column depending on pictograph
+                bumpBlueJewel(1);                  // Bump Blue Jewel
+                drive(-0.25, -0.25);               // Drive to Cryptobox...
+                sleep(650);                        // ...for 0.12 seconds  (about 2")
+                imuTurn(-90);                      // Turn to Cryptobox!
+                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                drive(-0.25, -0.25);               // Drive out in front of Cryptobox...
+                sleep(730);                        // ...for 0.73 seconds  (about 12")
+                imuTurn(90);                       // Turn to Cryptobox!
+                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                placeGlyph(stoneAndKey);           // Place Glyph in column depending on pictograph
                 break;
+            /*---------------------Blue Right Autonomous--------------------------*/
             case "blueRight":
                 bumpRedJewel(-1);                  // Bump Red Jewel
                 drive(-0.25, -0.25);               // Drive to Cryptobox...
