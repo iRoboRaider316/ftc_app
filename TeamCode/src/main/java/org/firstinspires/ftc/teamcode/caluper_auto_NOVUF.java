@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -17,7 +20,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
  * Created by Ian on 11/2/2017.
  */
 
-@Autonomous(name="caluper_auto_", group="LinearOpMode")
+@Autonomous(name="caluper_auto_Novuf", group="LinearOpMode")
+//@Disabled
 public class caluper_auto_NOVUF extends LinearOpMode {
     ElapsedTime timer = new ElapsedTime();
 
@@ -28,10 +32,12 @@ public class caluper_auto_NOVUF extends LinearOpMode {
                    liftM;        // Lift Glyph Grabber
 
     public Servo   lArmS,
-                   rArmS,
-                   jewelArmS;
+                   rArmS;
 
-    ColorSensor sensorColor;
+    public CRServo jewelArmS;
+
+    ColorSensor sensorColorFwd;
+    ColorSensor sensorColorBck;
 
     private double lArmSGrasp = .43;
     private double rArmSGrasp = .50;
@@ -42,6 +48,9 @@ public class caluper_auto_NOVUF extends LinearOpMode {
     boolean red  = false;
     boolean rightStone = false;
     boolean leftStone  = false;
+
+    DcMotorSimple.Direction FORWARD = DcMotorSimple.Direction.FORWARD;
+    DcMotorSimple.Direction BACKWARD = DcMotorSimple.Direction.REVERSE;
 
     public void drive(double leftPower, double rightPower) {    // Turns on motors. The reason
         lfDriveM.setPower(leftPower);                            // there are two powers is so the
@@ -63,45 +72,58 @@ public class caluper_auto_NOVUF extends LinearOpMode {
         sleep(200);
     }
 
-    public void jewelBumper(double pos, long time) throws InterruptedException { // Move Jewel Bumper
-        jewelArmS.setPosition(pos);                 // when pos is 0, jewel bumper is lowered
+    public void jewelBumper(DcMotorSimple.Direction direction, long time) throws InterruptedException { // Move Jewel Bumper
+        jewelArmS.setDirection(direction);                 // when pos is 0, jewel bumper is lowered
+        jewelArmS.setPower(1);
         sleep(time);                               // when pos is 1, jewel bumper is raised
-        jewelArmS.setPosition(0.5);
+        jewelArmS.setPower(0);
     }
 
     public void bumpRedJewel(int direction) throws InterruptedException {  // Knock the red jewel off. For blue side only.
-        jewelBumper(0, 2700);                              // Lower jewel bumper
-        if(sensorColor.red() > sensorColor.blue()) {       // Is detected jewel red?
+        jewelBumper(BACKWARD, 2700);                              // Lower jewel bumper
+        if(sensorColorFwd.red() > sensorColorFwd.blue() || sensorColorBck.blue() > sensorColorBck.red()) {       // Is detected jewel red?
             drive(0.25 * direction, 0.25 * direction);       // Drive to knock it off.
             sleep(200);
             driveStop();
-            jewelBumper(1, 2700);                          // Raise Jewel Bumper
-        } else if(sensorColor.blue() > sensorColor.red()) {// Is detected jewel blue?
+            jewelBumper(FORWARD, 2700);                          // Raise Jewel Bumper
+        } else if(sensorColorBck.red() > sensorColorBck.blue() || sensorColorFwd.blue() > sensorColorFwd.red()) {// Is detected jewel blue?
             drive(-0.25 * direction, -0.25 * direction);   // Drive to knock off red jewel
             sleep(500);                                    // it's called indirect proof
             driveStop();
-            jewelBumper(1, 2700);                          // Raise Jewel Bumper
+            jewelBumper(FORWARD, 2700);                          // Raise Jewel Bumper
             drive(0.5 * direction, 0.5 * direction);       // Drive back on stone (We won't need it later on)
             sleep(600);
             driveStop();
+        } else {
+            jewelBumper(FORWARD, 2700);                          // Raise Jewel Bumper
+            drive(0.25 * direction, 0.25 * direction);           // Drive
+            sleep(200);
+            driveStop();
+            sleep(700);
         }
     }
 
     public void bumpBlueJewel(int direction) throws InterruptedException {              // Knock the blue jewel off. For red side only.
-        jewelBumper(0, 2700);                               // Lower Jewel Bumper
-        if(sensorColor.blue() > sensorColor.red()) {        // Is detected jewel blue?
+        jewelBumper(BACKWARD, 2700);                               // Lower Jewel Bumper
+        if(sensorColorBck.red() > sensorColorBck.blue() || sensorColorFwd.blue() > sensorColorFwd.red()) {        // Is detected jewel blue?
             drive(-0.25 * direction, -0.25 * direction);    // Drive to knock off blue jewel
             sleep(300);                                     // it's called indirect proof
             driveStop();
-            jewelBumper(1, 2700);                           // Raise Jewel Bumper
+            jewelBumper(FORWARD, 2700);                           // Raise Jewel Bumper
             drive(0.5 * direction, 0.5 * direction);        // Drive back on stone (We won't need it later on)
             sleep(400);
             driveStop();
-        } else if(sensorColor.red() > sensorColor.blue()) { // Is detected jewel red?
+        } else if(sensorColorFwd.red() > sensorColorFwd.blue() || sensorColorBck.blue() > sensorColorBck.red()) { // Is detected jewel red?
             drive(0.25 * direction, 0.25 * direction);      // Drive to knock it off.
             sleep(600);
             driveStop();
-            jewelBumper(1, 2700);                           // Raise the Jewel Bumper
+            jewelBumper(FORWARD, 2700);                           // Raise the Jewel Bumper
+        } else {
+            jewelBumper(FORWARD, 2700);                          // Raise Jewel Bumper
+            drive(0.25 * direction, 0.25 * direction);           // Drive
+            sleep(200);
+            driveStop();
+            sleep(700);
         }
     }
 
@@ -160,9 +182,10 @@ public class caluper_auto_NOVUF extends LinearOpMode {
 
         lArmS = hardwareMap.servo.get("lArmS"); //Left servo arm, Hub 1, port 2
         rArmS = hardwareMap.servo.get("rArmS"); //Right servo arm, Hub 2, port 1
-        jewelArmS = hardwareMap.servo.get("jewelArmS"); //Jewel Arm, Hub 2, Port 3
+        jewelArmS = hardwareMap.crservo.get("jewelArmS"); //Jewel Arm, Hub 2, Port 3
 
-        sensorColor = hardwareMap.get(ColorSensor.class, "sensorColor");
+        sensorColorFwd = hardwareMap.get(ColorSensor.class, "sensorColorFwd");
+        sensorColorBck = hardwareMap.get(ColorSensor.class, "sensorColorBck");
 
         driveStop();
         liftM.setPower(0);

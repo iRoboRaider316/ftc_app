@@ -105,9 +105,13 @@ public class caluper_auto extends LinearOpMode {
         telemetry.update();
         if (sensorColorFwd.red() > sensorColorFwd.blue() || sensorColorBck.blue() > sensorColorBck.red()) {       // Is detected jewel red?
             drive(0.25 * direction, 0.25 * direction);       // Drive to knock it off.
-            sleep(300);
+            sleep(500);
             driveStop();
             jewelBumper(FORWARD, 2700);                          // Raise Jewel Bumper
+            if(stone == "blueLeft") {
+                drive(-0.25 * direction, -0.25 * direction);
+                sleep(200);
+            }
         } else if (sensorColorBck.red() > sensorColorBck.blue() || sensorColorFwd.blue() > sensorColorFwd.red()) {// Is detected jewel blue?
             drive(-0.25 * direction, -0.25 * direction);   // Drive to knock off red jewel
             sleep(400);                                    // it's called indirect proof
@@ -271,7 +275,7 @@ public class caluper_auto extends LinearOpMode {
                 break;
             case "blueRightKeyLeft":
                 drive(0.25, -0.25);
-                sleep(300);
+                sleep(400);
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -280,6 +284,8 @@ public class caluper_auto extends LinearOpMode {
                 sleep(500);
                 break;
             case "blueRightKeyCenter":
+                drive(-0.25, 0.25);
+                sleep(90);
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -289,7 +295,7 @@ public class caluper_auto extends LinearOpMode {
                 break;
             case "blueRightKeyRight":
                 drive(-0.25, 0.25);
-                sleep(300);
+                sleep(470);
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -299,7 +305,7 @@ public class caluper_auto extends LinearOpMode {
                 break;
             case "blueLeftKeyLeft":
                 drive(0.25, -0.25);
-                sleep(500);
+                sleep(450);
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -317,7 +323,7 @@ public class caluper_auto extends LinearOpMode {
                 break;
             case "blueLeftKeyRight":
                 drive(-0.25, 0.25);
-                sleep(500);
+                sleep(450);
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -405,7 +411,6 @@ public class caluper_auto extends LinearOpMode {
                 }                                   // Could help with the OpModeStuckInStop issues.
             }
         }
-
         driveStop();
     }
 
@@ -450,7 +455,7 @@ public class caluper_auto extends LinearOpMode {
                 "5M1OgX/bkWoUV6pUTAsKj4GaaAKIf76vnX36boqJ7BaMJNuhkYhoQJWdVqwFOC4veNcABzJRw4mQmfO" +
                 "3dfPvNVjxDl8kgdBEQOZRi9kFDy9w3cTLatSGZne3IvyaYYd8uckzPnQb5Mgel3ORjar/84qO+GBmG2" +
                 "vDhmiv+vkY4gbCtS0em5LM+7CIMuZa5vO9GmtqXyNsoCp9zpPlgZHc1OJ7javiI5jAzWEKCPjZcmLAkSs7k+amw";
-        parameters_Vuf.cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;                              // Look through the camera you use for selfies
+        parameters_Vuf.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;                               // Look through the camera you use for selfies
         this.vuforia = ClassFactory.createVuforiaLocalizer(parameters_Vuf);                                   // Apply Parameters
 
         VuforiaTrackables Cryptokey = this.vuforia.loadTrackablesFromAsset("RelicVuMark");                    // Create VuMarks from Pictograph
@@ -542,9 +547,9 @@ public class caluper_auto extends LinearOpMode {
                 break;
             /*---------------------Blue Left Autonomous--------------------------*/
             case "blueLeft":
-                bumpBlueJewel(1);                  // Bump Blue Jewel
+                bumpRedJewel(-1);                  // Bump Blue Jewel
                 drive(-0.25, -0.25);               // Drive to Cryptobox...
-                sleep(650);                        // ...for 0.12 seconds  (about 2")
+                sleep(700);                        // ...for 0.7 seconds
                 imuTurn(-90);                      // Turn to Cryptobox!
                 sleep(700);                        // wait 0.7 seconds just to see what is happening
                 drive(-0.25, -0.25);               // Drive out in front of Cryptobox...
