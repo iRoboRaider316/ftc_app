@@ -39,10 +39,10 @@ public class caluper_auto_NOVUF extends LinearOpMode {
     ColorSensor sensorColorFwd;
     ColorSensor sensorColorBck;
 
-    private double lArmSGrasp = .43;
-    private double rArmSGrasp = .50;
-    private double lArmSRelease = .63;
-    private double rArmSRelease = .30;
+    private double lArmSGrasp = 0;
+    private double rArmSGrasp = 1;
+    private double lArmSRelease = 1;
+    private double rArmSRelease = 0;
 
     boolean blue = false;
     boolean red  = false;
