@@ -7,10 +7,11 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 @TeleOp(name="aftershock_teleop", group="TeleOp")
-@Disabled
+
 public class aftershock_teleop extends OpMode{
 
     public DcMotor lfDriveM, lbDriveM, rfDriveM, rbDriveM, glyphLiftM;
@@ -22,15 +23,20 @@ public class aftershock_teleop extends OpMode{
     boolean halfSpeed = false;
     boolean fullSpeed = false;
 
+    boolean rightBackwardBrake = false;                      //These four variables initiate an abrupt stop (see below).
+    boolean rightForwardBrake = false;
+    boolean leftBackwardBrake = false;
+    boolean leftForwardBrake = false;
+
     double floorLeft;
     double floorRight;
 
-    private double lGlyphSInit = .39;               //Glyph arms will initialize in the open position.
-    private double rGlyphSInit = .61;
-    private double lGlyphSGrasp = 0;              //After testing, these positions were optimal for grasping the glyphs.
-    private double rGlyphSGrasp = 1;
-    private double lGlyphSAlmostGrasp = .2;
-    private double rGlyphSAlmostGrasp = .8;
+    private double lGlyphSInit = 0;               //Glyph arms will initialize in the open position.
+    private double rGlyphSInit = 1;
+    private double lGlyphSGrasp = 1;              //After testing, these positions were optimal for grasping the glyphs.
+    private double rGlyphSGrasp = 0;
+    private double lGlyphSAlmostGrasp = .5;
+    private double rGlyphSAlmostGrasp = .5;
 
     private double getDirection(double inputPower) {
         if(inputPower == 0) {
@@ -42,39 +48,39 @@ public class aftershock_teleop extends OpMode{
 
     int drive = 0;
 
-
+    ElapsedTime timer = new ElapsedTime();
 
     public void init() {
         //Drive motors
-        lfDriveM = hardwareMap.dcMotor.get("lfDriveM");
+        lfDriveM = hardwareMap.dcMotor.get("lfDriveM"); //Hub 3 Port 2
         lfDriveM.setPower(0);
-        lbDriveM = hardwareMap.dcMotor.get("lbDriveM");
+        lbDriveM = hardwareMap.dcMotor.get("lbDriveM"); //Hub 3 Port 3
         lbDriveM.setPower(0);
-        rfDriveM = hardwareMap.dcMotor.get("rfDriveM");
+        rfDriveM = hardwareMap.dcMotor.get("rfDriveM"); //Hub 3 Port 0
         rfDriveM.setPower(0);
-        rbDriveM = hardwareMap.dcMotor.get("rbDriveM");
+        rbDriveM = hardwareMap.dcMotor.get("rbDriveM"); //Hub 3 Port 1
         rbDriveM.setPower(0);
 
         //Lifting glypher motor
-        glyphLiftM = hardwareMap.dcMotor.get("glyphLiftM");
+        glyphLiftM = hardwareMap.dcMotor.get("glyphLiftM"); //Hub 2 Port 0
         glyphLiftM.setPower(0);
 
         //Glypher left-to-right motor
-        glyphSlideS = hardwareMap.crservo.get("glyphSlideS");
+        glyphSlideS = hardwareMap.crservo.get("glyphSlideS"); //Hub 3 Servo 1
         glyphSlideS.setPower(0);
 
-        lGlyphS = hardwareMap.servo.get("lGlyphS");
+        lGlyphS = hardwareMap.servo.get("lGlyphS"); //Hub 3 Servo 3
         lGlyphS.setPosition(lGlyphSInit);
-        rGlyphS = hardwareMap.servo.get("rGlyphS");
+        rGlyphS = hardwareMap.servo.get("rGlyphS"); //Hub 3 Servo 5
         rGlyphS.setPosition(rGlyphSInit);
 
+/*
+        jewelExtendS = hardwareMap.servo.get("jewelExtendS"); //Hub 3 Servo 5
+        jewelKnockS = hardwareMap.servo.get("jewelKnockS"); //Hub 2 Servo 4
+*/
 
-//        jewelExtendS = hardwareMap.servo.get("jewelExtendS");
-//        jewelKnockS = hardwareMap.servo.get("jewelKnockS");
-
-
-        rfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the right side of the drive train for intuitive human interface
-        rbDriveM.setDirection(DcMotor.Direction.REVERSE);
+        lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
+        lbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
     }
 
     public void loop() {
@@ -88,21 +94,13 @@ public class aftershock_teleop extends OpMode{
         double rightPower;
         double speed;
 
-        ///OPERATOR CODE
+///-----------------------------------------OPERATOR CODE-----------------------------------------\\\
 
         if (gamepad2.dpad_up) {            //Hit up on the d-pad to lift the glypher.
             glyphLiftM.setPower(1);
         } else if (gamepad2.dpad_down) {   //Hit down on the d-pad to lower the glypher.
             glyphLiftM.setPower(-1);
         } else {                           //If neither button is pressed, stop the motor.
-            glyphLiftM.setPower(0);
-        }
-
-        if (gamepad2.dpad_up) {
-            glyphLiftM.setPower(1);
-        } else if (gamepad2.dpad_down) {
-            glyphLiftM.setPower(-1);
-        } else {
             glyphLiftM.setPower(0);
         }
 
@@ -130,7 +128,12 @@ public class aftershock_teleop extends OpMode{
             rGlyphS.setPosition(rGlyphSAlmostGrasp);
         }
 
-        ///DRIVER CODE\\\
+//        if (gamepad1.a) {
+//            jewelExtendS.setPosition(1);
+//        }
+
+
+///------------------------------------------DRIVER CODE------------------------------------------\\\
 
 
         // Universal drive train power switch case
@@ -216,6 +219,76 @@ public class aftershock_teleop extends OpMode{
             default:
                 leftPower = ((lStick1 * Math.abs(lStick1)) / speed) + floorLeft;
                 rightPower = ((rStick1 * Math.abs(rStick1)) / speed) + floorRight;
+        }
+
+        //ABRUPT STOP (Right Side)
+        //Backwards
+        if (gamepad1.right_stick_y > 0.01) {        //As soon as the joystick activates, set the brake variable to true.
+            rightBackwardBrake = true;
+        }
+
+        if (gamepad1.right_stick_y == 0 && rightBackwardBrake == true) {
+            timer.reset();
+            rfDriveM.setPower(-.3);          //If the brake variable is true and the joystick resets to 0, the robot will reverse power briefly to cause an abrupt stop.
+            rbDriveM.setPower(-.3);
+
+            if (timer.milliseconds() > 150) {
+                rfDriveM.setPower(0);
+                rbDriveM.setPower(0);
+            }
+            rightBackwardBrake = false;     //As soon as the robot stops, reset the brake variable to false.
+        }
+
+        //Forwards
+        if (gamepad1.right_stick_y < -0.01) {
+            rightForwardBrake = true;
+        }
+
+        if (gamepad1.right_stick_y == 0 && rightForwardBrake == true) {
+            timer.reset();
+            rfDriveM.setPower(.3);
+            rbDriveM.setPower(.3);
+
+            if (timer.milliseconds() > 150) {
+                rfDriveM.setPower(0);
+                rbDriveM.setPower(0);
+            }
+            rightForwardBrake = false;
+        }
+
+        //ABRUPT STOP (Left Side)
+        //Backwards
+        if (gamepad1.left_stick_y < -0.01) {
+            leftBackwardBrake = true;
+        }
+
+        if (gamepad1.left_stick_y == 0 && leftBackwardBrake == true) {
+            timer.reset();
+            lfDriveM.setPower(.3);
+            lbDriveM.setPower(.3);
+
+            if (timer.milliseconds() > 150) {
+                lfDriveM.setPower(0);
+                lbDriveM.setPower(0);
+            }
+            leftBackwardBrake = false;
+        }
+
+        //Forwards
+        if (gamepad1.left_stick_y > 0.01) {
+            leftForwardBrake = true;
+        }
+
+        if (gamepad1.left_stick_y == 0 && leftForwardBrake == true) {
+            timer.reset();
+            lfDriveM.setPower(-.3);
+            lbDriveM.setPower(-.3);
+
+            if (timer.milliseconds() > 150) {
+                lfDriveM.setPower(0);
+                lbDriveM.setPower(0);
+            }
+            leftForwardBrake = false;
         }
 
 
