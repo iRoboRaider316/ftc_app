@@ -87,8 +87,8 @@ public class legacy_teleop extends OpMode{
 //        jewelKnockS = hardwareMap.servo.get("jewelKnockS");
 
 
-        rfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the right side of the drive train for intuitive human interface
-        rbDriveM.setDirection(DcMotor.Direction.REVERSE);
+        lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the right side of the drive train for intuitive human interface
+        lbDriveM.setDirection(DcMotor.Direction.REVERSE);
     }
 
     public void loop() {
@@ -226,8 +226,8 @@ public class legacy_teleop extends OpMode{
         switch (drive) {
             case 1:
                 // forward default
-                rightPower = ((-lStick1 * Math.abs(lStick1)) / speed) - floorLeft;
-                leftPower = ((-rStick1 * Math.abs(rStick1)) / speed) - floorRight;
+                rightPower = ((-rStick1 * Math.abs(rStick1)) / speed) - floorRight;
+                leftPower = ((-lStick1 * Math.abs(lStick1)) / speed) - floorLeft;
                 drive = 1;
                 break;
             case 2:
@@ -237,13 +237,13 @@ public class legacy_teleop extends OpMode{
                 drive = 2;
                 break;
             case 3:
-                rightPower = (Math.abs(rStick1) * -1) - floorRight;
-                leftPower = (Math.abs(rStick1) * -1) - floorRight;
+                rightPower = ((rStick1 * Math.abs(rStick1)) * -1) - floorRight;
+                leftPower = ((rStick1 * Math.abs(rStick1)) * -1) - floorRight;
                 drive = 1;
                 break;
             case 4:
-                rightPower = Math.abs(rStick1) + floorRight;
-                leftPower = Math.abs(rStick1) + floorRight;
+                rightPower = (rStick1 * Math.abs(rStick1)) + floorRight;
+                leftPower = (rStick1 * Math.abs(rStick1)) + floorRight;
                 drive = 1;
                 break;
 
