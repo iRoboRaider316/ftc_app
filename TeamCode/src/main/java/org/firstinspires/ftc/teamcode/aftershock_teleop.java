@@ -74,10 +74,11 @@ public class aftershock_teleop extends OpMode{
         rGlyphS = hardwareMap.servo.get("rGlyphS"); //Hub 3 Servo 5
         rGlyphS.setPosition(rGlyphSInit);
 
-/*
+
         jewelExtendS = hardwareMap.servo.get("jewelExtendS"); //Hub 3 Servo 5
-        jewelKnockS = hardwareMap.servo.get("jewelKnockS"); //Hub 2 Servo 4
-*/
+        jewelExtendS.setPosition(0);
+//        jewelKnockS = hardwareMap.servo.get("jewelKnockS"); //Hub 2 Servo 4
+
 
         lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
         lbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
@@ -128,9 +129,11 @@ public class aftershock_teleop extends OpMode{
             rGlyphS.setPosition(rGlyphSAlmostGrasp);
         }
 
-//        if (gamepad1.a) {
-//            jewelExtendS.setPosition(1);
-//        }
+        if (gamepad1.a) {
+            jewelExtendS.setPosition(1);
+        } else {
+            jewelExtendS.setPosition(0);
+        }
 
 
 ///------------------------------------------DRIVER CODE------------------------------------------\\\
