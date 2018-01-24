@@ -297,6 +297,9 @@ public class legacy_auto extends LinearOpMode {
         lGlyphS = hardwareMap.servo.get("lGlyphS");
         rGlyphS = hardwareMap.servo.get("rGlyphS");
 
+        lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the right side of the drive train for intuitive human interface
+        lbDriveM.setDirection(DcMotor.Direction.REVERSE);
+
         lGlyphS.scaleRange(0, 0.8);
         rGlyphS.scaleRange(0.2, 1);
         grabbers(lGlyphSGrasp, rGlyphSGrasp);
