@@ -17,7 +17,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
+import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
@@ -184,7 +186,7 @@ public class legacy_auto extends LinearOpMode {
             while (targetHeading > -angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, -angles.firstAngle)) {
                 updateIMU();
                 drive(0.2, -0.2);
-                telemetry.addData("Gyro", angles.thirdAngle);
+                telemetry.addData("Gyro", -angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
                 telemetry.update();
                 foreHeading = -angles.firstAngle;
@@ -230,28 +232,28 @@ public class legacy_auto extends LinearOpMode {
         int differenceY = Y - locationY;
         double trigHeading;
         if(differenceX > 0 && differenceY > 0) {                        // If desired point is in the robot's 1st quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 90 + angularOffset;
+            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 90;
         } else if(differenceX < 0 && differenceY > 0) {                 // 2nd quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + angularOffset;
+            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY));
         } else if(differenceX < 0 && differenceY < 0) {                 // 3rd quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 270 + angularOffset;
+            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) - 90;
         } else if(differenceX > 0 && differenceY < 0) {                 // 4th quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 180 + angularOffset;
+            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 180;
         } else if(differenceX == 0 && differenceY > 0) {                // between the 1st & 2nd quadrants...
-            trigHeading = 90 + angularOffset;
+            trigHeading = 90;
         } else if(differenceX == 0 && differenceY < 0) {                // between the 3rd & 4th quadrants...
-            trigHeading = -90 + angularOffset;
+            trigHeading = -90;
         } else if(differenceY == 0 && differenceX > 0) {                // between the 1st & 4th quadrants...
-            trigHeading = 180 + angularOffset;
+            trigHeading = 180;
         } else if(differenceY == 0 && differenceX < 0) {                // between the 2nd & 3rd quadrants...
-            trigHeading = angularOffset;
+            trigHeading = 0;
         } else {                                // Anywhere else is where the robot already is.
             return;
         }
         double dist = Math.hypot(differenceX, differenceY);
-        
+
         imuTurn(trigHeading);
-        encoderDrive(dist, 0.25, -1);
+        encoderDrive(-dist, 0.25, -1);
         if(resetHeading) {
             imuTurn(-trigHeading);
         }
@@ -323,13 +325,13 @@ public class legacy_auto extends LinearOpMode {
                 "3dfPvNVjxDl8kgdBEQOZRi9kFDy9w3cTLatSGZne3IvyaYYd8uckzPnQb5Mgel3ORjar/84qO+GBmG2" +
                 "vDhmiv+vkY4gbCtS0em5LM+7CIMuZa5vO9GmtqXyNsoCp9zpPlgZHc1OJ7javiI5jAzWEKCPjZcmLAkSs7k+amw";
         parameters_Vuf.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;                               // Look through the camera you use for selfies
-        this.vuforia = new ClosableVuforiaLocalizer(parameters_Vuf);                                   // Apply Parameters                               // Apply Parameters
+        this.vuforia = new ClosableVuforiaLocalizer(parameters_Vuf);                                          // Apply Parameters                               // Apply Parameters
 
         VuforiaTrackables Cryptokey = this.vuforia.loadTrackablesFromAsset("RelicVuMark");                    // Create VuMarks from Pictograph
         VuforiaTrackable Targets = Cryptokey.get(0);
         Targets.setName("Targets");
 
-        //============================================== Selection =================================
+//============================================== Selection =========================================
         telemetry.addData("Selection", "X for Blue, B for Red");        // Which side are you on?
         telemetry.update();
         while (stone == "") {
@@ -384,14 +386,53 @@ public class legacy_auto extends LinearOpMode {
                 break;
         }
 
+        telemetry.addData("Searching For Key", "...");
+        telemetry.update();
+
+        telemetry.update();
         Cryptokey.activate();
         decryptKey(Targets);
         waitForStart();
+        imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+        updateIMU();
+// ========================================= AUTONOMOUS ============================================
+        switch(stone) {
+            /*---------------------Red Left Autonomous--------------------------*/
+            case "redLeft":
+                //Bump the Jewel
+                driveToLocation(84, 120, false);
+                sleep(650);
+                imuTurn(90);                       // Turn to Cryptobox!
+                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                //Place the Glyph
+                break;
+            /*---------------------Red Right Autonomous--------------------------*/
+            case "redRight":
+                //Bump the Jewel
+                driveToLocation(24, 108, true);
+                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                //Place the Glyph
+                break;
+            /*---------------------Blue Left Autonomous--------------------------*/
+            case "blueLeft":
+                //Bump the Jewel
+                driveToLocation(84, 24, false);
+                sleep(650);
+                imuTurn(-90);                      // Turn to Cryptobox!
+                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                //Place the Glyph
+                break;
+            /*---------------------Blue Right Autonomous--------------------------*/
+            case "blueRight":
+                //Bump the Jewel
+                driveToLocation(24, 36, true);
+                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                //Place the Glyph
+                break;
+        }
+        driveStop();
 
 
-        locationX = 120;
-        locationY = 24;
-        driveToLocation(84, 24, false);
 
     }
 }
