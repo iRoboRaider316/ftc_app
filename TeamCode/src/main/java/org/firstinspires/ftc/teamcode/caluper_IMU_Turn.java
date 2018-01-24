@@ -45,6 +45,7 @@ public class caluper_IMU_Turn extends LinearOpMode {
     Orientation angles;
     Acceleration gravity;
     ElapsedTime gyroTimer = new ElapsedTime();
+    ElapsedTime gyroTimer2 = new ElapsedTime();
 
     public void drive(double leftPower, double rightPower) {    // Turns on motors. The reason
         lfDriveM.setPower(leftPower);                            // there are two powers is so the
@@ -107,7 +108,7 @@ public class caluper_IMU_Turn extends LinearOpMode {
          * For us, the IMU has had us turn just a bit more than what we intend. The operation
          * below accounts for this by dividing the current degreesToTurn value by 8/9.
          */
-        degreesToTurn *= (8.0F / 9.0F);
+        degreesToTurn = (degreesToTurn * 8.0F) / 9.0F;
 
         float targetHeading = degreesToTurn + angles.firstAngle;
         float foreHeading = angles.firstAngle;
@@ -115,6 +116,7 @@ public class caluper_IMU_Turn extends LinearOpMode {
         int previousMotorPosition;
 
         gyroTimer.reset();
+        gyroTimer2.reset();
 
         if (targetHeading > angles.firstAngle) {
             while (targetHeading > angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, angles.firstAngle)) {
@@ -122,20 +124,21 @@ public class caluper_IMU_Turn extends LinearOpMode {
                 drive(0.2, -0.2);
                 telemetry.addData("Gyro", angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
+                telemetry.addData("Time to update", gyroTimer2.milliseconds());
                 telemetry.update();
                 foreHeading = angles.firstAngle;
                 if(gyroTimer.milliseconds() % 500 == 0) {       // Every 1/2 second that passes...
                     previousMotorPosition = currentMotorPosition;
                     currentMotorPosition = rfDriveM.getCurrentPosition();
-                    if(Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
-                       Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) > -20) {
+                    if(Math.abs(currentMotorPosition) - Math.abs(previousMotorPosition) < 20 ||
+                       Math.abs(currentMotorPosition) - Math.abs(previousMotorPosition) > -20) {
                         break;
                     }
                 }
                 if(isStopRequested()) {
                     break;
                 }
-
+                gyroTimer2.reset();
             }
         } else {
             while (targetHeading < angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, angles.firstAngle)) {
@@ -143,19 +146,21 @@ public class caluper_IMU_Turn extends LinearOpMode {
                 drive(-0.2, 0.2);
                 telemetry.addData("Gyro", angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
+                telemetry.addData("Time to update", gyroTimer2.milliseconds());
                 telemetry.update();
                 foreHeading = angles.firstAngle;
                 if(gyroTimer.milliseconds() % 500 == 0) {       // Every 1/2 second that passes...
                     previousMotorPosition = currentMotorPosition;
                     currentMotorPosition = rfDriveM.getCurrentPosition();
-                    if(Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
-                       Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) > -20) {
+                    if(Math.abs(currentMotorPosition) - Math.abs(previousMotorPosition) < 20 ||
+                       Math.abs(currentMotorPosition) - Math.abs(previousMotorPosition) > -20) {
                         break;
                     }
                 }
-                if(isStopRequested()) {             // Found this one boolean in LinearOpMode
-                    break;                          // that checks if STOP is hit.
-                }                                   // Could help with the OpModeStuckInStop issues.
+                if(isStopRequested()) {
+                    break;
+                }
+                gyroTimer2.reset();
             }
         }
         driveStop();

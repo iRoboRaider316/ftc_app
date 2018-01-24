@@ -45,15 +45,19 @@ public class caluper_teleop extends OpMode {
     public void init () {
         lfDriveM = hardwareMap.dcMotor.get("lfDriveM");       //Left front drive, Hub 1, port 2
         lfDriveM.setPower(0);
+        lfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         lbDriveM = hardwareMap.dcMotor.get("lbDriveM");       //Left back drive, Hub 1, port 3
         lbDriveM.setPower(0);
+        lbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         rfDriveM = hardwareMap.dcMotor.get("rfDriveM");       //Right front drive, Hub 1, port 1
         rfDriveM.setPower(0);
+        rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         rbDriveM = hardwareMap.dcMotor.get("rbDriveM");       //Right back drive, Hub 1, port 0
         rbDriveM.setPower(0);
+        rbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         liftM = hardwareMap.dcMotor.get("liftM");   //Lift motor, Hub 2, port 3
         liftM.setPower(0);
@@ -113,7 +117,7 @@ public class caluper_teleop extends OpMode {
         }
 
         //ABRUPT STOP (Right Side)
-        //Backwards
+        /*//Backwards
         if (gamepad1.right_stick_y > 0.01) {        //As soon as the joystick activates, set the brake variable to true.
             rightBackwardBrake = true;
         }
@@ -180,7 +184,7 @@ public class caluper_teleop extends OpMode {
                 lbDriveM.setPower(0);
             }
             leftForwardBrake = false;
-        }
+        }*/
 
 ///OPERATOR CODE
 
@@ -204,7 +208,7 @@ public class caluper_teleop extends OpMode {
             liftM.setPower(0);
         }
 
-
+/*
 
         if (gamepad1.right_stick_y == 0 && rightBackwardBrake == true) {
             timer.reset();
@@ -216,7 +220,7 @@ public class caluper_teleop extends OpMode {
                 rbDriveM.setPower(0);
             }
             rightBackwardBrake = false;     //As soon as the robot stops, reset the brake variable to false.
-        }
+        }*/
 
 
 

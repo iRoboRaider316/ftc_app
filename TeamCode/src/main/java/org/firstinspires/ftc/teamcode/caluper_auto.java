@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
@@ -18,6 +17,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.MagneticFlux;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
@@ -26,10 +26,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by Ian on 11/2/2017.
@@ -237,7 +233,7 @@ public class caluper_auto extends LinearOpMode {
                 break;
             case "redLeftKeyRight":
                 drive(-0.25, 0.25);
-                sleep(300);
+                sleep(350);
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -275,7 +271,7 @@ public class caluper_auto extends LinearOpMode {
                 break;
             case "blueRightKeyLeft":
                 drive(0.25, -0.25);
-                sleep(400);
+                sleep(350);
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -324,6 +320,14 @@ public class caluper_auto extends LinearOpMode {
             case "blueLeftKeyRight":
                 drive(-0.25, 0.25);
                 sleep(450);
+                drive(-0.25, -0.25);
+                sleep(2000);
+                driveStop();
+                grabbers(lArmSRelease, rArmSRelease);
+                drive(0.2, 0.2);
+                sleep(500);
+                break;
+            default:
                 drive(-0.25, -0.25);
                 sleep(2000);
                 driveStop();
@@ -481,6 +485,9 @@ public class caluper_auto extends LinearOpMode {
             } else if (gamepad1.b) {
                 stone = "red";
             }
+            if(isStopRequested()) {             // Found this one boolean in LinearOpMode
+                break;                          // that checks if STOP is hit.
+            }                                   // Could help with the OpModeStuckInStop issues.
         }
         sleep(500);
         telemetry.addData("Selection", "X for Left, B for Right");  // Which stone is the robot on?
@@ -491,6 +498,9 @@ public class caluper_auto extends LinearOpMode {
             } else if (gamepad1.b) {
                 stone += "Right";
             }
+            if(isStopRequested()) {             // Found this one boolean in LinearOpMode
+                break;                          // that checks if STOP is hit.
+            }                                   // Could help with the OpModeStuckInStop issues.
         }
 
         switch(stone) {                                             // Display the input
@@ -527,7 +537,7 @@ public class caluper_auto extends LinearOpMode {
             case "redLeft":
                 bumpBlueJewel(1);                  // Bump Blue Jewel
                 drive(0.25, 0.25);                 // Drive to Cryptobox...
-                sleep(850);                        // ...for 0.85 seconds  (about 14")
+                sleep(650);                        // ...for 0.65 seconds
                 imuTurn(90);                       // Turn to Cryptobox!
                 sleep(700);                        // wait 0.7 seconds just to see what is happening
                 placeGlyph(stoneAndKey);           // Place Glyph in column depending on pictograph
@@ -562,7 +572,7 @@ public class caluper_auto extends LinearOpMode {
             case "blueRight":
                 bumpRedJewel(-1);                  // Bump Red Jewel
                 drive(-0.25, -0.25);               // Drive to Cryptobox...
-                sleep(1100);                       // ...for 1.1 seconds
+                sleep(1000);                       // ...for 1 sec
                 imuTurn(90);                       // Turn to Cryptobox!
                 sleep(700);                        // wait 0.7 seconds just to see what is happening
                 placeGlyph(stoneAndKey);           // Place Glyph in column depending on pictograph
