@@ -130,72 +130,68 @@ public class DriveToLocation extends LinearOpMode {
         /*
          * These operations account for when the robot would cross the IMU rotation line, which
          * separates -180 from 180. Adding or subtracting the degreesToTurn by 360 here isn't
-         * always necessary, however, so we skip this operation in those cases*/
-        if(degreesToTurn + angles.firstAngle > 180) {
-            degreesToTurn -= 360;
-        }
-
+         * always necessary, however, so we skip this operation in those cases */
         if(degreesToTurn - angles.firstAngle < -180) {
             degreesToTurn += 360;
+        }
+
+        if(degreesToTurn + angles.firstAngle > 180) {
+            degreesToTurn -= 360;
         }
 
         /*
          * For us, the IMU has had us turn just a bit more than what we intend. The operation
          * below accounts for this by dividing the current degreesToTurn value by 8/9.
          */
-        degreesToTurn = (degreesToTurn * 8.0F) / 9.0F;
+        degreesToTurn *= (8.0F / 9.0F);
 
-        double targetHeading = -degreesToTurn - angles.firstAngle;
+        double targetHeading = -degreesToTurn + -angles.firstAngle;
         double foreHeading = -angles.firstAngle;
         int currentMotorPosition = rfDriveM.getCurrentPosition();
         int previousMotorPosition;
 
         gyroTimer.reset();
-        gyroTimer2.reset();
 
-        if (targetHeading < angles.firstAngle) {
-            while (targetHeading < angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, angles.firstAngle)) {
+        if (targetHeading > -angles.firstAngle) {
+            while (targetHeading > -angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, -angles.firstAngle)) {
                 updateIMU();
                 drive(0.2, -0.2);
                 telemetry.addData("Gyro", -angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
-                telemetry.addData("Time to update", gyroTimer2.milliseconds());
                 telemetry.update();
                 foreHeading = -angles.firstAngle;
                 if(gyroTimer.milliseconds() % 500 == 0) {       // Every 1/2 second that passes...
                     previousMotorPosition = currentMotorPosition;
                     currentMotorPosition = rfDriveM.getCurrentPosition();
-                    if(Math.abs(currentMotorPosition) - Math.abs(previousMotorPosition) < 20 ||
-                            Math.abs(currentMotorPosition) - Math.abs(previousMotorPosition) > -20) {
+                    if(Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
+                            Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) > -20) {
                         break;
                     }
                 }
                 if(isStopRequested()) {
                     break;
                 }
-                gyroTimer2.reset();
+
             }
         } else {
-            while (targetHeading > angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, angles.firstAngle)) {
+            while (targetHeading < -angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, -angles.firstAngle)) {
                 updateIMU();
                 drive(-0.2, 0.2);
-                telemetry.addData("Gyro", angles.firstAngle);
+                telemetry.addData("Gyro", -angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
-                telemetry.addData("Time to update", gyroTimer2.milliseconds());
                 telemetry.update();
-                foreHeading = angles.firstAngle;
+                foreHeading = -angles.firstAngle;
                 if(gyroTimer.milliseconds() % 500 == 0) {       // Every 1/2 second that passes...
                     previousMotorPosition = currentMotorPosition;
                     currentMotorPosition = rfDriveM.getCurrentPosition();
-                    if(Math.abs(currentMotorPosition) - Math.abs(previousMotorPosition) < 20 ||
-                            Math.abs(currentMotorPosition) - Math.abs(previousMotorPosition) > -20) {
+                    if(Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
+                            Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) > -20) {
                         break;
                     }
                 }
-                if(isStopRequested()) {
-                    break;
-                }
-                gyroTimer2.reset();
+                if(isStopRequested()) {             // Found this one boolean in LinearOpMode
+                    break;                          // that checks if STOP is hit.
+                }                                   // Could help with the OpModeStuckInStop issues.
             }
         }
         driveStop();
@@ -206,28 +202,28 @@ public class DriveToLocation extends LinearOpMode {
         int differenceY = Y - locationY;
         double trigHeading;
         if(differenceX > 0 && differenceY > 0) {                        // If desired point is in the robot's 1st quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 90 + angularOffset;
+            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 90;
         } else if(differenceX < 0 && differenceY > 0) {                 // 2nd quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + angularOffset;
+            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY));
         } else if(differenceX < 0 && differenceY < 0) {                 // 3rd quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 270 + angularOffset;
+            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) - 90;
         } else if(differenceX > 0 && differenceY < 0) {                 // 4th quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 180 + angularOffset;
+            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 180;
         } else if(differenceX == 0 && differenceY > 0) {                // between the 1st & 2nd quadrants...
-            trigHeading = 90 + angularOffset;
+            trigHeading = 90;
         } else if(differenceX == 0 && differenceY < 0) {                // between the 3rd & 4th quadrants...
-            trigHeading = -90 + angularOffset;
+            trigHeading = -90;
         } else if(differenceY == 0 && differenceX > 0) {                // between the 1st & 4th quadrants...
-            trigHeading = 180 + angularOffset;
+            trigHeading = 180;
         } else if(differenceY == 0 && differenceX < 0) {                // between the 2nd & 3rd quadrants...
-            trigHeading = angularOffset;
+            trigHeading = 0;
         } else {                                // Anywhere else is where the robot already is.
             return;
         }
         double dist = Math.hypot(differenceX, differenceY);
 
         imuTurn(trigHeading);
-        encoderDrive(dist, 0.25, -1);
+        encoderDrive(-dist, 0.25, -1);
         if(resetHeading) {
             imuTurn(-trigHeading);
         }
@@ -249,6 +245,9 @@ public class DriveToLocation extends LinearOpMode {
         rbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         resetEncoders();
         useEncoders();
+        telemetry.addData("Status", "Ready!");
+        telemetry.update();
+        waitForStart();
 
         locationX = 120;
         locationY = 24;
