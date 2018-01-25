@@ -44,11 +44,7 @@ public class legacy_auto extends LinearOpMode {
     DcMotorSimple.Direction BACKWARD = DcMotorSimple.Direction.REVERSE;
 
     String stone = "";
-    String stoneAndKey = "";
-
-    int locationX = 0;
-    int locationY = 0;
-    int angularOffset = 0;
+    String key = "";
 
     ClosableVuforiaLocalizer vuforia;    // The Vuforia camera
     BNO055IMU imu;               // IMU Gyro sensor inside of REV Hub
@@ -88,7 +84,6 @@ public class legacy_auto extends LinearOpMode {
         rbDriveM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
-    // This is the Drive Method
     private void encoderDrive(double distance, double speed, int direction) throws InterruptedException {
         int ENCODER_CPR = 1120; // Encoder counts per Revolution
         double gearRatio = 1.75; // [Gear Ratio]:1
@@ -100,8 +95,8 @@ public class legacy_auto extends LinearOpMode {
         lfDriveM.setTargetPosition(lfDriveM.getCurrentPosition() + (int) COUNTS);
 
         if (direction == 1) {
-            while (rfDriveM.getCurrentPosition() < rfDriveM.getTargetPosition() - 5 &&
-                    lfDriveM.getCurrentPosition() < lfDriveM.getTargetPosition() - 5 && opModeIsActive()) {
+            while ((rfDriveM.getCurrentPosition() < rfDriveM.getTargetPosition() - 5 ||
+                    lfDriveM.getCurrentPosition() < lfDriveM.getTargetPosition() - 5) && opModeIsActive()) {
                 drive(speed, speed);
                 telemetry.addData("1. left speed", speed);
                 telemetry.addData("2. right speed", speed);
@@ -112,8 +107,8 @@ public class legacy_auto extends LinearOpMode {
             driveStop();
         }
         else if (direction == -1) {
-            while (Math.abs(rfDriveM.getCurrentPosition()) < Math.abs(rfDriveM.getTargetPosition() - 5) &&
-                    Math.abs(lfDriveM.getCurrentPosition()) < Math.abs(lfDriveM.getTargetPosition() - 5) && opModeIsActive()) {
+            while ((Math.abs(rfDriveM.getCurrentPosition()) < Math.abs(rfDriveM.getTargetPosition() - 5) ||
+                    Math.abs(lfDriveM.getCurrentPosition()) < Math.abs(lfDriveM.getTargetPosition() - 5)) && opModeIsActive()) {
                 drive(-speed, -speed);
                 telemetry.addData("1. left speed", speed);
                 telemetry.addData("2. right speed", speed);
@@ -154,14 +149,14 @@ public class legacy_auto extends LinearOpMode {
      * angles.firstAngle is used for currentRotation.
      */
 
-    public void imuTurn(double degreesToTurn) {
+    public void imuTurn(double degreesToTurn) throws InterruptedException {
         updateIMU();                                    // Update the IMU to see where we are,
                                                         // rotation-wise.
         /*
          * These operations account for when the robot would cross the IMU rotation line, which
          * separates -180 from 180. Adding or subtracting the degreesToTurn by 360 here isn't
          * always necessary, however, so we skip this operation in those cases */
-        if(degreesToTurn - angles.firstAngle < -180) {
+        if(degreesToTurn + angles.firstAngle < -180) {
             degreesToTurn += 360;
         }
 
@@ -175,26 +170,32 @@ public class legacy_auto extends LinearOpMode {
          */
         degreesToTurn *= (8.0F / 9.0F);
 
-        double targetHeading = -degreesToTurn + -angles.firstAngle;
-        double foreHeading = -angles.firstAngle;
+        double targetHeading = degreesToTurn + angles.firstAngle;
+        double foreHeading = angles.firstAngle;
         int currentMotorPosition = rfDriveM.getCurrentPosition();
         int previousMotorPosition;
 
+
         gyroTimer.reset();
 
-        if (targetHeading > -angles.firstAngle) {
-            while (targetHeading > -angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, -angles.firstAngle)) {
+        if (targetHeading > angles.firstAngle) {
+            while (targetHeading > angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, angles.firstAngle)) {
                 updateIMU();
-                drive(0.2, -0.2);
-                telemetry.addData("Gyro", -angles.firstAngle);
+                drive(-0.2, 0.2);
+                telemetry.addData("Gyro", angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
+                telemetry.addData("180 Point?", targetHeading < -160);
                 telemetry.update();
-                foreHeading = -angles.firstAngle;
+                foreHeading = angles.firstAngle;
                 if(gyroTimer.milliseconds() % 500 == 0) {       // Every 1/2 second that passes...
                     previousMotorPosition = currentMotorPosition;
                     currentMotorPosition = rfDriveM.getCurrentPosition();
                     if(Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
                             Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) > -20) {
+                        telemetry.addData("Status", "Rammed!");
+                        telemetry.update();
+                        driveStop();
+                        sleep(3000);
                         break;
                     }
                 }
@@ -204,18 +205,23 @@ public class legacy_auto extends LinearOpMode {
 
             }
         } else {
-            while (targetHeading < -angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, -angles.firstAngle)) {
+            while (targetHeading < angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, angles.firstAngle)) {
                 updateIMU();
-                drive(-0.2, 0.2);
-                telemetry.addData("Gyro", -angles.firstAngle);
+                drive(0.2, -0.2);
+                telemetry.addData("Gyro", angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
+                telemetry.addData("180 Point?", shouldKeepTurning(targetHeading, foreHeading, angles.firstAngle));
                 telemetry.update();
-                foreHeading = -angles.firstAngle;
+                foreHeading = angles.firstAngle;
                 if(gyroTimer.milliseconds() % 500 == 0) {       // Every 1/2 second that passes...
                     previousMotorPosition = currentMotorPosition;
                     currentMotorPosition = rfDriveM.getCurrentPosition();
                     if(Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
                             Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) > -20) {
+                        telemetry.addData("Status", "Rammed!");
+                        telemetry.update();
+                        driveStop();
+                        sleep(3000);
                         break;
                     }
                 }
@@ -227,38 +233,36 @@ public class legacy_auto extends LinearOpMode {
         driveStop();
     }
 
-    private void driveToLocation(int X, int Y, boolean resetHeading) throws InterruptedException {
-        int differenceX = X - locationX;
-        int differenceY = Y - locationY;
-        double trigHeading;
-        if(differenceX > 0 && differenceY > 0) {                        // If desired point is in the robot's 1st quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 90;
-        } else if(differenceX < 0 && differenceY > 0) {                 // 2nd quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY));
-        } else if(differenceX < 0 && differenceY < 0) {                 // 3rd quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) - 90;
-        } else if(differenceX > 0 && differenceY < 0) {                 // 4th quadrant...
-            trigHeading = Math.atan(Math.abs(differenceX) / Math.abs(differenceY)) + 180;
-        } else if(differenceX == 0 && differenceY > 0) {                // between the 1st & 2nd quadrants...
-            trigHeading = 90;
-        } else if(differenceX == 0 && differenceY < 0) {                // between the 3rd & 4th quadrants...
-            trigHeading = -90;
-        } else if(differenceY == 0 && differenceX > 0) {                // between the 1st & 4th quadrants...
-            trigHeading = 180;
-        } else if(differenceY == 0 && differenceX < 0) {                // between the 2nd & 3rd quadrants...
-            trigHeading = 0;
-        } else {                                // Anywhere else is where the robot already is.
-            return;
+    public void driveOffStone(String alliance) throws InterruptedException {
+        if(alliance == "Red") {
+            encoderDrive(24, 0.23, 1);
+        } else if(alliance == "Blue") {
+            encoderDrive(-24, 0.23, -1);
         }
-        double dist = Math.hypot(differenceX, differenceY);
+    }
 
-        imuTurn(trigHeading);
-        encoderDrive(-dist, 0.25, -1);
-        if(resetHeading) {
-            imuTurn(-trigHeading);
+    public void driveToColumn(String Stone, String Key) throws InterruptedException {
+        switch(Stone) {
+            case "redLeft":
+                encoderDrive(11, 0.23, -1);
+                imuTurn(-90);
+            case "redRight":
+                imuTurn(-90);
+                sleep(1000);
+                encoderDrive(-11, 0.23, -1);
+                sleep(1000);
+                imuTurn(-90);
+                break;
+            case "blueLeft":
+                imuTurn(-90);
+                encoderDrive(-11, 0.23, -1);
+                imuTurn(90);
+                break;
+            case "blueRight":
+                encoderDrive(-11, 0.23, -1);
+                imuTurn(90);
+                break;
         }
-        locationX = X;
-        locationY = Y;
     }
 
     public void decryptKey(VuforiaTrackable cryptokeys) {
@@ -267,15 +271,15 @@ public class legacy_auto extends LinearOpMode {
             vuMark = RelicRecoveryVuMark.from(cryptokeys);
 
             if (vuMark == RelicRecoveryVuMark.LEFT) {
-                stoneAndKey = stone + "KeyLeft";
+                key = "Left";
                 telemetry.addData("Spotted Key", "Left!");
                 telemetry.update();
             } else if (vuMark == RelicRecoveryVuMark.CENTER) {
-                stoneAndKey = stone + "KeyCenter";
+                key = "Center";
                 telemetry.addData("Spotted Key", "Center!");
                 telemetry.update();
             } else if (vuMark == RelicRecoveryVuMark.RIGHT) {
-                stoneAndKey = stone + "KeyRight";
+                key = "Right";
                 telemetry.addData("Spotted Key", "Right!");
                 telemetry.update();
             }
@@ -290,19 +294,23 @@ public class legacy_auto extends LinearOpMode {
         lfDriveM = hardwareMap.dcMotor.get("lfDriveM");         // Drive Motors
         lbDriveM = hardwareMap.dcMotor.get("lbDriveM");
         rfDriveM = hardwareMap.dcMotor.get("rfDriveM");
-        rbDriveM = hardwareMap.dcMotor.get("rbDriveM");
+        rbDriveM = hardwareMap.dcMotor.get("rbDriveM");/*
         glyphLiftM = hardwareMap.dcMotor.get("glyphLiftM");     // Glyph Lifter
         glyphSlideS = hardwareMap.crservo.get("glyphSlideS");   // Glyph Slide
 
         lGlyphS = hardwareMap.servo.get("lGlyphS");
-        rGlyphS = hardwareMap.servo.get("rGlyphS");
+        rGlyphS = hardwareMap.servo.get("rGlyphS");*/
 
         lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the right side of the drive train for intuitive human interface
         lbDriveM.setDirection(DcMotor.Direction.REVERSE);
-
+        lfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+/*
         lGlyphS.scaleRange(0, 0.8);
         rGlyphS.scaleRange(0.2, 1);
-        grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        grabbers(lGlyphSGrasp, rGlyphSGrasp);*/
 
 //        jewelExtendS = hardwareMap.servo.get("jewelExtendS");
 //        jewelKnockS = hardwareMap.servo.get("jewelKnockS");
@@ -335,14 +343,13 @@ public class legacy_auto extends LinearOpMode {
         Targets.setName("Targets");
 
 //============================================== Selection =========================================
-        telemetry.addData("Selection", "X for Blue, B for Red");        // Which side are you on?
+        /*telemetry.addData("Selection", "X for Blue, B for Red");        // Which side are you on?
         telemetry.update();
         while (stone == "") {
             if (gamepad1.x) {
                 stone = "blue";
             } else if (gamepad1.b) {
                 stone = "red";
-                angularOffset = 180;
             }
             if(isStopRequested()) {             // Found this one boolean in LinearOpMode
                 break;                          // that checks if STOP is hit.
@@ -360,32 +367,26 @@ public class legacy_auto extends LinearOpMode {
             if(isStopRequested()) {             // Found this one boolean in LinearOpMode
                 break;                          // that checks if STOP is hit.
             }                                   // Could help with the OpModeStuckInStop issues.
-        }
+        }*/
+
+        stone = "blueRight";
 
         switch(stone) {                                             // Display the input
             case "redLeft":
                 telemetry.addData("Team", "Red");
                 telemetry.addData("Stone", "Left");
-                locationX = 120;
-                locationY = 120;
                 break;
             case "redRight":
                 telemetry.addData("Team", "Red");
                 telemetry.addData("Stone", "Right");
-                locationX = 48;
-                locationY = 120;
                 break;
             case "blueLeft":
                 telemetry.addData("Team", "Blue");
                 telemetry.addData("Stone", "Left");
-                locationX = 48;
-                locationY = 24;
                 break;
             case "blueRight":
                 telemetry.addData("Team", "Blue");
                 telemetry.addData("Stone", "Right");
-                locationX = 120;
-                locationY = 24;
                 break;
         }
 
@@ -393,8 +394,9 @@ public class legacy_auto extends LinearOpMode {
         telemetry.update();
 
         telemetry.update();
-        Cryptokey.activate();
-        decryptKey(Targets);
+        /*Cryptokey.activate();
+        decryptKey(Targets);*/
+        key = "Left";
         waitForStart();
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
         updateIMU();
@@ -403,39 +405,31 @@ public class legacy_auto extends LinearOpMode {
             /*---------------------Red Left Autonomous--------------------------*/
             case "redLeft":
                 //Bump the Jewel
-                driveToLocation(84, 120, false);
+                driveOffStone("Red");
+                driveToColumn(stone, key);
                 sleep(650);
-                imuTurn(90);                       // Turn to Cryptobox!
-                sleep(700);                        // wait 0.7 seconds just to see what is happening
-                //Place the Glyph
                 break;
             /*---------------------Red Right Autonomous--------------------------*/
             case "redRight":
                 //Bump the Jewel
-                driveToLocation(24, 108, true);
-                sleep(700);                        // wait 0.7 seconds just to see what is happening
+                driveOffStone("Red");
+                driveToColumn(stone, key);
                 //Place the Glyph
                 break;
             /*---------------------Blue Left Autonomous--------------------------*/
             case "blueLeft":
                 //Bump the Jewel
-                driveToLocation(84, 24, false);
-                sleep(650);
-                imuTurn(-90);                      // Turn to Cryptobox!
-                sleep(700);                        // wait 0.7 seconds just to see what is happening
-                //Place the Glyph
+                driveOffStone("Blue");
+                driveToColumn(stone, key);
                 break;
             /*---------------------Blue Right Autonomous--------------------------*/
             case "blueRight":
                 //Bump the Jewel
-                driveToLocation(24, 36, true);
-                sleep(700);                        // wait 0.7 seconds just to see what is happening
-                //Place the Glyph
+                driveOffStone("Blue");
+                driveToColumn(stone, key);
                 break;
         }
         driveStop();
-
-
 
     }
 }

@@ -124,7 +124,7 @@ public class DriveToLocation extends LinearOpMode {
      * angles.firstAngle is used for currentRotation.
      */
 
-    public void imuTurn(double degreesToTurn) {
+    public void imuTurn(double degreesToTurn, String relativeOrNot) {
         updateIMU();                                    // Update the IMU to see where we are,
         // rotation-wise.
         /*
@@ -145,7 +145,12 @@ public class DriveToLocation extends LinearOpMode {
          */
         degreesToTurn *= (8.0F / 9.0F);
 
-        double targetHeading = -degreesToTurn + -angles.firstAngle;
+        double targetHeading;
+        if(relativeOrNot == "relative") {
+            targetHeading = -degreesToTurn - angles.firstAngle;
+        } else {
+            targetHeading = -degreesToTurn;
+        }
         double foreHeading = -angles.firstAngle;
         int currentMotorPosition = rfDriveM.getCurrentPosition();
         int previousMotorPosition;
@@ -222,10 +227,10 @@ public class DriveToLocation extends LinearOpMode {
         }
         double dist = Math.hypot(differenceX, differenceY);
 
-        imuTurn(trigHeading);
+        imuTurn(trigHeading, "absolute");
         encoderDrive(-dist, 0.25, -1);
         if(resetHeading) {
-            imuTurn(-trigHeading);
+            imuTurn(0, "absolute");
         }
         locationX = X;
         locationY = Y;

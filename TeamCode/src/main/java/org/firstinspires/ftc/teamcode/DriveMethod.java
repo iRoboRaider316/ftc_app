@@ -39,7 +39,6 @@ public class DriveMethod extends LinearOpMode {
         rbDriveM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
-    // This is the Drive Method
     private void encoderDrive(double distance, double speed, int direction) throws InterruptedException {
         int ENCODER_CPR = 1120; // Encoder counts per Revolution
         double gearRatio = 1.75; // [Gear Ratio]:1
@@ -51,8 +50,8 @@ public class DriveMethod extends LinearOpMode {
         lfDriveM.setTargetPosition(lfDriveM.getCurrentPosition() + (int) COUNTS);
 
         if (direction == 1) {
-            while (rfDriveM.getCurrentPosition() < rfDriveM.getTargetPosition() - 5 &&
-                   lfDriveM.getCurrentPosition() < lfDriveM.getTargetPosition() - 5 && opModeIsActive()) {
+            while ((rfDriveM.getCurrentPosition() < rfDriveM.getTargetPosition() - 5 ||
+                    lfDriveM.getCurrentPosition() < lfDriveM.getTargetPosition() - 5) && opModeIsActive()) {
                 drive(speed, speed);
                 telemetry.addData("1. left speed", speed);
                 telemetry.addData("2. right speed", speed);
@@ -63,8 +62,8 @@ public class DriveMethod extends LinearOpMode {
             driveStop();
         }
         else if (direction == -1) {
-            while (Math.abs(rfDriveM.getCurrentPosition()) < Math.abs(rfDriveM.getTargetPosition() - 5) &&
-                   Math.abs(lfDriveM.getCurrentPosition()) < Math.abs(lfDriveM.getTargetPosition() - 5) && opModeIsActive()) {
+            while ((Math.abs(rfDriveM.getCurrentPosition()) < Math.abs(rfDriveM.getTargetPosition() - 5) ||
+                    Math.abs(lfDriveM.getCurrentPosition()) < Math.abs(lfDriveM.getTargetPosition() - 5)) && opModeIsActive()) {
                 drive(-speed, -speed);
                 telemetry.addData("1. left speed", speed);
                 telemetry.addData("2. right speed", speed);
