@@ -32,7 +32,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
  */
 
 @Autonomous(name = "caluper_auto", group = "LinearOpMode")
-//@Disabled
+@Disabled
 public class caluper_auto extends LinearOpMode {
 
     //============================VARIABLES + CONSTANTS=============================================

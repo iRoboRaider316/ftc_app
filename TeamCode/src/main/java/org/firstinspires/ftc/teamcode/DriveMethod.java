@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @Autonomous(name="Drive Method", group="Methods")
-//@Disabled
+@Disabled
 public class DriveMethod extends LinearOpMode {
 
     DcMotor lfDriveM;
