@@ -180,6 +180,9 @@ public class legacy_auto extends LinearOpMode {
         double distanceToDrive = distance / (circumference * gearRatio); // Number of rotations to drive
         double COUNTS = ENCODER_CPR * distanceToDrive; // Number of encoder counts to drive
 
+        resetEncoders();
+        useEncoders();
+
         rfDriveM.setTargetPosition(rfDriveM.getCurrentPosition() + (int) COUNTS);
         lfDriveM.setTargetPosition(lfDriveM.getCurrentPosition() + (int) COUNTS);
 
@@ -265,7 +268,6 @@ public class legacy_auto extends LinearOpMode {
         int currentMotorPosition = rfDriveM.getCurrentPosition();
         int previousMotorPosition;
 
-
         gyroTimer.reset();
 
         if (targetHeading > -angles.firstAngle) {
@@ -326,31 +328,31 @@ public class legacy_auto extends LinearOpMode {
     public void driveOffStone(String alliance) throws InterruptedException {
         if(alliance == "Red") {
             encoderDrive(24, 0.23, 1);
+            sleep(500);
         } else if(alliance == "Blue") {
-            encoderDrive(-24, 0.23, -1);
+            encoderDrive(-25, 0.23, -1);
         }
     }
 
     public void driveToColumn(String Alliance, String Stone, String Key) throws InterruptedException {
         switch(Alliance + Stone) {
             case "redleft":
-                encoderDrive(12, 0.23, -1);
-                imuTurn(-90);
-            case "redright":
-                imuTurn(-90);
-                sleep(1000);
-                encoderDrive(-11, 0.23, -1);
-                sleep(1000);
+                encoderDrive(12, 0.23, 1);
                 imuTurn(-90);
                 break;
-            case "blueleft":
-                imuTurn(-90);
-                encoderDrive(-11, 0.23, -1);
+            case "redright":
                 imuTurn(90);
+                encoderDrive(12, 0.23, -1);
+                imuTurn(80);
+                break;
+            case "blueleft":
+                imuTurn(90);
+                encoderDrive(-11, 0.23, -1);
+                imuTurn(-90);
                 break;
             case "blueright":
                 encoderDrive(-12, 0.23, -1);
-                imuTurn(90);
+                imuTurn(-90);
                 break;
         }
     }
@@ -457,10 +459,12 @@ public class legacy_auto extends LinearOpMode {
         jewelKnockS = hardwareMap.servo.get("jewelKnockS"); //Hub 2 Servo 4
         jewelKnockS.setPosition(knockCenter);
 
-
         lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
         lbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
-
+        lfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         BNO055IMU.Parameters parameters_IMU = new BNO055IMU.Parameters();
         parameters_IMU.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -475,7 +479,7 @@ public class legacy_auto extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
 
         // =======================BEGIN SELECTION===================================================
-        telemetry.addData("Selection", "X for Blue, B for Red");        // Which side are you on?
+        telemetry.addData("Selection", "X for Blue, B for Red");        // Which alliance are you on?
         telemetry.update();
         while (alliance == "" && !isStopRequested()) {
             if (gamepad1.x) {
@@ -486,7 +490,9 @@ public class legacy_auto extends LinearOpMode {
         }
 
         sleep(500);
-
+        telemetry.addData("Status", "Initialized");
+        telemetry.addData("Selection", "X for Left Stone, B for Right Stone");        // Which side are you on?
+        telemetry.update();
         while (stone == "" && !isStopRequested()) {
             if (gamepad1.x) {
                 stone = "left";
@@ -495,7 +501,7 @@ public class legacy_auto extends LinearOpMode {
             }
         }
 
-        while(!gamepad1.a) {
+        while(!gamepad1.a && !isStopRequested()) {
             switch(alliance + stone) {
                 case "redleft":
                     telemetry.addData("Alliance", "Red");
