@@ -80,8 +80,8 @@ public class legacy_auto extends LinearOpMode {
     private double knockLeft = 0;      //jewelKnockS knock left jewel variable
     private double knockRight = 1;     //jewelKnockS knocks right jewel variable
 
-    private double lGlyphSInit = .39;               //Glyph arms will initialize in the open position.
-    private double rGlyphSInit = .61;
+    private double lGlyphSRelease = 1;               //Glyph arms will initialize in the open position.
+    private double rGlyphSRelease = 0;
     private double lGlyphSGrasp = 0;              //After testing, these positions were optimal for grasping the glyphs.
     private double rGlyphSGrasp = 1;
 
@@ -100,7 +100,6 @@ public class legacy_auto extends LinearOpMode {
     String alliance = "";
     String jewelOrder = "";
     String stone = "";
-    String stoneAndKey = "";
     String vuforiaLicenseKey = "Ae3H91v/////AAAAGT+4TPU5r02VnQxesioVLr0qQzNtgdYskxP7aL6/" +     // Yay, random Vuforia license key!
             "yt9VozCBUcQrSjwec5opfpOWEuc55kDXNNSRJjLAnjGPeaku9j4nOfe7tWxio/xj/uNdPX7fEHD0j5b" +
             "5M1OgX/bkWoUV6pUTAsKj4GaaAKIf76vnX36boqJ7BaMJNuhkYhoQJWdVqwFOC4veNcABzJRw4mQmfO" +
@@ -110,33 +109,34 @@ public class legacy_auto extends LinearOpMode {
     private ElapsedTime vutimer = new ElapsedTime();
 
     public String decryptKey(VuforiaTrackable cryptokeys) {
+        String key = "";
         vutimer.reset();
         RelicRecoveryVuMark vuMark;
         while (isStarted()) {
             vuMark = RelicRecoveryVuMark.from(cryptokeys);
 
             if (vuMark == RelicRecoveryVuMark.LEFT) {       //Store which cryptokey is found and
-                stoneAndKey = stone + "KeyLeft";            //update the telemetry accordingly.
+                key = "KeyLeft";            //update the telemetry accordingly.
                 telemetry.addData("Spotted Key", "Left!");
                 telemetry.update();
             } else if (vuMark == RelicRecoveryVuMark.CENTER) {
-                stoneAndKey = stone + "KeyCenter";
+                key = "KeyCenter";
                 telemetry.addData("Spotted Key", "Center!");
                 telemetry.update();
             } else if (vuMark == RelicRecoveryVuMark.RIGHT) {
-                stoneAndKey = stone + "KeyRight";
+                key = "KeyRight";
                 telemetry.addData("Spotted Key", "Right!");
                 telemetry.update();
             } else {
-                stoneAndKey = "KeyUnknown";
+                key = "KeyUnknown";
                 telemetry.addData("Spotted Key", "Unknown");
                 telemetry.update();
             }
-            if(isStopRequested() || stoneAndKey != "KeyUnknown" || vutimer.time() > 3) {
+            if(isStopRequested() || key != "KeyUnknown" || vutimer.time() > 3) {
                 break;           //Stop this code if a stop is requested, or if the VuMark has been
             }                    //found, or if more than 3 seconds have passed.
         }
-        return stoneAndKey;
+        return key;
     }
 
     // =======================================METHODS===============================================
@@ -155,7 +155,7 @@ public class legacy_auto extends LinearOpMode {
     public void grabbers(double lPos, double rPos) {
         lGlyphS.setPosition(lPos);
         rGlyphS.setPosition(rPos);
-        sleep(200);
+        sleep(500);
     }
 
     private void useEncoders(){
@@ -334,7 +334,7 @@ public class legacy_auto extends LinearOpMode {
         }
     }
 
-    public void driveToColumn(String Alliance, String Stone, String Key) throws InterruptedException {
+    public void driveToColumn(String Alliance, String Stone) throws InterruptedException {
         switch(Alliance + Stone) {
             case "redleft":
                 encoderDrive(12, 0.23, 1);
@@ -353,6 +353,107 @@ public class legacy_auto extends LinearOpMode {
             case "blueright":
                 encoderDrive(-12, 0.23, -1);
                 imuTurn(-90);
+                break;
+        }
+    }
+
+    public void placeGlyph(String Alliance, String Stone, String Key) throws InterruptedException {
+        switch(Alliance + Stone) {
+            case "redleft":
+                switch (Key) {
+                    case "KeyLeft":
+                        imuTurn(-20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyCenter":
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyRight":
+                        imuTurn(20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                }
+                break;
+            case "redright":
+                switch (Key) {
+                    case "KeyLeft":
+                        imuTurn(-20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyCenter":
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyRight":
+                        imuTurn(20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                }
+                break;
+            case "blueleft":
+                switch (Key) {
+                    case "KeyLeft":
+                        imuTurn(-20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyCenter":
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyRight":
+                        imuTurn(20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                }
+                break;
+            case "blueright":
+                switch (Key) {
+                    case "KeyLeft":
+                        imuTurn(-20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyCenter":
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyRight":
+                        imuTurn(20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                }
                 break;
         }
     }
@@ -449,9 +550,11 @@ public class legacy_auto extends LinearOpMode {
         glyphSlideS.setPower(0);
 
         lGlyphS = hardwareMap.servo.get("lGlyphS"); //Hub 3 Servo 3
-        lGlyphS.setPosition(lGlyphSInit);
+        lGlyphS.scaleRange(0, 0.8);
+        lGlyphS.setPosition(lGlyphSGrasp);
         rGlyphS = hardwareMap.servo.get("rGlyphS"); //Hub 3 Servo 5
-        rGlyphS.setPosition(rGlyphSInit);
+        lGlyphS.scaleRange(0.2, 1);
+        rGlyphS.setPosition(rGlyphSGrasp);
 
         // Jewel Knocker
         jewelExtendS = hardwareMap.servo.get("jewelExtendS"); //Hub 3 Servo 0
@@ -557,7 +660,7 @@ public class legacy_auto extends LinearOpMode {
         telemetry.addData("Jewel Order", jewelOrder);
         telemetry.update();
 
-//  =======================================AUTONOMOUS===============================================
+//  ====================================== AUTONOMOUS ==============================================
 
         bumpJewel(alliance, jewelOrder);
         String cryptoKey = activateVuforia();
@@ -569,26 +672,36 @@ public class legacy_auto extends LinearOpMode {
             /*--------------------- Red Left --------------------------*/
             case "redleft":
                 driveOffStone("Red");
-                driveToColumn(alliance, stone, cryptoKey);
+                driveToColumn(alliance, stone);
+                placeGlyph(alliance, stone, cryptoKey);
                 sleep(650);
                 break;
             /*--------------------- Red Right --------------------------*/
             case "redright":
                 driveOffStone("Red");
-                driveToColumn(alliance, stone, cryptoKey);
+                driveToColumn(alliance, stone);
+                placeGlyph(alliance, stone, cryptoKey);
                 break;
             /*--------------------- Blue Left --------------------------*/
             case "blueleft":
                 driveOffStone("Blue");
-                driveToColumn(alliance, stone, cryptoKey);
+                driveToColumn(alliance, stone);
+                placeGlyph(alliance, stone, cryptoKey);
                 break;
             /*--------------------- Blue Right --------------------------*/
             case "blueright":
                 driveOffStone("Blue");
-                driveToColumn(alliance, stone, cryptoKey);
+                driveToColumn(alliance, stone);
+                placeGlyph(alliance, stone, cryptoKey);
                 break;
         }
-        driveStop();
-
+        drive(0.23, 0.23);
+        sleep(100);
+        grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        drive(-0.23, -0.23);
+        sleep(500);
+        drive(0.23, 0.23);
+        sleep(400);
+        imuTurn(45);
     }
 }
