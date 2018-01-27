@@ -325,11 +325,11 @@ public class legacy_auto extends LinearOpMode {
         driveStop();
     }
 
-    public void driveOffStone(String alliance) throws InterruptedException {
-        if(alliance == "Red") {
+    public void driveOffStone(String Alliance) throws InterruptedException {
+        if(alliance == "red") {
             encoderDrive(24, 0.23, 1);
             sleep(500);
-        } else if(alliance == "Blue") {
+        } else if(alliance == "blue") {
             encoderDrive(-25, 0.23, -1);
         }
     }
@@ -668,33 +668,9 @@ public class legacy_auto extends LinearOpMode {
         telemetry.update();
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
-        switch(alliance + stone) {
-            /*--------------------- Red Left --------------------------*/
-            case "redleft":
-                driveOffStone("Red");
-                driveToColumn(alliance, stone);
-                placeGlyph(alliance, stone, cryptoKey);
-                sleep(650);
-                break;
-            /*--------------------- Red Right --------------------------*/
-            case "redright":
-                driveOffStone("Red");
-                driveToColumn(alliance, stone);
-                placeGlyph(alliance, stone, cryptoKey);
-                break;
-            /*--------------------- Blue Left --------------------------*/
-            case "blueleft":
-                driveOffStone("Blue");
-                driveToColumn(alliance, stone);
-                placeGlyph(alliance, stone, cryptoKey);
-                break;
-            /*--------------------- Blue Right --------------------------*/
-            case "blueright":
-                driveOffStone("Blue");
-                driveToColumn(alliance, stone);
-                placeGlyph(alliance, stone, cryptoKey);
-                break;
-        }
+        driveOffStone(alliance);
+        driveToColumn(alliance, stone);
+        placeGlyph(alliance, stone, cryptoKey);
         drive(0.23, 0.23);
         sleep(100);
         grabbers(lGlyphSGrasp, rGlyphSGrasp);
