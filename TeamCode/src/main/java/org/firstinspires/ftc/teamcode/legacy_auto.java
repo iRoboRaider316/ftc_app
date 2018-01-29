@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -87,6 +88,8 @@ public class legacy_auto extends LinearOpMode {
 
     DcMotorSimple.Direction FORWARD = DcMotorSimple.Direction.FORWARD;
     DcMotorSimple.Direction BACKWARD = DcMotorSimple.Direction.REVERSE;
+    DcMotorSimple.Direction LEFT = DcMotorSimple.Direction.FORWARD;
+    DcMotorSimple.Direction RIGHT = DcMotorSimple.Direction.REVERSE;
 
     ClosableVuforiaLocalizer vuforia;    // The Vuforia camera
     BNO055IMU imu;               // IMU Gyro sensor inside of REV Hub
@@ -164,8 +167,15 @@ public class legacy_auto extends LinearOpMode {
         } else {
             glyphLiftM.setPower(-0.5);
         }
-        sleep(400);
+        sleep(300);
         glyphLiftM.setPower(0);
+    }
+
+    private void moveSliders(DcMotorSimple.Direction Dir, int time) {
+        glyphSlideS.setDirection(Dir);
+        glyphSlideS.setPower(1);
+        sleep(time);
+        glyphSlideS.setPower(0);
     }
 
     private void useEncoders(){
@@ -385,7 +395,8 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(20);
+                        imuTurn(16);
+                        sleep(200);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -404,12 +415,13 @@ public class legacy_auto extends LinearOpMode {
                         break;
                     case "KeyCenter":
                         drive(-0.23, -0.23);
-                        sleep(1000);
+                        sleep(900);
                         driveStop();
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(20);
+                        imuTurn(16);
+                        sleep(200);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -427,13 +439,15 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyCenter":
+                        moveSliders(RIGHT, 200);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(20);
+                        imuTurn(16);
+                        sleep(200);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -451,13 +465,15 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyCenter":
+                        moveSliders(RIGHT, 200);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(20);
+                        imuTurn(14);
+                        sleep(200);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -572,15 +588,16 @@ public class legacy_auto extends LinearOpMode {
         //Lifting glypher motor
         glyphLiftM = hardwareMap.dcMotor.get("glyphLiftM"); //Hub 2 Port 0
         glyphLiftM.setPower(0);
+        glyphLiftM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //Glypher left-to-right motor
         glyphSlideS = hardwareMap.crservo.get("glyphSlideS"); //Hub 3 Servo 1
         glyphSlideS.setPower(0);
 
         lGlyphS = hardwareMap.servo.get("lGlyphS"); //Hub 3 Servo 3
-        lGlyphS.scaleRange(0, 0.8);
+        lGlyphS.scaleRange(0, 0.65);
         rGlyphS = hardwareMap.servo.get("rGlyphS"); //Hub 3 Servo 5
-        lGlyphS.scaleRange(0.2, 1);
+        rGlyphS.scaleRange(0.35, 1);
         grabbers(lGlyphSRelease, rGlyphSRelease);
 
         // Jewel Knocker
@@ -703,6 +720,8 @@ public class legacy_auto extends LinearOpMode {
         drive(0.23, 0.23);
         sleep(100);
         grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        driveStop();
+        glyphLifter("DOWN");
         drive(-0.23, -0.23);
         sleep(500);
         drive(0.23, 0.23);
