@@ -158,6 +158,16 @@ public class legacy_auto extends LinearOpMode {
         sleep(500);
     }
 
+    private void glyphLifter(String direction) {
+        if(direction == "UP") {
+            glyphLiftM.setPower(1);
+        } else {
+            glyphLiftM.setPower(-0.5);
+        }
+        sleep(400);
+        glyphLiftM.setPower(0);
+    }
+
     private void useEncoders(){
         rfDriveM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rbDriveM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -502,6 +512,24 @@ public class legacy_auto extends LinearOpMode {
         }
     }
 
+    private void bumpJewelShort(String alliance, String jewel) throws InterruptedException {
+        double knockVal = ((alliance == "blue" && jewel == "RED_BLUE") || (alliance == "red" && jewel == "BLUE_RED")) ? 0 : ((alliance == "red" && jewel == "RED_BLUE") || (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5;
+        if(knockVal != 0.5) {
+            jewelExtendS.setPosition(extendArm);
+            sleep(750);
+            jewelKnockS.setPosition(knockVal);
+            sleep(500);
+            jewelKnockS.setPosition(knockCenter);
+            sleep(500);
+            jewelExtendS.setPosition(retractArm);
+            sleep(500);
+        } else {
+            telemetry.addData("Problem with alliance or jewelOrder.", "");
+            telemetry.update();
+            sleep(3000);
+        }
+    }
+
     private String activateVuforia () throws InterruptedException {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName()); // Get the camera!
         VuforiaLocalizer.Parameters parameters_Vuf = new VuforiaLocalizer.Parameters(cameraMonitorViewId);  // Prepare the parameters
@@ -551,10 +579,9 @@ public class legacy_auto extends LinearOpMode {
 
         lGlyphS = hardwareMap.servo.get("lGlyphS"); //Hub 3 Servo 3
         lGlyphS.scaleRange(0, 0.8);
-        lGlyphS.setPosition(lGlyphSGrasp);
         rGlyphS = hardwareMap.servo.get("rGlyphS"); //Hub 3 Servo 5
         lGlyphS.scaleRange(0.2, 1);
-        rGlyphS.setPosition(rGlyphSGrasp);
+        grabbers(lGlyphSRelease, rGlyphSRelease);
 
         // Jewel Knocker
         jewelExtendS = hardwareMap.servo.get("jewelExtendS"); //Hub 3 Servo 0
@@ -668,6 +695,8 @@ public class legacy_auto extends LinearOpMode {
         telemetry.update();
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
+        grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        glyphLifter("UP");
         driveOffStone(alliance);
         driveToColumn(alliance, stone);
         placeGlyph(alliance, stone, cryptoKey);
