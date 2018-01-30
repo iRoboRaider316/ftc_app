@@ -7,6 +7,7 @@ package org.firstinspires.ftc.teamcode;
 import com.disnodeteam.dogecv.CameraViewDisplay;
 import com.disnodeteam.dogecv.detectors.JewelDetector;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -17,12 +18,16 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
+import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-
 
 
 /**
@@ -64,27 +69,26 @@ public class legacy_auto extends LinearOpMode {
     //============================VARIABLES + CONSTANTS=============================================
 
     public DcMotor lfDriveM, lbDriveM, rfDriveM, rbDriveM, glyphLiftM;
-    public Servo lGlyphS, rGlyphS, jewelExtendS, jewelKnockS;
+    public Servo lGlyphS, rGlyphS, jewelExtendS, jewelHitS;
     public CRServo glyphSlideS;
 
-    private double extendArm = .55;
-    private double retractArm = 0;
+    private double pExtendArm = .3; //Partially extend the jewel arm.
+    private double extendArm = .55; //Fully extend the jewel arm.
+    private double retractArm = 0; //Bring jewel arm back to the robot.
 
-    private double knockCenter = .5;   //jewelKnockS returns to center variable
-    private double knockLeft = 0;      //jewelKnockS knock left jewel variable
-    private double knockRight = 1;     //jewelKnockS knocks right jewel variable
+    private double hitCenter = .5;   //jewelHitS returns to center variable
+    private double hitLeft = 0;      //jewelHitS Hit left jewel variable
+    private double hitRight = 1;     //jewelHitS Hits right jewel variable
 
-    private double lGlyphSInit = .39;               //Glyph arms will initialize in the open position.
-    private double rGlyphSInit = .61;
-    private double lGlyphSGrasp = 0;              //After testing, these positions were optimal for grasping the glyphs.
+    private double lGlyphSRelease = 1;  //Glyph arms will initialize in the open position.
+    private double rGlyphSRelease = 0;  //Glyph servos were programmed into optimal positions.
+    private double lGlyphSGrasp = 0;
     private double rGlyphSGrasp = 1;
 
     DcMotorSimple.Direction FORWARD = DcMotorSimple.Direction.FORWARD;
     DcMotorSimple.Direction BACKWARD = DcMotorSimple.Direction.REVERSE;
-
-    int locationX = 0;
-    int locationY = 0;
-    int angularOffset = 0;
+    DcMotorSimple.Direction LEFT = DcMotorSimple.Direction.FORWARD;
+    DcMotorSimple.Direction RIGHT = DcMotorSimple.Direction.REVERSE;
 
     ClosableVuforiaLocalizer vuforia;    // The Vuforia camera
     BNO055IMU imu;               // IMU Gyro sensor inside of REV Hub
@@ -98,7 +102,6 @@ public class legacy_auto extends LinearOpMode {
     String alliance = "";
     String jewelOrder = "";
     String stone = "";
-    String stoneAndKey = "";
     String vuforiaLicenseKey = "Ae3H91v/////AAAAGT+4TPU5r02VnQxesioVLr0qQzNtgdYskxP7aL6/" +     // Yay, random Vuforia license key!
             "yt9VozCBUcQrSjwec5opfpOWEuc55kDXNNSRJjLAnjGPeaku9j4nOfe7tWxio/xj/uNdPX7fEHD0j5b" +
             "5M1OgX/bkWoUV6pUTAsKj4GaaAKIf76vnX36boqJ7BaMJNuhkYhoQJWdVqwFOC4veNcABzJRw4mQmfO" +
@@ -108,33 +111,34 @@ public class legacy_auto extends LinearOpMode {
     private ElapsedTime vutimer = new ElapsedTime();
 
     public String decryptKey(VuforiaTrackable cryptokeys) {
+        String key = "";
         vutimer.reset();
         RelicRecoveryVuMark vuMark;
         while (isStarted()) {
             vuMark = RelicRecoveryVuMark.from(cryptokeys);
 
             if (vuMark == RelicRecoveryVuMark.LEFT) {       //Store which cryptokey is found and
-                stoneAndKey = stone + "KeyLeft";            //update the telemetry accordingly.
+                key = "KeyLeft";            //update the telemetry accordingly.
                 telemetry.addData("Spotted Key", "Left!");
                 telemetry.update();
             } else if (vuMark == RelicRecoveryVuMark.CENTER) {
-                stoneAndKey = stone + "KeyCenter";
+                key = "KeyCenter";
                 telemetry.addData("Spotted Key", "Center!");
                 telemetry.update();
             } else if (vuMark == RelicRecoveryVuMark.RIGHT) {
-                stoneAndKey = stone + "KeyRight";
+                key = "KeyRight";
                 telemetry.addData("Spotted Key", "Right!");
                 telemetry.update();
             } else {
-                stoneAndKey = "KeyUnknown";
+                key = "KeyUnknown";
                 telemetry.addData("Spotted Key", "Unknown");
                 telemetry.update();
             }
-            if(isStopRequested() || stoneAndKey != "KeyUnknown" || vutimer.time() > 3) {
-                break;           //Stop this code if a stop is requested, or if the VuMark has been
+            if(isStopRequested() || key != "KeyUnknown" || vutimer.time() > 3) {
+                break;           //Stop this section of the code if a stop is requested, or if the VuMark has been
             }                    //found, or if more than 3 seconds have passed.
         }
-        return stoneAndKey;
+        return key;
     }
 
     // =======================================METHODS===============================================
@@ -153,7 +157,24 @@ public class legacy_auto extends LinearOpMode {
     public void grabbers(double lPos, double rPos) {
         lGlyphS.setPosition(lPos);
         rGlyphS.setPosition(rPos);
-        sleep(200);
+        sleep(500);
+    }
+
+    private void glyphLifter(String direction) {
+        if(direction == "UP") {
+            glyphLiftM.setPower(1);
+        } else {
+            glyphLiftM.setPower(-0.5);
+        }
+        sleep(400);
+        glyphLiftM.setPower(0);
+    }
+
+    private void moveSliders(DcMotorSimple.Direction Dir, int time) {
+        glyphSlideS.setDirection(Dir);
+        glyphSlideS.setPower(1);
+        sleep(time);
+        glyphSlideS.setPower(0);
     }
 
     private void useEncoders(){
@@ -177,6 +198,9 @@ public class legacy_auto extends LinearOpMode {
         double circumference = 13.10; // Wheel circumference (in inches)
         double distanceToDrive = distance / (circumference * gearRatio); // Number of rotations to drive
         double COUNTS = ENCODER_CPR * distanceToDrive; // Number of encoder counts to drive
+
+        resetEncoders();
+        useEncoders();
 
         rfDriveM.setTargetPosition(rfDriveM.getCurrentPosition() + (int) COUNTS);
         lfDriveM.setTargetPosition(lfDriveM.getCurrentPosition() + (int) COUNTS);
@@ -212,41 +236,305 @@ public class legacy_auto extends LinearOpMode {
         }
     }
 
+    public void updateIMU() {
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        gravity = imu.getGravity();
+    }
+
+    public boolean shouldKeepTurning(double desiredHeading, double afterHeading, double currentHeading) {
+        if(desiredHeading > 160) {
+            if(currentHeading > afterHeading + 100) {
+                return false;
+            }
+        } else if(desiredHeading < -160){
+            if(afterHeading + 100 < currentHeading) {
+                return false;
+            }
+        }
+        return true;             // If we made it this far, yes we should keep turning
+    }
+
+    /*
+     * Perform a turn with the gyro sensor. For degreesToTurn, positive is clockwise, and negative
+     * is counterclockwise.
+     * -angles.firstAngle is used for currentRotation.
+     * NOTE: angles.firstAngle is flipped on the number line because the REV Hub is upside-down
+     */
+
+    public void imuTurn(double degreesToTurn) throws InterruptedException {
+        updateIMU();                                    // Update the IMU to see where we are,
+        // rotation-wise.
+        /*
+         * These operations account for when the robot would cross the IMU rotation line, which
+         * separates -180 from 180. Adding or subtracting the degreesToTurn by 360 here isn't
+         * always necessary, however, so we skip this operation in those cases */
+        if(degreesToTurn - angles.firstAngle < -180) {
+            degreesToTurn += 360;
+        }
+
+        if(degreesToTurn - angles.firstAngle > 180) {
+            degreesToTurn -= 360;
+        }
+
+        /*
+         * For us, the IMU has had us turn just a bit more than what we intend. The operation
+         * below accounts for this by dividing the current degreesToTurn value by 8/9.
+         */
+        degreesToTurn *= (8.0F / 9.0F);
+
+        double targetHeading = degreesToTurn - angles.firstAngle;
+        double foreHeading = -angles.firstAngle;
+        int currentMotorPosition = rfDriveM.getCurrentPosition();
+        int previousMotorPosition;
+
+        gyroTimer.reset();
+
+        if (targetHeading > -angles.firstAngle) {
+            while (targetHeading > -angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, -angles.firstAngle)) {
+                updateIMU();
+                drive(-0.2, 0.2);
+                telemetry.addData("Gyro", -angles.firstAngle);
+                telemetry.addData("Target", targetHeading);
+                telemetry.addData("180 Point?", targetHeading < -160);
+                telemetry.update();
+                foreHeading = -angles.firstAngle;
+                if(gyroTimer.milliseconds() % 500 == 0) {       // Every 1/2 second that passes...
+                    previousMotorPosition = currentMotorPosition;
+                    currentMotorPosition = rfDriveM.getCurrentPosition();
+                    if(Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
+                            Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) > -20) {
+                        telemetry.addData("Status", "Rammed!");
+                        telemetry.update();
+                        driveStop();
+                        sleep(3000);
+                        break;
+                    }
+                }
+                if(isStopRequested()) {
+                    break;
+                }
+
+            }
+        } else {
+            while (targetHeading < -angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, -angles.firstAngle)) {
+                updateIMU();
+                drive(0.2, -0.2);
+                telemetry.addData("Gyro", -angles.firstAngle);
+                telemetry.addData("Target", targetHeading);
+                telemetry.addData("180 Point?", shouldKeepTurning(targetHeading, foreHeading, -angles.firstAngle));
+                telemetry.update();
+                foreHeading = -angles.firstAngle;
+                if(gyroTimer.milliseconds() % 500 == 0) {       // Every 1/2 second that passes...
+                    previousMotorPosition = currentMotorPosition;
+                    currentMotorPosition = rfDriveM.getCurrentPosition();
+                    if(Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
+                            Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) > -20) {
+                        telemetry.addData("Status", "Rammed!");
+                        telemetry.update();
+                        driveStop();
+                        sleep(3000);
+                        break;
+                    }
+                }
+                if(isStopRequested()) {             // Found this one boolean in LinearOpMode
+                    break;                          // that checks if STOP is hit.
+                }                                   // Could help with the OpModeStuckInStop issues.
+            }
+        }
+        driveStop();
+    }
+
+    public void driveOffStone(String Alliance) throws InterruptedException {
+        if(alliance == "red") {
+            encoderDrive(24, 0.23, 1);
+            sleep(500);
+        } else if(alliance == "blue") {
+            encoderDrive(-25, 0.23, -1);
+        }
+    }
+
+    public void driveToColumn(String Alliance, String Stone) throws InterruptedException {
+        switch(Alliance + Stone) {
+            case "redleft":
+                encoderDrive(12, 0.23, 1);
+                imuTurn(-80);
+                break;
+            case "redright":
+                imuTurn(90);
+                encoderDrive(12, 0.23, -1);
+                imuTurn(80);
+                break;
+            case "blueleft":
+                imuTurn(90);
+                encoderDrive(-11, 0.23, -1);
+                imuTurn(-90);
+                break;
+            case "blueright":
+                encoderDrive(-12, 0.23, -1);
+                imuTurn(-90);
+                break;
+        }
+    }
+
+    public void placeGlyph(String Alliance, String Stone, String Key) throws InterruptedException {
+        switch(Alliance + Stone) {
+            case "redleft":
+                switch (Key) {
+                    case "KeyLeft":
+                        imuTurn(-10);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyCenter":
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        moveSliders(RIGHT, 200);
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyRight":
+                        imuTurn(20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                }
+                break;
+            case "redright":
+                switch (Key) {
+                    case "KeyLeft":
+                        imuTurn(-20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyCenter":
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyRight":
+                        imuTurn(20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                }
+                break;
+            case "blueleft":
+                switch (Key) {
+                    case "KeyLeft":
+                        imuTurn(-20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyCenter":
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyRight":
+                        imuTurn(20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                }
+                break;
+            case "blueright":
+                switch (Key) {
+                    case "KeyLeft":
+                        imuTurn(-20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyCenter":
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    case "KeyRight":
+                        imuTurn(20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                }
+                break;
+        }
+    }
 
     private void bumpJewel(String alliance, String jewel) throws InterruptedException {
         if (alliance == "blue" && jewel == "RED_BLUE") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockLeft);
+            jewelHitS.setPosition(hitLeft);
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else if (alliance == "blue" && jewel == "BLUE_RED") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockRight);
+            jewelHitS.setPosition(hitRight);
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else if (alliance == "red" && jewel == "RED_BLUE") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockRight);
+            jewelHitS.setPosition(hitRight);
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else if (alliance == "red" && jewel == "BLUE_RED") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockLeft);
+            jewelHitS.setPosition(hitLeft);
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
+            sleep(500);
+            jewelExtendS.setPosition(retractArm);
+            sleep(500);
+        } else {
+            if (jewelOrder == "UNKNOWN") {
+                telemetry.addData("Problem with 'jewelOrder'", ";-;");
+                telemetry.update();
+            } else {
+                telemetry.addData("Problem with 'alliance'", ";-;");
+                telemetry.update();
+                sleep(3000);
+            }
+        }
+    }
+
+    private void bumpJewelShort(String alliance, String jewel) throws InterruptedException {
+        double HitVal = ((alliance == "blue" && jewel == "RED_BLUE") || (alliance == "red" && jewel == "BLUE_RED")) ? 0 : ((alliance == "red" && jewel == "RED_BLUE") || (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5;
+        if(HitVal != 0.5) {
+            jewelExtendS.setPosition(extendArm);
+            sleep(750);
+            jewelHitS.setPosition(HitVal);
+            sleep(500);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
@@ -256,9 +544,6 @@ public class legacy_auto extends LinearOpMode {
             sleep(3000);
         }
     }
-
-
-
 
     private String activateVuforia () throws InterruptedException {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName()); // Get the camera!
@@ -277,7 +562,7 @@ public class legacy_auto extends LinearOpMode {
         String vufkey = decryptKey(Targets);
         telemetry.addData("Key Found", vufkey);
         telemetry.update();
-        sleep(5000); //For testing purposes to see the telemetry, we should remove this for the final auto.
+        sleep(1000); //For testing purposes to see the telemetry, we should remove this for the final auto.
 
         this.vuforia.close();
         return vufkey;
@@ -302,42 +587,89 @@ public class legacy_auto extends LinearOpMode {
         //Lifting glypher motor
         glyphLiftM = hardwareMap.dcMotor.get("glyphLiftM"); //Hub 2 Port 0
         glyphLiftM.setPower(0);
+        glyphLiftM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //Glypher left-to-right motor
         glyphSlideS = hardwareMap.crservo.get("glyphSlideS"); //Hub 3 Servo 1
         glyphSlideS.setPower(0);
 
         lGlyphS = hardwareMap.servo.get("lGlyphS"); //Hub 3 Servo 3
-        lGlyphS.setPosition(lGlyphSInit);
+        lGlyphS.scaleRange(0, 0.65);
         rGlyphS = hardwareMap.servo.get("rGlyphS"); //Hub 3 Servo 5
-        rGlyphS.setPosition(rGlyphSInit);
+        rGlyphS.scaleRange(0.35, 1);
+        grabbers(lGlyphSRelease, rGlyphSRelease);
 
-
+        // Jewel Hitter
+        jewelHitS = hardwareMap.servo.get("jewelHitS"); //Hub 2 Servo 4
+        jewelHitS.setPosition(hitCenter);
         jewelExtendS = hardwareMap.servo.get("jewelExtendS"); //Hub 3 Servo 0
         jewelExtendS.setPosition(retractArm);
-        jewelKnockS = hardwareMap.servo.get("jewelKnockS"); //Hub 2 Servo 4
-        jewelKnockS.setPosition(knockCenter);
-
 
         lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
         lbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
+        lfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        BNO055IMU.Parameters parameters_IMU = new BNO055IMU.Parameters();
+        parameters_IMU.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters_IMU.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters_IMU.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        parameters_IMU.loggingEnabled = true;
+        parameters_IMU.loggingTag = "IMU";
+        parameters_IMU.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters_IMU);
 
         telemetry.addData("Status", "Initialized");
 
         // =======================BEGIN SELECTION===================================================
-        telemetry.addData("Selection", "X for Blue, B for Red");        // Which side are you on?
+        telemetry.addData("Selection", "X for Blue, B for Red");        // Which alliance are you on?
         telemetry.update();
-        while (alliance == "") {
+        while (alliance == "" && !isStopRequested()) {
             if (gamepad1.x) {
                 alliance = "blue";
             } else if (gamepad1.b) {
                 alliance = "red";
-                angularOffset = 180;
             }
-            if(isStopRequested()) {             // Found this one boolean in LinearOpMode
-                break;                          // that checks if STOP is hit.
-            }                                   // Could help with the OpModeStuckInStop issues.
         }
+
+        sleep(500);
+        telemetry.addData("Status", "Initialized");
+        telemetry.addData("Selection", "X for Left Stone, B for Right Stone");        // Which side are you on?
+        telemetry.update();
+        while (stone == "" && !isStopRequested()) {
+            if (gamepad1.x) {
+                stone = "left";
+            } else if (gamepad1.b) {
+                stone = "right";
+            }
+        }
+
+        while(!gamepad1.a && !isStopRequested()) {
+            switch(alliance + stone) {
+                case "redleft":
+                    telemetry.addData("Alliance", "Red");
+                    telemetry.addData("Stone", "Left");
+                    break;
+                case "redright":
+                    telemetry.addData("Alliance", "Red");
+                    telemetry.addData("Stone", "Right");
+                    break;
+                case "blueleft":
+                    telemetry.addData("Alliance", "Blue");
+                    telemetry.addData("Stone", "Left");
+                    break;
+                case "blueright":
+                    telemetry.addData("Alliance", "Blue");
+                    telemetry.addData("Stone", "Right");
+                    break;
+            }
+            telemetry.addData("Press A if this is ok", "");
+            telemetry.update();
+        }
+
         sleep(500);
 
         jewelDetector = new JewelDetector();
@@ -371,13 +703,46 @@ public class legacy_auto extends LinearOpMode {
         telemetry.addData("Jewel Order", jewelOrder);
         telemetry.update();
 
-//  =======================================AUTONOMOUS===============================================
+//  ====================================== AUTONOMOUS ==============================================
 
-        bumpJewel(alliance, jewelOrder);
+        bumpJewel(alliance, jewelOrder);    //Bump the correct jewel based on selected alliance and scanned order of jewels (see above function).
         String cryptoKey = activateVuforia();
         telemetry.addData("Crytpokey", cryptoKey);
         telemetry.update();
-        sleep(5000);
+        imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+
+        grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        glyphLifter("UP");
+        driveOffStone(alliance);
+        driveToColumn(alliance, stone);
+        placeGlyph(alliance, stone, cryptoKey);
+        drive(0.23, 0.23);
+        sleep(100);
+        glyphLiftM.setPower(-1);
+        sleep(300);
+        grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        drive(-0.23, -0.23);
+        sleep(500);
+        drive(0.23, 0.23);
+        sleep(400);
+        imuTurn(45);
+
+//        while (alliance == "blue" && stone == "right") {
+//            imuTurn(-180);                     // Turn towards the glyph pile
+//            drive(-0.25, -0.25);               // Drive into Glyph Pile
+//            sleep(1600);
+//            driveStop();
+//            grabbers(lGlyphSGrasp, rGlyphSGrasp);  // Grab and pick up a glyph
+//            glyphLiftM.setPower(1);
+//            sleep(600);
+//            glyphLiftM.setPower(0);
+//            drive(0.25, 0.25);                 // Drive back to Cryptobox
+//            sleep(1500);
+//            imuTurn(180);                      // Turn to Cryptobox
+//            sleep(700);
+//            placeGlyph(alliance, stone, cryptoKey);         // Place the glyph in Caluper
+//            drive(0.25, 0.25);                 // Get back in Safe Zone
+//        }
 
     }
 }
