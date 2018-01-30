@@ -10,7 +10,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+<<<<<<< HEAD
 @Disabled
+=======
+>>>>>>> origin/master.jake
 @TeleOp(name="aftershock_teleop", group="TeleOp")
 
 public class aftershock_teleop extends OpMode{
@@ -75,11 +78,18 @@ public class aftershock_teleop extends OpMode{
         rGlyphS = hardwareMap.servo.get("rGlyphS"); //Hub 3 Servo 5
         rGlyphS.setPosition(rGlyphSInit);
 
+<<<<<<< HEAD
 
         jewelExtendS = hardwareMap.servo.get("jewelExtendS"); //Hub 3 Servo 5
         jewelExtendS.setPosition(0);
 //        jewelKnockS = hardwareMap.servo.get("jewelKnockS"); //Hub 2 Servo 4
 
+=======
+/*
+        jewelExtendS = hardwareMap.servo.get("jewelExtendS"); //Hub 3 Servo 5
+        jewelKnockS = hardwareMap.servo.get("jewelKnockS"); //Hub 2 Servo 4
+*/
+>>>>>>> origin/master.jake
 
         lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
         lbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
@@ -130,11 +140,17 @@ public class aftershock_teleop extends OpMode{
             rGlyphS.setPosition(rGlyphSAlmostGrasp);
         }
 
+<<<<<<< HEAD
         if (gamepad1.a) {
             jewelExtendS.setPosition(1);
         } else {
             jewelExtendS.setPosition(0);
         }
+=======
+//        if (gamepad1.a) {
+//            jewelExtendS.setPosition(1);
+//        }
+>>>>>>> origin/master.jake
 
 
 ///------------------------------------------DRIVER CODE------------------------------------------\\\
