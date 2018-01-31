@@ -100,9 +100,10 @@ public class legacy_auto extends LinearOpMode {
     private ElapsedTime gyroTimer = new ElapsedTime();
     private JewelDetector jewelDetector = null;
 
-    String alliance = "";
+    private String alliance = "";
     String jewelOrder = "";
-    String stone = "";
+    private String jewelBumpType = "";
+    private String stone = "";
     String vuforiaLicenseKey = "Ae3H91v/////AAAAGT+4TPU5r02VnQxesioVLr0qQzNtgdYskxP7aL6/" +     // Yay, random Vuforia license key!
             "yt9VozCBUcQrSjwec5opfpOWEuc55kDXNNSRJjLAnjGPeaku9j4nOfe7tWxio/xj/uNdPX7fEHD0j5b" +
             "5M1OgX/bkWoUV6pUTAsKj4GaaAKIf76vnX36boqJ7BaMJNuhkYhoQJWdVqwFOC4veNcABzJRw4mQmfO" +
@@ -167,7 +168,7 @@ public class legacy_auto extends LinearOpMode {
         } else {
             glyphLiftM.setPower(-0.5);
         }
-        sleep(300);
+        sleep(350);
         glyphLiftM.setPower(0);
     }
 
@@ -358,7 +359,7 @@ public class legacy_auto extends LinearOpMode {
         switch(Alliance + Stone) {
             case "redleft":
                 encoderDrive(12, 0.23, 1);
-                imuTurn(-90);
+                imuTurn(-80);
                 break;
             case "redright":
                 imuTurn(90);
@@ -389,14 +390,21 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyCenter":
+                        moveSliders(LEFT, 200);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(16);
-                        sleep(200);
+                        imuTurn(20);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    default:
+                        imuTurn(20);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -407,21 +415,30 @@ public class legacy_auto extends LinearOpMode {
             case "redright":
                 switch (Key) {
                     case "KeyLeft":
-                        imuTurn(-20);
+                        imuTurn(-13);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyCenter":
+                        moveSliders(LEFT, 200);
                         drive(-0.23, -0.23);
                         sleep(900);
                         driveStop();
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(16);
-                        sleep(200);
+                        imuTurn(20);
+                        moveSliders(RIGHT, 200);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    default:
+                        imuTurn(20);
+                        moveSliders(RIGHT, 200);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -446,7 +463,15 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(16);
+                        imuTurn(14);
+                        sleep(200);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    default:
+                        imuTurn(14);
                         sleep(200);
                         drive(-0.23, -0.23);
                         sleep(1000);
@@ -465,13 +490,20 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyCenter":
-                        moveSliders(RIGHT, 200);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
+                        imuTurn(14);
+                        sleep(200);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSRelease, rGlyphSRelease);
+                        break;
+                    default:
                         imuTurn(14);
                         sleep(200);
                         drive(-0.23, -0.23);
@@ -595,9 +627,7 @@ public class legacy_auto extends LinearOpMode {
         glyphSlideS.setPower(0);
 
         lGlyphS = hardwareMap.servo.get("lGlyphS"); //Hub 3 Servo 3
-        lGlyphS.scaleRange(0, 0.65);
         rGlyphS = hardwareMap.servo.get("rGlyphS"); //Hub 3 Servo 5
-        rGlyphS.scaleRange(0.35, 1);
         grabbers(lGlyphSRelease, rGlyphSRelease);
 
         // Jewel Knocker
@@ -645,6 +675,20 @@ public class legacy_auto extends LinearOpMode {
                 stone = "left";
             } else if (gamepad1.b) {
                 stone = "right";
+            }
+        }
+
+        sleep(500);
+        telemetry.addData("Status", "Initialized");
+        telemetry.addData("Selection", "X for Correct Jewel, B for Wrong Jewel, Y for No Jewel");        // Which side are you on?
+        telemetry.update();
+        while (jewelBumpType == "" && !isStopRequested()) {
+            if (gamepad1.x) {
+                jewelBumpType = "correct";
+            } else if (gamepad1.b) {
+                jewelBumpType = "wrong";
+            } else if(gamepad1.y) {
+                jewelBumpType = "none";
             }
         }
 
@@ -706,7 +750,9 @@ public class legacy_auto extends LinearOpMode {
 
 //  ====================================== AUTONOMOUS ==============================================
 
-        bumpJewel(alliance, jewelOrder);
+        if(jewelBumpType != "none") {
+            bumpJewel(alliance, jewelOrder);
+        }
         String cryptoKey = activateVuforia();
         telemetry.addData("Crytpokey", cryptoKey);
         telemetry.update();
