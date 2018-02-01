@@ -134,7 +134,7 @@ public class legacy_auto extends LinearOpMode {
         } else {
             glyphLiftM.setPower(-0.5);
         }
-        sleep(350);
+        sleep(400);
         glyphLiftM.setPower(0);
     }
 
@@ -349,7 +349,7 @@ public class legacy_auto extends LinearOpMode {
             case "redleft":
                 switch (Key) {
                     case "KeyLeft":
-                        imuTurn(-20);
+                        imuTurn(-22);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -358,19 +358,19 @@ public class legacy_auto extends LinearOpMode {
                     case "KeyCenter":
                         moveSliders(LEFT, 200);
                         drive(-0.23, -0.23);
-                        sleep(1000);
+                        sleep(900);
                         driveStop();
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(20);
+                        imuTurn(14);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     default:
-                        imuTurn(20);
+                        imuTurn(-22);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -388,14 +388,13 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyCenter":
-                        moveSliders(LEFT, 200);
                         drive(-0.23, -0.23);
-                        sleep(900);
+                        sleep(700);
                         driveStop();
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(20);
+                        imuTurn(16);
                         moveSliders(RIGHT, 200);
                         drive(-0.23, -0.23);
                         sleep(1000);
@@ -403,8 +402,7 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     default:
-                        imuTurn(20);
-                        moveSliders(RIGHT, 200);
+                        imuTurn(-13);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -430,6 +428,7 @@ public class legacy_auto extends LinearOpMode {
                         break;
                     case "KeyRight":
                         imuTurn(14);
+                        moveSliders(LEFT, 200);
                         sleep(200);
                         drive(-0.23, -0.23);
                         sleep(1000);
@@ -437,8 +436,7 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     default:
-                        imuTurn(14);
-                        sleep(200);
+                        imuTurn(-20);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -470,8 +468,7 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     default:
-                        imuTurn(14);
-                        sleep(200);
+                        imuTurn(-20);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -508,6 +505,7 @@ public class legacy_auto extends LinearOpMode {
             sleep(750);
             if (jewelBumpType == "correct") {jewelHitS.setPosition(hitRight);
             } else { jewelHitS.setPosition(hitLeft); };
+            sleep(500);
             jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
@@ -517,6 +515,7 @@ public class legacy_auto extends LinearOpMode {
             sleep(750);
             if (jewelBumpType == "correct") {jewelHitS.setPosition(hitLeft);
             } else { jewelHitS.setPosition(hitRight); }
+            sleep(500);
             jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);

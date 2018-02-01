@@ -18,12 +18,12 @@ public class legacy_teleop extends OpMode {
     public Servo lArmS, rArmS, jewelExtendS, jewelHitS;
     public CRServo glyphSlideS;
 
-    private double lServoArmInit = 0.5;                     //Glyph arms will initialize in the open position./
-    private double rServoArmInit = 0.5;
+    private double lServoArmInit = 0.65;                     //Glyph arms will initialize in the open position./
+    private double rServoArmInit = 0.4;
     private double lServoArmGrasp = 0;                    //After testing, these positions were optimal for grasping the glyphs.
     private double rServoArmGrasp = 1;
-    private double lServoArmAlmostGrasp = .25;
-    private double rServoArmAlmostGrasp = .75;
+    private double lServoArmAlmostGrasp = 0.5;
+    private double rServoArmAlmostGrasp = 0.6;
 
     private double speedFactor = .65;
     private int controlMode = 1;
