@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.util.Range;
  */
 @TeleOp (name="legacy_teleop",group="Opmode")
 public class legacy_teleop extends OpMode {
-    public DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, liftM;  //Left front drive, right front drive, left back drive, right back drive.
+    public DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, glyphLiftM;  //Left front drive, right front drive, left back drive, right back drive.
     public Servo lArmS, rArmS;
     public CRServo glyphSlideS;
     private double lServoArmInit = 0.5;                     //Glyph arms will initialize in the open position./
@@ -33,8 +33,8 @@ public class legacy_teleop extends OpMode {
         rfDriveM.setPower(0);
         rbDriveM = hardwareMap.dcMotor.get("rbDriveM");       //Right back drive, Hub 1, port 0
         rbDriveM.setPower(0);
-        liftM = hardwareMap.dcMotor.get("glyphLiftM");   //Lift motor, Hub 2, port 3
-        liftM.setPower(0);
+        glyphLiftM = hardwareMap.dcMotor.get("glyphLiftM");   //Lift motor, Hub 2, port 3
+        glyphLiftM.setPower(0);
         lArmS = hardwareMap.servo.get("lGlyphS");     //Left servo arm, Hub 1, port 2
         lArmS.setPosition(lServoArmInit);
         rArmS = hardwareMap.servo.get("rGlyphS");     //Right servo arm, Hub 2, port 1
@@ -45,7 +45,7 @@ public class legacy_teleop extends OpMode {
         lbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        liftM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        glyphLiftM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
     public void loop() {
         if(gamepad1.right_bumper) {
@@ -86,19 +86,19 @@ public class legacy_teleop extends OpMode {
 
 ///OPERATOR CODE
         if (gamepad2.dpad_up) {
-            liftM.setPower(1);
+            glyphLiftM.setPower(1);
         } else if (gamepad2.dpad_down) {
-            liftM.setPower(-1);
+            glyphLiftM.setPower(-1);
         } else {
-            liftM.setPower(0);
+            glyphLiftM.setPower(0);
         }
 
         if (gamepad2.dpad_up) {
-            liftM.setPower(1);
+            glyphLiftM.setPower(1);
         } else if (gamepad2.dpad_down) {
-            liftM.setPower(-1);
+            glyphLiftM.setPower(-1);
         } else {
-            liftM.setPower(0);
+            glyphLiftM.setPower(0);
         }
 
         if (gamepad2.b) { //hitting the "b" button on Gamepad 2 will cause the glypher servos to grasp the glyph
