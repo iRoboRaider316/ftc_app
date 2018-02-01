@@ -527,7 +527,10 @@ public class legacy_auto extends LinearOpMode {
     }
 
     private void bumpJewelShort(String alliance, String jewel) throws InterruptedException {
-        double knockVal = ((alliance == "blue" && jewel == "RED_BLUE") || (alliance == "red" && jewel == "BLUE_RED")) ? 0 : ((alliance == "red" && jewel == "RED_BLUE") || (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5;
+        double knockVal =   ((alliance == "blue" && jewel == "RED_BLUE") ||
+                            (alliance == "red" && jewel == "BLUE_RED")) ? 0 :
+                            ((alliance == "red" && jewel == "RED_BLUE") ||
+                            (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5;
         if(knockVal != 0.5) {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
@@ -630,6 +633,9 @@ public class legacy_auto extends LinearOpMode {
             } else if (gamepad1.b) {
                 alliance = "red";
             }
+            if (isStopRequested()) {
+                break;
+            }
         }
 
         sleep(500);
@@ -641,6 +647,9 @@ public class legacy_auto extends LinearOpMode {
                 stone = "left";
             } else if (gamepad1.b) {
                 stone = "right";
+            }
+            if (isStopRequested()) {
+                break;
             }
         }
 
@@ -655,6 +664,9 @@ public class legacy_auto extends LinearOpMode {
                 jewelBumpType = "wrong";
             } else if(gamepad1.y) {
                 jewelBumpType = "none";
+            }
+            if (isStopRequested()) {
+                break;
             }
         }
 
@@ -679,6 +691,9 @@ public class legacy_auto extends LinearOpMode {
             }
             telemetry.addData("Press A if this is ok", "");
             telemetry.update();
+            if (isStopRequested()) {
+                break;
+            }
         }
 
         sleep(500);
