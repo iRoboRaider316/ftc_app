@@ -34,6 +34,7 @@ public class legacy_teleop extends OpMode {
 
     private double hitCenter = .5;   //jewelHitS returns to center variable
     private double hitLeft = 0;      //jewelHitS Hit left jewel variable
+    private double hitPLeft = .25;   //Protects arm from falling in case of power outages.
     private double hitRight = 1;     //jewelHitS Hits right jewel variable
 
     public void init () {
@@ -61,7 +62,7 @@ public class legacy_teleop extends OpMode {
         jewelExtendS = hardwareMap.servo.get("jewelExtendS");   //Hub 3 Servo 0
         jewelExtendS.setPosition(retractArm);
         jewelHitS = hardwareMap.servo.get("jewelHitS");     //Hub 2 Servo 4
-        jewelHitS.setPosition(hitCenter);
+        jewelHitS.setPosition(hitPLeft);
 
         lfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
