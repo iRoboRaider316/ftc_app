@@ -37,15 +37,15 @@ public class legacy_auto extends LinearOpMode {
     //============================VARIABLES + CONSTANTS=============================================
 
     public DcMotor lfDriveM, lbDriveM, rfDriveM, rbDriveM, glyphLiftM;
-    public Servo lGlyphS, rGlyphS, jewelExtendS, jewelKnockS;
+    public Servo lGlyphS, rGlyphS, jewelExtendS, jewelHitS;
     public CRServo glyphSlideS;
 
     private double extendArm = .55;
     private double retractArm = 0;
 
-    private double knockCenter = .5;   //jewelKnockS returns to center variable
-    private double knockLeft = 0;      //jewelKnockS knock left jewel variable
-    private double knockRight = 1;     //jewelKnockS knocks right jewel variable
+    private double hitCenter = .5;   //jewelHitS returns to center variable
+    private double hitLeft = 0;      //jewelHitS knock left jewel variable
+    private double hitRight = 1;     //jewelHitS knocks right jewel variable
 
     private double lGlyphSRelease = 1;               //Glyph arms will initialize in the open position.
     private double rGlyphSRelease = 0;
@@ -486,54 +486,63 @@ public class legacy_auto extends LinearOpMode {
         if (alliance == "blue" && jewel == "RED_BLUE") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockLeft);
+            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitLeft);
+            } else { jewelHitS.setPosition(hitRight); }
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else if (alliance == "blue" && jewel == "BLUE_RED") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockRight);
+            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitRight);
+            } else { jewelHitS.setPosition(hitLeft); };
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else if (alliance == "red" && jewel == "RED_BLUE") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockRight);
-            sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitRight);
+            } else { jewelHitS.setPosition(hitLeft); };
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else if (alliance == "red" && jewel == "BLUE_RED") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockLeft);
-            sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitLeft);
+            } else { jewelHitS.setPosition(hitRight); }
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else {
-            telemetry.addData("Problem with alliance or jewelOrder.", "");
-            telemetry.update();
-            sleep(3000);
+            if (jewelOrder == "UNKNOWN") {
+                telemetry.addData("Problem with 'jewelOrder'", "  ;-;");
+                telemetry.update();
+                sleep(3000);
+            } else {
+                telemetry.addData("Problem with 'alliance'", "  ;-;");
+            }
         }
     }
 
     private void bumpJewelShort(String alliance, String jewel) throws InterruptedException {
-        double knockVal = ((alliance == "blue" && jewel == "RED_BLUE") || (alliance == "red" && jewel == "BLUE_RED")) ? 0 : ((alliance == "red" && jewel == "RED_BLUE") || (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5;
+        double knockVal =   ((alliance == "blue" && jewel == "RED_BLUE") ||
+                            (alliance == "red" && jewel == "BLUE_RED")) ? 0 :
+                            ((alliance == "red" && jewel == "RED_BLUE") ||
+                            (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5;
         if(knockVal != 0.5) {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockVal);
+            jewelHitS.setPosition(knockVal);
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
@@ -599,8 +608,8 @@ public class legacy_auto extends LinearOpMode {
         // Jewel Knocker
         jewelExtendS = hardwareMap.servo.get("jewelExtendS"); //Hub 3 Servo 0
         jewelExtendS.setPosition(retractArm);
-        jewelKnockS = hardwareMap.servo.get("jewelKnockS"); //Hub 2 Servo 4
-        jewelKnockS.setPosition(knockCenter);
+        jewelHitS = hardwareMap.servo.get("jewelHitS"); //Hub 2 Servo 4
+        jewelHitS.setPosition(hitCenter);
 
         lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
         lbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
@@ -630,6 +639,9 @@ public class legacy_auto extends LinearOpMode {
             } else if (gamepad1.b) {
                 alliance = "red";
             }
+            if (isStopRequested()) {
+                break;
+            }
         }
 
         sleep(500);
@@ -641,6 +653,9 @@ public class legacy_auto extends LinearOpMode {
                 stone = "left";
             } else if (gamepad1.b) {
                 stone = "right";
+            }
+            if (isStopRequested()) {
+                break;
             }
         }
 
@@ -655,6 +670,9 @@ public class legacy_auto extends LinearOpMode {
                 jewelBumpType = "wrong";
             } else if(gamepad1.y) {
                 jewelBumpType = "none";
+            }
+            if (isStopRequested()) {
+                break;
             }
         }
 
@@ -679,6 +697,9 @@ public class legacy_auto extends LinearOpMode {
             }
             telemetry.addData("Press A if this is ok", "");
             telemetry.update();
+            if (isStopRequested()) {
+                break;
+            }
         }
 
         sleep(500);

@@ -13,18 +13,32 @@ import com.qualcomm.robotcore.util.Range;
  */
 @TeleOp (name="legacy_teleop",group="Opmode")
 public class legacy_teleop extends OpMode {
-    public DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, liftM;  //Left front drive, right front drive, left back drive, right back drive.
-    public Servo lArmS, rArmS;
+
+    public DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, glyphLiftM;  //Left front drive, right front drive, left back drive, right back drive.
+    public Servo lArmS, rArmS, jewelExtendS, jewelHitS;
     public CRServo glyphSlideS;
+
     private double lServoArmInit = 0.5;                     //Glyph arms will initialize in the open position./
     private double rServoArmInit = 0.5;
     private double lServoArmGrasp = 0;                    //After testing, these positions were optimal for grasping the glyphs.
     private double rServoArmGrasp = 1;
     private double lServoArmAlmostGrasp = .25;
     private double rServoArmAlmostGrasp = .75;
+
     private double speedFactor = .65;
     private int controlMode = 1;
+
+    private double pExtendArm = .3; //Partially extend the jewel arm.
+    private double extendArm = .55; //Fully extend the jewel arm.
+    private double retractArm = 0; //Bring jewel arm back to the robot.
+
+    private double hitCenter = .5;   //jewelHitS returns to center variable
+    private double hitLeft = 0;      //jewelHitS Hit left jewel variable
+    private double hitPLeft = .25;   //Protects arm from falling in case of power outages.
+    private double hitRight = 1;     //jewelHitS Hits right jewel variable
+
     public void init () {
+
         lfDriveM = hardwareMap.dcMotor.get("lfDriveM");       //Left front drive, Hub 1, port 2
         lfDriveM.setPower(0);
         lbDriveM = hardwareMap.dcMotor.get("lbDriveM");       //Left back drive, Hub 1, port 3
@@ -33,19 +47,28 @@ public class legacy_teleop extends OpMode {
         rfDriveM.setPower(0);
         rbDriveM = hardwareMap.dcMotor.get("rbDriveM");       //Right back drive, Hub 1, port 0
         rbDriveM.setPower(0);
-        liftM = hardwareMap.dcMotor.get("glyphLiftM");   //Lift motor, Hub 2, port 3
-        liftM.setPower(0);
+
+        glyphLiftM = hardwareMap.dcMotor.get("glyphLiftM");   //Lift motor, Hub 2, port 3
+        glyphLiftM.setPower(0);
+
         lArmS = hardwareMap.servo.get("lGlyphS");     //Left servo arm, Hub 1, port 2
         lArmS.setPosition(lServoArmInit);
         rArmS = hardwareMap.servo.get("rGlyphS");     //Right servo arm, Hub 2, port 1
         rArmS.setPosition(rServoArmInit);
+
         glyphSlideS = hardwareMap.crservo.get("glyphSlideS");
         glyphSlideS.setPower(0);
+
+        jewelExtendS = hardwareMap.servo.get("jewelExtendS");   //Hub 3 Servo 0
+        jewelExtendS.setPosition(retractArm);
+        jewelHitS = hardwareMap.servo.get("jewelHitS");     //Hub 2 Servo 4
+        jewelHitS.setPosition(hitPLeft);
+
         lfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        liftM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        glyphLiftM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
     public void loop() {
         if(gamepad1.right_bumper) {
@@ -86,19 +109,19 @@ public class legacy_teleop extends OpMode {
 
 ///OPERATOR CODE
         if (gamepad2.dpad_up) {
-            liftM.setPower(1);
+            glyphLiftM.setPower(1);
         } else if (gamepad2.dpad_down) {
-            liftM.setPower(-1);
+            glyphLiftM.setPower(-1);
         } else {
-            liftM.setPower(0);
+            glyphLiftM.setPower(0);
         }
 
         if (gamepad2.dpad_up) {
-            liftM.setPower(1);
+            glyphLiftM.setPower(1);
         } else if (gamepad2.dpad_down) {
-            liftM.setPower(-1);
+            glyphLiftM.setPower(-1);
         } else {
-            liftM.setPower(0);
+            glyphLiftM.setPower(0);
         }
 
         if (gamepad2.b) { //hitting the "b" button on Gamepad 2 will cause the glypher servos to grasp the glyph
