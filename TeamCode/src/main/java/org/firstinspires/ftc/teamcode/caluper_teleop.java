@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.util.Range;
  */
 
 @TeleOp (name="caluper_teleop",group="Opmode")
-
+@Disabled
 public class caluper_teleop extends OpMode {
 
     public DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, liftM;  //Left front drive, right front drive, left back drive, right back drive.

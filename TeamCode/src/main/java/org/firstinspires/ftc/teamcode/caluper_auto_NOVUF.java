@@ -21,7 +21,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
  */
 
 @Autonomous(name="caluper_auto_Novuf", group="LinearOpMode")
-//@Disabled
+@Disabled
 public class caluper_auto_NOVUF extends LinearOpMode {
     ElapsedTime timer = new ElapsedTime();
 

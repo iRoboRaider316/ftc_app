@@ -28,7 +28,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
  */
 
 @Autonomous(name="caluper_auto_IMU", group="LinearOpMode")
-//@Disabled
+@Disabled
 public class caluper_IMU_Turn extends LinearOpMode {
 
     public DcMotor lfDriveM,     // Left Front Drive
