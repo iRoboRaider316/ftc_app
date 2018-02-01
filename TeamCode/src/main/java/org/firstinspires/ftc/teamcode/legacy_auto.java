@@ -486,7 +486,8 @@ public class legacy_auto extends LinearOpMode {
         if (alliance == "blue" && jewel == "RED_BLUE") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelHitS.setPosition(hitLeft);
+            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitLeft);
+            } else { jewelHitS.setPosition(hitRight); }
             sleep(500);
             jewelHitS.setPosition(hitCenter);
             sleep(500);
@@ -495,7 +496,8 @@ public class legacy_auto extends LinearOpMode {
         } else if (alliance == "blue" && jewel == "BLUE_RED") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelHitS.setPosition(hitRight);
+            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitRight);
+            } else { jewelHitS.setPosition(hitLeft); };
             sleep(500);
             jewelHitS.setPosition(hitCenter);
             sleep(500);
@@ -504,8 +506,8 @@ public class legacy_auto extends LinearOpMode {
         } else if (alliance == "red" && jewel == "RED_BLUE") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelHitS.setPosition(hitRight);
-            sleep(500);
+            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitRight);
+            } else { jewelHitS.setPosition(hitLeft); };
             jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
@@ -513,16 +515,20 @@ public class legacy_auto extends LinearOpMode {
         } else if (alliance == "red" && jewel == "BLUE_RED") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelHitS.setPosition(hitLeft);
-            sleep(500);
+            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitLeft);
+            } else { jewelHitS.setPosition(hitRight); }
             jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else {
-            telemetry.addData("Problem with alliance or jewelOrder.", "");
-            telemetry.update();
-            sleep(3000);
+            if (jewelOrder == "UNKNOWN") {
+                telemetry.addData("Problem with 'jewelOrder'", "  ;-;");
+                telemetry.update();
+                sleep(3000);
+            } else {
+                telemetry.addData("Problem with 'alliance'", "  ;-;");
+            }
         }
     }
 
