@@ -37,15 +37,15 @@ public class legacy_auto extends LinearOpMode {
     //============================VARIABLES + CONSTANTS=============================================
 
     public DcMotor lfDriveM, lbDriveM, rfDriveM, rbDriveM, glyphLiftM;
-    public Servo lGlyphS, rGlyphS, jewelExtendS, jewelKnockS;
+    public Servo lGlyphS, rGlyphS, jewelExtendS, jewelHitS;
     public CRServo glyphSlideS;
 
     private double extendArm = .55;
     private double retractArm = 0;
 
-    private double knockCenter = .5;   //jewelKnockS returns to center variable
-    private double knockLeft = 0;      //jewelKnockS knock left jewel variable
-    private double knockRight = 1;     //jewelKnockS knocks right jewel variable
+    private double hitCenter = .5;   //jewelHitS returns to center variable
+    private double hitLeft = 0;      //jewelHitS knock left jewel variable
+    private double hitRight = 1;     //jewelHitS knocks right jewel variable
 
     private double lGlyphSRelease = 1;               //Glyph arms will initialize in the open position.
     private double rGlyphSRelease = 0;
@@ -486,36 +486,36 @@ public class legacy_auto extends LinearOpMode {
         if (alliance == "blue" && jewel == "RED_BLUE") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockLeft);
+            jewelHitS.setPosition(hitLeft);
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else if (alliance == "blue" && jewel == "BLUE_RED") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockRight);
+            jewelHitS.setPosition(hitRight);
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else if (alliance == "red" && jewel == "RED_BLUE") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockRight);
+            jewelHitS.setPosition(hitRight);
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else if (alliance == "red" && jewel == "BLUE_RED") {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockLeft);
+            jewelHitS.setPosition(hitLeft);
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
@@ -534,9 +534,9 @@ public class legacy_auto extends LinearOpMode {
         if(knockVal != 0.5) {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
-            jewelKnockS.setPosition(knockVal);
+            jewelHitS.setPosition(knockVal);
             sleep(500);
-            jewelKnockS.setPosition(knockCenter);
+            jewelHitS.setPosition(hitCenter);
             sleep(500);
             jewelExtendS.setPosition(retractArm);
             sleep(500);
@@ -602,8 +602,8 @@ public class legacy_auto extends LinearOpMode {
         // Jewel Knocker
         jewelExtendS = hardwareMap.servo.get("jewelExtendS"); //Hub 3 Servo 0
         jewelExtendS.setPosition(retractArm);
-        jewelKnockS = hardwareMap.servo.get("jewelKnockS"); //Hub 2 Servo 4
-        jewelKnockS.setPosition(knockCenter);
+        jewelHitS = hardwareMap.servo.get("jewelHitS"); //Hub 2 Servo 4
+        jewelHitS.setPosition(hitCenter);
 
         lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
         lbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
