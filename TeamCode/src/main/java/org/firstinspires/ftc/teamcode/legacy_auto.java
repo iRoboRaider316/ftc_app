@@ -44,6 +44,7 @@ public class legacy_auto extends LinearOpMode {
     private double retractArm = 0;
 
     private double hitCenter = .5;   //jewelHitS returns to center variable
+    private double hitPLeft = .25;   //Protects arm from falling in case of power outages.
     private double hitLeft = 0;      //jewelHitS knock left jewel variable
     private double hitRight = 1;     //jewelHitS knocks right jewel variable
 
@@ -157,6 +158,16 @@ public class legacy_auto extends LinearOpMode {
         lbDriveM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rfDriveM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rbDriveM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
+
+    private void initForTeleop () {
+
+        lGlyphS.setPosition(0.65);
+        rGlyphS.setPosition(0.4);
+
+        jewelExtendS.setPosition(0);
+        jewelHitS.setPosition(0.25);
+
     }
 
     // This is the Drive Method
@@ -759,5 +770,10 @@ public class legacy_auto extends LinearOpMode {
         drive(0.23, 0.23);
         sleep(400);
         imuTurn(45);
+
+
+        initForTeleop();    //Because initializing in teleop moves servos before teleop begins, this
+                            //function allows us to initialize legally in the correct position.
+
     }
 }
