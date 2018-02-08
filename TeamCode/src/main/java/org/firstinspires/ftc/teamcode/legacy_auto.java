@@ -458,7 +458,7 @@ public class legacy_auto extends LinearOpMode {
             case "blueright":
                 switch (Key) {
                     case "KeyLeft":
-                        imuTurn(-20);
+                        imuTurn(-15);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -479,7 +479,6 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     default:
-                        imuTurn(-20);
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -773,7 +772,7 @@ public class legacy_auto extends LinearOpMode {
 
 
         initForTeleop();    //Because initializing in teleop moves servos before teleop begins, this
-                            //function allows us to initialize legally in the correct position.
+        sleep(1000);        //function allows us to initialize legally in the correct position.
 
     }
 }
