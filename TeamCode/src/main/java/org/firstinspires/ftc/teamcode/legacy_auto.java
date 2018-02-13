@@ -61,16 +61,16 @@ public class legacy_auto extends LinearOpMode {
     ClosableVuforiaLocalizer vuforia;    // The Vuforia camera
     BNO055IMU imu;               // IMU Gyro sensor inside of REV Hub
     Orientation angles;          // variables of the IMU that get the rotation of the robot
-    Acceleration gravity;
 
     private ElapsedTime runtime = new ElapsedTime();
     private ElapsedTime gyroTimer = new ElapsedTime();
     private JewelDetector jewelDetector = null;
 
     private String alliance = "";
-    String jewelOrder = "";
+    private String jewelOrder = "";
     private String jewelBumpType = "";
     private String stone = "";
+    private String getMoreGlyphs = "";
     String vuforiaLicenseKey = "Ae3H91v/////AAAAGT+4TPU5r02VnQxesioVLr0qQzNtgdYskxP7aL6/" +     // Yay, random Vuforia license key!
             "yt9VozCBUcQrSjwec5opfpOWEuc55kDXNNSRJjLAnjGPeaku9j4nOfe7tWxio/xj/uNdPX7fEHD0j5b" +
             "5M1OgX/bkWoUV6pUTAsKj4GaaAKIf76vnX36boqJ7BaMJNuhkYhoQJWdVqwFOC4veNcABzJRw4mQmfO" +
@@ -217,107 +217,116 @@ public class legacy_auto extends LinearOpMode {
 
     public void updateIMU() {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        gravity = imu.getGravity();
     }
 
-    public boolean shouldKeepTurning(double desiredHeading, double afterHeading, double currentHeading) {
-        if(desiredHeading > 160) {
-            if(currentHeading > afterHeading + 100) {
-                return false;
-            }
-        } else if(desiredHeading < -160){
-            if(afterHeading + 100 < currentHeading) {
+    /** This method checks for when Legacy has reached its desired heading.
+     *  It takes an array of integers that we create within the gyro turn code itself */
+    public boolean shouldKeepTurning2(int[] listOfHeadings) {
+        for(int heading : listOfHeadings) {
+            if(heading == (int)-angles.firstAngle) {
                 return false;
             }
         }
-        return true;             // If we made it this far, yes we should keep turning
+
+        return true;
     }
 
-    /*
-     * Perform a turn with the gyro sensor. For degreesToTurn, positive is clockwise, and negative
-     * is counterclockwise.
-     * -angles.firstAngle is used for currentRotation.
+    /**
+     * Perform a turn with the IMU inside our REV Hub. For degreesToTurn, positive is clockwise,
+     * and negative is counterclockwise. angles.firstAngle is used for currentRotation.
      * NOTE: angles.firstAngle is flipped on the number line because the REV Hub is upside-down
      */
 
-    public void imuTurn(double degreesToTurn) throws InterruptedException {
-        updateIMU();                                    // Update the IMU to see where we are,
-        // rotation-wise.
-        /*
-         * These operations account for when the robot would cross the IMU rotation line, which
-         * separates -180 from 180. Adding or subtracting the degreesToTurn by 360 here isn't
-         * always necessary, however, so we skip this operation in those cases */
-        if(degreesToTurn - angles.firstAngle < -180) {
-            degreesToTurn += 360;
-        }
+    public void imuTurn(int degreesToTurn, String direction) throws InterruptedException {
+        updateIMU();
 
-        if(degreesToTurn - angles.firstAngle > 180) {
-            degreesToTurn -= 360;
-        }
-
-        /*
-         * For us, the IMU has had us turn just a bit more than what we intend. The operation
+        /* For us, the IMU has had us turn just a bit more than what we intend. The operation
          * below accounts for this by dividing the current degreesToTurn value by 8/9.
          */
-        degreesToTurn *= (8.0F / 9.0F);
+        degreesToTurn = (degreesToTurn * 8) / 9;
 
-        double targetHeading = degreesToTurn - angles.firstAngle;
-        double foreHeading = -angles.firstAngle;
+        // Now we define our variables
+        int targetHeading = degreesToTurn - (int)angles.firstAngle;
         int currentMotorPosition = rfDriveM.getCurrentPosition();
         int previousMotorPosition;
 
+        /* These operations account for when the robot would cross the IMU rotation line, which
+         * separates -180 from 180. Adding or subtracting the degreesToTurn by 360 here isn't
+         * always necessary, however, so we skip this operation in those cases */
+        targetHeading += targetHeading > 180 ? -360 :
+                         targetHeading < -180 ? 360 : 0;
+
+        /* In case you don't know what this is (it isn't widely used in FTC Robot programs, I
+         * don't think), it's called an Array, and they're used to store a list of variables in
+         * Java programs.
+         * This array stores 5 heading variables that are very close or equal to our target heading.
+         * We will use them to determine if we are in range of where we want Legacy to turn
+         */
+        int[] headingList = {targetHeading - 2,
+                             targetHeading - 1,
+                             targetHeading,
+                             targetHeading + 1,
+                             targetHeading + 2};
+
+        /* As you can probably see here, the values in an array are mutable, which works very well
+         * in cases like this, where are target heading values might be above or below where our
+         * IMU can read.
+         */
+        for(int i = 0; i < headingList.length; i++) {
+            headingList[i] += headingList[i] < -180 ? 360 :
+                              headingList[i] > 180 ? -360 : 0;
+        }
+
+        // Finally, we reset the Gyro timer and begin our turn!
         gyroTimer.reset();
 
-        if (targetHeading > -angles.firstAngle) {
-            while (targetHeading > -angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, -angles.firstAngle)) {
+        // RIGHT TURN
+        if (direction == "RIGHT") {
+            while (shouldKeepTurning2(headingList)) {
                 updateIMU();
-                drive(-0.2, 0.2);
+                drive(-0.25, 0.25);
                 telemetry.addData("Gyro", -angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
-                telemetry.addData("180 Point?", targetHeading < -160);
                 telemetry.update();
-                foreHeading = -angles.firstAngle;
                 if(gyroTimer.milliseconds() % 500 == 0) {       // Every 1/2 second that passes...
                     previousMotorPosition = currentMotorPosition;
                     currentMotorPosition = rfDriveM.getCurrentPosition();
-                    if(Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
+                    if (Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
                             Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) > -20) {
                         telemetry.addData("Status", "Rammed!");
                         telemetry.update();
                         driveStop();
-                        sleep(3000);
+                        sleep(1000);
                         break;
                     }
                 }
-                if(isStopRequested()) {
+                if(isStopRequested()) {             // Break if we hit stop
                     break;
                 }
-
             }
+        // LEFT TURN
         } else {
-            while (targetHeading < -angles.firstAngle && shouldKeepTurning(targetHeading, foreHeading, -angles.firstAngle)) {
+            while (shouldKeepTurning2(headingList)) {
                 updateIMU();
-                drive(0.2, -0.2);
+                drive(0.25, -0.25);
                 telemetry.addData("Gyro", -angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
-                telemetry.addData("180 Point?", shouldKeepTurning(targetHeading, foreHeading, -angles.firstAngle));
                 telemetry.update();
-                foreHeading = -angles.firstAngle;
-                if(gyroTimer.milliseconds() % 500 == 0) {       // Every 1/2 second that passes...
+                if (gyroTimer.milliseconds() % 500 == 0) {       // Every 1/2 second that passes...
                     previousMotorPosition = currentMotorPosition;
                     currentMotorPosition = rfDriveM.getCurrentPosition();
-                    if(Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
+                    if (Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) < 20 ||
                             Math.abs(currentMotorPosition) + Math.abs(previousMotorPosition) > -20) {
                         telemetry.addData("Status", "Rammed!");
                         telemetry.update();
                         driveStop();
-                        sleep(3000);
+                        sleep(1000);
                         break;
                     }
                 }
-                if(isStopRequested()) {             // Found this one boolean in LinearOpMode
-                    break;                          // that checks if STOP is hit.
-                }                                   // Could help with the OpModeStuckInStop issues.
+                if (isStopRequested()) {
+                    break;
+                }
             }
         }
         driveStop();
@@ -336,21 +345,21 @@ public class legacy_auto extends LinearOpMode {
         switch(Alliance + Stone) {
             case "redleft":
                 encoderDrive(12, 0.23, 1);
-                imuTurn(-80);
+                imuTurn(-90, "LEFT");
                 break;
             case "redright":
-                imuTurn(90);
+                imuTurn(90, "RIGHT");
                 encoderDrive(12, 0.23, -1);
-                imuTurn(80);
+                imuTurn(90, "RIGHT");
                 break;
             case "blueleft":
-                imuTurn(90);
+                imuTurn(90, "RIGHT");
                 encoderDrive(-11, 0.23, -1);
-                imuTurn(-90);
+                imuTurn(-90, "LEFT");
                 break;
             case "blueright":
                 encoderDrive(-12, 0.23, -1);
-                imuTurn(-90);
+                imuTurn(-90, "LEFT");
                 break;
         }
     }
@@ -360,7 +369,7 @@ public class legacy_auto extends LinearOpMode {
             case "redleft":
                 switch (Key) {
                     case "KeyLeft":
-                        imuTurn(-22);
+                        imuTurn(-22, "LEFT");
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -374,14 +383,14 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(14);
+                        imuTurn(14, "RIGHT");
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     default:
-                        imuTurn(-22);
+                        imuTurn(-22, "LEFT");
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -392,7 +401,7 @@ public class legacy_auto extends LinearOpMode {
             case "redright":
                 switch (Key) {
                     case "KeyLeft":
-                        imuTurn(-13);
+                        imuTurn(-13, "LEFT");
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -405,7 +414,7 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(16);
+                        imuTurn(16, "RIGHT");
                         moveSliders(RIGHT, 200);
                         drive(-0.23, -0.23);
                         sleep(1000);
@@ -413,7 +422,7 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     default:
-                        imuTurn(-13);
+                        imuTurn(-13, "LEFT");
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -424,7 +433,7 @@ public class legacy_auto extends LinearOpMode {
             case "blueleft":
                 switch (Key) {
                     case "KeyLeft":
-                        imuTurn(-20);
+                        imuTurn(-20, "LEFT");
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -438,7 +447,7 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(14);
+                        imuTurn(14, "RIGHT");
                         moveSliders(LEFT, 200);
                         sleep(200);
                         drive(-0.23, -0.23);
@@ -447,7 +456,7 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     default:
-                        imuTurn(-20);
+                        imuTurn(-20, "LEFT");
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -458,7 +467,7 @@ public class legacy_auto extends LinearOpMode {
             case "blueright":
                 switch (Key) {
                     case "KeyLeft":
-                        imuTurn(-15);
+                        imuTurn(-15, "LEFT");
                         drive(-0.23, -0.23);
                         sleep(1000);
                         driveStop();
@@ -471,7 +480,7 @@ public class legacy_auto extends LinearOpMode {
                         grabbers(lGlyphSRelease, rGlyphSRelease);
                         break;
                     case "KeyRight":
-                        imuTurn(14);
+                        imuTurn(14, "RIGHT");
                         sleep(200);
                         drive(-0.23, -0.23);
                         sleep(1000);
@@ -542,10 +551,13 @@ public class legacy_auto extends LinearOpMode {
     }
 
     private void bumpJewelShort(String alliance, String jewel) throws InterruptedException {
-        double knockVal =   ((alliance == "blue" && jewel == "RED_BLUE") ||
-                            (alliance == "red" && jewel == "BLUE_RED")) ? 0 :
-                            ((alliance == "red" && jewel == "RED_BLUE") ||
-                            (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5;
+        double knockVal =
+                    jewelBumpType == "correct" ? (
+                    ((alliance == "blue" && jewel == "RED_BLUE") || (alliance == "red"  && jewel == "BLUE_RED")) ? 0 :
+                    ((alliance == "red"  && jewel == "RED_BLUE") || (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5) :
+                    jewelBumpType == "wrong" ? (
+                    ((alliance == "blue" && jewel == "BLUE_RED") || (alliance == "red"  && jewel == "RED_BLUE")) ? 0 :
+                    ((alliance == "red"  && jewel == "BLUE_RED") || (alliance == "blue" && jewel == "RED_BLUE")) ? 1 : 0.5) : 0.5;
         if(knockVal != 0.5) {
             jewelExtendS.setPosition(extendArm);
             sleep(750);
@@ -585,6 +597,21 @@ public class legacy_auto extends LinearOpMode {
         return vufkey;
     }
 
+    private void grabRelic() {
+        new Thread(new Runnable() {
+            public void run() {
+                //
+                // Relic Grabber Code Here
+                //
+
+                /* //Use this to sleep in subthreads
+		        try {
+		            Thread.sleep(1000);
+		        } catch(InterruptedException ie) {}
+		        */
+            }
+        }).start();
+    }
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -670,6 +697,24 @@ public class legacy_auto extends LinearOpMode {
 
         sleep(500);
         telemetry.addData("Status", "Initialized");
+        telemetry.addData("Selection", "X for Extra Glyph Load, B for no Extra Load");        // Do we want an extra glyph load?
+        telemetry.update();                                                                   // Only for Blue Right or Red Left stone
+        if((alliance == "blue" && stone == "right") ||
+           (alliance == "red" && stone == "left")) {
+            while (getMoreGlyphs == "") {
+                if (gamepad1.x) {
+                    getMoreGlyphs = "Yes";
+                } else if (gamepad1.b) {
+                    getMoreGlyphs = "No";
+                }
+                if (isStopRequested()) {
+                    break;
+                }
+            }
+        }
+
+        sleep(500);
+        telemetry.addData("Status", "Initialized");
         telemetry.addData("Selection", "X for Correct Jewel, B for Wrong Jewel, Y for No Jewel");        // Which side are you on?
         telemetry.update();
         while (jewelBumpType == "" && !isStopRequested()) {
@@ -704,6 +749,8 @@ public class legacy_auto extends LinearOpMode {
                     telemetry.addData("Stone", "Right");
                     break;
             }
+            telemetry.addData("Jewel Hit Type", jewelBumpType);
+            telemetry.addData("Extra Glyph Load?", getMoreGlyphs);
             telemetry.addData("Press A if this is ok", "");
             telemetry.update();
             if (isStopRequested()) {
@@ -738,7 +785,7 @@ public class legacy_auto extends LinearOpMode {
 
         waitForStart();
 
-        jewelOrder = jewelDetector.getCurrentOrder().toString(); //Store the jewel order for use later on.
+        jewelOrder = jewelDetector.getLastOrder().toString(); //Store the jewel order for use later on.
         jewelDetector.disable(); //Once we have the jewel order, disable OpenCV so we can activate Vuforia.
         jewelDetector = null;
         telemetry.addData("Jewel Order", jewelOrder);
@@ -747,7 +794,7 @@ public class legacy_auto extends LinearOpMode {
 //  ====================================== AUTONOMOUS ==============================================
 
         if(jewelBumpType != "none") {
-            bumpJewel(alliance, jewelOrder);
+            bumpJewelShort(alliance, jewelOrder);
         }
         String cryptoKey = activateVuforia();
         telemetry.addData("Crytpokey", cryptoKey);
@@ -768,7 +815,7 @@ public class legacy_auto extends LinearOpMode {
         sleep(500);
         drive(0.23, 0.23);
         sleep(400);
-        imuTurn(45);
+        imuTurn(45, "RIGHT");
 
 
         initForTeleop();    //Because initializing in teleop moves servos before teleop begins, this
