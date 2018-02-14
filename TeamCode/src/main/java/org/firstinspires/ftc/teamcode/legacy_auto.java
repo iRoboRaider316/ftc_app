@@ -52,6 +52,8 @@ public class legacy_auto extends LinearOpMode {
     private double rGlyphSRelease = 0;
     private double lGlyphSGrasp = 0;              //After testing, these positions were optimal for grasping the glyphs.
     private double rGlyphSGrasp = 1;
+    private double lGlyphSAlmostGrasp = 0.5;              //After testing, these positions were optimal for grasping the glyphs.
+    private double rGlyphSAlmostGrasp = 0.6;
 
     DcMotorSimple.Direction FORWARD = DcMotorSimple.Direction.FORWARD;
     DcMotorSimple.Direction BACKWARD = DcMotorSimple.Direction.REVERSE;
@@ -341,161 +343,156 @@ public class legacy_auto extends LinearOpMode {
         }
     }
 
-    public void driveToColumn(String Alliance, String Stone) throws InterruptedException {
-        switch(Alliance + Stone) {
-            case "redleft":
-                encoderDrive(12, 0.23, 1);
-                imuTurn(-90, "LEFT");
+    private void deliverGlyph (String alliance, String stone, String cryptoKey) throws InterruptedException {
+        switch (alliance + stone) {
+            case ("blueleft") :
+                switch (cryptoKey) {
+                    default :
+                    case ("KeyLeft") :
+                        moveSliders(RIGHT, 2600);
+                        encoderDrive(-8, 0.23, -1);
+                        driveStop();
+                        glyphLifter("DOWN");
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                    case ("KeyCenter") :
+                        break;
+                    case ("KeyRight") :
+                        break;
+                }
                 break;
-            case "redright":
-                imuTurn(90, "RIGHT");
-                encoderDrive(12, 0.23, -1);
-                imuTurn(90, "RIGHT");
+            case ("blueright") :
+                switch (cryptoKey) {
+                    case ("KeyLeft") :
+                        encoderDrive(-5, 0.23, -1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                    case ("KeyCenter") :
+                        encoderDrive(-12, 0.23, -1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                    case ("KeyRight") :
+                        encoderDrive(-19, 0.23, -1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                    default:
+                        encoderDrive(-12, 0.23, -1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                }
                 break;
-            case "blueleft":
-                imuTurn(90, "RIGHT");
-                encoderDrive(-11, 0.23, -1);
-                imuTurn(-90, "LEFT");
+            case ("redleft") :
+                switch (cryptoKey) {
+                    case ("KeyLeft") :
+                        encoderDrive(5, 0.23, 1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                    case ("KeyCenter") :
+                        encoderDrive(12, 0.23, 1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                    case ("KeyRight") :
+                        encoderDrive(19, 0.23, 1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                    default:
+                        encoderDrive(12, 0.23, 1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        drive(-0.23, -0.23);
+                        sleep(1000);
+                        driveStop();
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                }
                 break;
-            case "blueright":
-                encoderDrive(-12, 0.23, -1);
-                imuTurn(-90, "LEFT");
+            case ("redright") :
+                switch (cryptoKey) {
+                    case ("KeyLeft") :
+                        break;
+                    case ("KeyCenter") :
+                        break;
+                    case ("KeyRight") :
+                        break;
+                    default:
+                        break;
+                }
                 break;
         }
     }
 
-    public void placeGlyph(String Alliance, String Stone, String Key) throws InterruptedException {
-        switch(Alliance + Stone) {
-            case "redleft":
-                switch (Key) {
-                    case "KeyLeft":
-                        imuTurn(-22, "LEFT");
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    case "KeyCenter":
-                        moveSliders(LEFT, 200);
-                        drive(-0.23, -0.23);
-                        sleep(900);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    case "KeyRight":
-                        imuTurn(14, "RIGHT");
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    default:
-                        imuTurn(-22, "LEFT");
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                }
-                break;
-            case "redright":
-                switch (Key) {
-                    case "KeyLeft":
-                        imuTurn(-13, "LEFT");
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    case "KeyCenter":
-                        drive(-0.23, -0.23);
-                        sleep(700);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    case "KeyRight":
-                        imuTurn(16, "RIGHT");
-                        moveSliders(RIGHT, 200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    default:
-                        imuTurn(-13, "LEFT");
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                }
-                break;
-            case "blueleft":
-                switch (Key) {
-                    case "KeyLeft":
-                        imuTurn(-20, "LEFT");
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    case "KeyCenter":
-                        moveSliders(RIGHT, 200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    case "KeyRight":
-                        imuTurn(14, "RIGHT");
-                        moveSliders(LEFT, 200);
-                        sleep(200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    default:
-                        imuTurn(-20, "LEFT");
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                }
-                break;
-            case "blueright":
-                switch (Key) {
-                    case "KeyLeft":
-                        imuTurn(-15, "LEFT");
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    case "KeyCenter":
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    case "KeyRight":
-                        imuTurn(14, "RIGHT");
-                        sleep(200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                    default:
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
-                        grabbers(lGlyphSRelease, rGlyphSRelease);
-                        break;
-                }
-                break;
-        }
+    private void pushGlyph () throws InterruptedException {
+        drive(0.23, 0.23);
+        sleep(700);
+        driveStop();
+        grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        glyphLifter("DOWN");
+        drive(-0.23, -0.23);
+        sleep(500);
+        drive(0.23, 0.23);
+        sleep(400);
+        driveStop();
+        //imuTurn(45, "RIGHT");
+    }
+
+    public void deliverExtraGlyph() throws InterruptedException {
+        imuTurn(190, "RIGHT");
+        sleep(200);
+        encoderDrive(-40, 0.23, -1);
+        grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        glyphLifter("UP");
+        glyphLifter("UP");
+        encoderDrive(40, 0.23, 1);
+        imuTurn(-190, "LEFT");
+        sleep(200);
+        drive(-0.23, -0.23);
+        sleep(1000);
+        driveStop();
+        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
     }
 
     private void bumpJewel(String alliance, String jewel) throws InterruptedException {
@@ -804,19 +801,13 @@ public class legacy_auto extends LinearOpMode {
         grabbers(lGlyphSGrasp, rGlyphSGrasp);
         glyphLifter("UP");
         driveOffStone(alliance);
-        driveToColumn(alliance, stone);
-        placeGlyph(alliance, stone, cryptoKey);
-        drive(0.23, 0.23);
-        sleep(100);
-        grabbers(lGlyphSGrasp, rGlyphSGrasp);
-        driveStop();
-        glyphLifter("DOWN");
-        drive(-0.23, -0.23);
-        sleep(500);
-        drive(0.23, 0.23);
-        sleep(400);
-        imuTurn(45, "RIGHT");
+        deliverGlyph(alliance, stone, cryptoKey);
+        pushGlyph();
 
+        if(getMoreGlyphs == "Yes") {
+            deliverExtraGlyph();
+            pushGlyph();
+        }
 
         initForTeleop();    //Because initializing in teleop moves servos before teleop begins, this
         sleep(1000);        //function allows us to initialize legally in the correct position.
