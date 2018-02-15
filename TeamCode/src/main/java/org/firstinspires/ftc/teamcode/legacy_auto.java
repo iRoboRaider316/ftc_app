@@ -48,7 +48,7 @@ public class legacy_auto extends LinearOpMode {
     private double hitLeft = 0;      //jewelHitS knock left jewel variable
     private double hitRight = 1;     //jewelHitS knocks right jewel variable
 
-    private double lGlyphSRelease = 1;               //Glyph arms will initialize in the open position.
+    private double lGlyphSRelease = 0.8;               //Glyph arms will initialize in the open position.
     private double rGlyphSRelease = 0;
     private double lGlyphSGrasp = 0;              //After testing, these positions were optimal for grasping the glyphs.
     private double rGlyphSGrasp = 1;
@@ -409,42 +409,34 @@ public class legacy_auto extends LinearOpMode {
             case ("redleft") :
                 switch (cryptoKey) {
                     case ("KeyLeft") :
-                        encoderDrive(5, 0.23, 1);
+                        encoderDrive(19, 0.23, 1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
+                        encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
                         break;
                     case ("KeyCenter") :
-                        encoderDrive(12, 0.23, 1);
+                        encoderDrive(10, 0.23, 1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
+                        encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
                         break;
                     case ("KeyRight") :
-                        encoderDrive(19, 0.23, 1);
+                        encoderDrive(3, 0.23, 1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
+                        encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
                         break;
                     default:
-                        encoderDrive(12, 0.23, 1);
+                        encoderDrive(10, 0.23, 1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
+                        encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
                         break;
@@ -466,32 +458,44 @@ public class legacy_auto extends LinearOpMode {
     }
 
     private void pushGlyph () throws InterruptedException {
-        drive(0.23, 0.23);
-        sleep(700);
-        driveStop();
-        grabbers(lGlyphSGrasp, rGlyphSGrasp);
-        glyphLifter("DOWN");
+        encoderDrive(6, 0.3, 1);/*
         drive(-0.23, -0.23);
         sleep(500);
         drive(0.23, 0.23);
-        sleep(400);
-        driveStop();
+        sleep(600);
+        driveStop();*/
         //imuTurn(45, "RIGHT");
     }
 
-    public void deliverExtraGlyph() throws InterruptedException {
-        imuTurn(190, "RIGHT");
+    public void deliverExtraGlyph(String Key) throws InterruptedException {
+        imuTurn(-190, "LEFT");
+        glyphLifter("DOWN");
+        grabbers(lGlyphSRelease, rGlyphSRelease);
         sleep(200);
-        encoderDrive(-40, 0.23, -1);
+        encoderDrive(-38, 0.3, -1);
         grabbers(lGlyphSGrasp, rGlyphSGrasp);
         glyphLifter("UP");
         glyphLifter("UP");
-        encoderDrive(40, 0.23, 1);
-        imuTurn(-190, "LEFT");
-        sleep(200);
-        drive(-0.23, -0.23);
-        sleep(1000);
+        encoderDrive(37, 0.3, 1);
+        switch (Key) {
+            case "KeyLeft":
+                imuTurn(-170, "LEFT");
+                break;
+            case "KeyCenter":
+                imuTurn(-180, "LEFT");
+                break;
+            case "KeyRight":
+                imuTurn(170, "RIGHT");
+                break;
+            default:
+                imuTurn(-170, "LEFT");
+                break;
+        }
+        sleep(100);
+        drive(-0.3, -0.3);
+        sleep(500);
         driveStop();
+        glyphLifter("DOWN");
         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
     }
 
@@ -805,7 +809,7 @@ public class legacy_auto extends LinearOpMode {
         pushGlyph();
 
         if(getMoreGlyphs == "Yes") {
-            deliverExtraGlyph();
+            deliverExtraGlyph(cryptoKey);
             pushGlyph();
         }
 
