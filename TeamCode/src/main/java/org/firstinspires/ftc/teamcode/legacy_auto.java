@@ -52,6 +52,8 @@ public class legacy_auto extends LinearOpMode {
     private double rGlyphSRelease = 0;
     private double lGlyphSGrasp = 0;              //After testing, these positions were optimal for grasping the glyphs.
     private double rGlyphSGrasp = 1;
+    private double lGlyphSAlmostGrasp = 0.5;
+    private double rGlyphSAlmostGrasp = 0.6;
 
     DcMotorSimple.Direction FORWARD = DcMotorSimple.Direction.FORWARD;
     DcMotorSimple.Direction BACKWARD = DcMotorSimple.Direction.REVERSE;
@@ -132,10 +134,11 @@ public class legacy_auto extends LinearOpMode {
     private void glyphLifter(String direction) {
         if(direction == "UP") {
             glyphLiftM.setPower(1);
-        } else {
+            sleep(400);
+        } else if (direction == "DOWN") {
             glyphLiftM.setPower(-0.5);
+            sleep(300);
         }
-        sleep(400);
         glyphLiftM.setPower(0);
     }
 
@@ -568,10 +571,112 @@ public class legacy_auto extends LinearOpMode {
             jewelExtendS.setPosition(retractArm);
             sleep(500);
         } else {
-            telemetry.addData("Problem with alliance or jewelOrder.", "");
+            telemetry.addData("Problem with alliance or jewelOrder", "    ;-;");
             telemetry.update();
             sleep(3000);
         }
+    }
+
+
+
+    private void deliverGlyph (String alliance, String stone, String cryptoKey) throws InterruptedException {
+        switch (alliance + stone) {
+            case ("blueleft") :
+                switch (cryptoKey) {
+                    default : case ("KeyCenter") :
+                        imuTurn(35, "RIGHT");
+                        driveStop();
+                        encoderDrive(-13, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                    case ("KeyLeft") :
+                        imuTurn(15, "RIGHT");
+                        driveStop();
+                        encoderDrive(-10, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                    case ("KeyRight") :
+                        imuTurn(46, "RIGHT");
+                        driveStop();
+                        encoderDrive(-17, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                }
+                break;
+            case ("blueright") :
+                switch (cryptoKey) {
+                    default : case ("KeyCenter") :
+                        break;
+                    case ("KeyLeft") :
+                        break;
+                    case ("KeyRight") :
+                        break;
+                }
+                break;
+            case ("redleft") :
+                switch (cryptoKey) {
+                    default : case ("KeyCenter") :
+                        break;
+                    case ("KeyLeft") :
+                        break;
+                    case ("KeyRight") :
+                        break;
+                }
+                break;
+            case ("redright") :
+                switch (cryptoKey) {
+                    default : case ("KeyCenter") :
+                        imuTurn(145, "RIGHT");
+                        driveStop();
+                        encoderDrive(-13, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                    case ("KeyLeft") :
+                        imuTurn(134, "RIGHT");
+                        driveStop();
+                        encoderDrive(-17, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                    case ("KeyRight") :
+                        imuTurn(170, "RIGHT");
+                        driveStop();
+                        encoderDrive(-10, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        break;
+                }
+                break;
+        }
+    }
+
+    private void pushGlyph () throws InterruptedException {
+        drive(0.23, 0.23);
+        sleep(600);
+        driveStop();
+        grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        drive(-0.23, -0.23);
+        sleep(600);
+        driveStop();
+        drive(0.23, 0.23);
+        sleep(600);
+        driveStop();
     }
 
     private String activateVuforia () throws InterruptedException {
@@ -591,7 +696,6 @@ public class legacy_auto extends LinearOpMode {
         String vufkey = decryptKey(Targets);
         telemetry.addData("Key Found", vufkey);
         telemetry.update();
-        sleep(1000); //For testing purposes to see the telemetry, we should remove this for the final auto.
 
         this.vuforia.close();
         return vufkey;
@@ -797,25 +901,18 @@ public class legacy_auto extends LinearOpMode {
             bumpJewelShort(alliance, jewelOrder);
         }
         String cryptoKey = activateVuforia();
-        telemetry.addData("Crytpokey", cryptoKey);
+        telemetry.addData("Cryptokey", cryptoKey);
         telemetry.update();
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
         grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        sleep(300);
         glyphLifter("UP");
+
         driveOffStone(alliance);
-        driveToColumn(alliance, stone);
-        placeGlyph(alliance, stone, cryptoKey);
-        drive(0.23, 0.23);
-        sleep(100);
-        grabbers(lGlyphSGrasp, rGlyphSGrasp);
-        driveStop();
-        glyphLifter("DOWN");
-        drive(-0.23, -0.23);
-        sleep(500);
-        drive(0.23, 0.23);
-        sleep(400);
-        imuTurn(45, "RIGHT");
+        deliverGlyph(alliance, stone, cryptoKey);
+        pushGlyph();
+
 
 
         initForTeleop();    //Because initializing in teleop moves servos before teleop begins, this

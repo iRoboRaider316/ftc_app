@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.util.Range;
 public class legacy_teleop extends OpMode {
 
     public DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, glyphLiftM;  //Left front drive, right front drive, left back drive, right back drive.
-    public Servo lArmS, rArmS, jewelExtendS, jewelHitS;
+    public Servo lGlyphS, rGlyphS, jewelExtendS, jewelHitS;
     public CRServo glyphSlideS;
 
     private double lServoArmInit = 0.65;                     //Glyph arms will initialize in the open position./
@@ -51,10 +51,10 @@ public class legacy_teleop extends OpMode {
         glyphLiftM = hardwareMap.dcMotor.get("glyphLiftM");   //Lift motor, Hub 2, port 3
         glyphLiftM.setPower(0);
 
-        lArmS = hardwareMap.servo.get("lGlyphS");     //Left servo arm, Hub 1, port 2
-        lArmS.setPosition(lServoArmInit);
-        rArmS = hardwareMap.servo.get("rGlyphS");     //Right servo arm, Hub 2, port 1
-        rArmS.setPosition(rServoArmInit);
+        lGlyphS = hardwareMap.servo.get("lGlyphS");     //Left servo arm, Hub 1, port 2
+        lGlyphS.setPosition(lServoArmInit);
+        rGlyphS = hardwareMap.servo.get("rGlyphS");     //Right servo arm, Hub 2, port 1
+        rGlyphS.setPosition(rServoArmInit);
 
         glyphSlideS = hardwareMap.crservo.get("glyphSlideS");
         glyphSlideS.setPower(0);
@@ -125,16 +125,16 @@ public class legacy_teleop extends OpMode {
         }
 
         if (gamepad2.b) { //hitting the "b" button on Gamepad 2 will cause the glypher servos to grasp the glyph
-            lArmS.setPosition(lServoArmGrasp);
-            rArmS.setPosition(rServoArmGrasp);
+            lGlyphS.setPosition(lServoArmGrasp);
+            rGlyphS.setPosition(rServoArmGrasp);
         }
         if (gamepad2.x) { //hitting the "x" button on Gamepad 2 will cause the glypher servos to return to their original position
-            lArmS.setPosition(lServoArmInit);
-            rArmS.setPosition(rServoArmInit);
+            lGlyphS.setPosition(lServoArmInit);
+            rGlyphS.setPosition(rServoArmInit);
         }
         if (gamepad2.y) {   //hitting the "y" button on Gamepad 2 will cause the glypher servos to expand slightly larger than grasping the glyphs.
-            lArmS.setPosition(lServoArmAlmostGrasp);
-            rArmS.setPosition(rServoArmAlmostGrasp);
+            lGlyphS.setPosition(lServoArmAlmostGrasp);
+            rGlyphS.setPosition(rServoArmAlmostGrasp);
         }
 
         if (gamepad1.left_trigger > 0.1) {     //If left trigger is pushed, set power to full forward.
