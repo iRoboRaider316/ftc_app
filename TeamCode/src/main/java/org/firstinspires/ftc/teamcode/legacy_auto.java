@@ -337,7 +337,7 @@ public class legacy_auto extends LinearOpMode {
     public void driveOffStone(String Alliance) throws InterruptedException {
         if(alliance == "red") {
             encoderDrive(24, 0.23, 1);
-            sleep(500);
+            sleep(200);
         } else if(alliance == "blue") {
             encoderDrive(-25, 0.23, -1);
         }
@@ -365,44 +365,40 @@ public class legacy_auto extends LinearOpMode {
             case ("blueright") :
                 switch (cryptoKey) {
                     case ("KeyLeft") :
-                        encoderDrive(-5, 0.23, -1);
+                        encoderDrive(-4.5, 0.23, -1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
+                        encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                     case ("KeyCenter") :
                         encoderDrive(-12, 0.23, -1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
+                        encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                     case ("KeyRight") :
                         encoderDrive(-19, 0.23, -1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
+                        encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                     default:
                         encoderDrive(-12, 0.23, -1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
-                        drive(-0.23, -0.23);
-                        sleep(1000);
-                        driveStop();
+                        encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                 }
                 break;
@@ -415,6 +411,7 @@ public class legacy_auto extends LinearOpMode {
                         encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                     case ("KeyCenter") :
                         encoderDrive(10, 0.23, 1);
@@ -423,6 +420,7 @@ public class legacy_auto extends LinearOpMode {
                         encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                     case ("KeyRight") :
                         encoderDrive(3, 0.23, 1);
@@ -431,6 +429,7 @@ public class legacy_auto extends LinearOpMode {
                         encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                     default:
                         encoderDrive(10, 0.23, 1);
@@ -439,6 +438,7 @@ public class legacy_auto extends LinearOpMode {
                         encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                 }
                 break;
@@ -457,18 +457,8 @@ public class legacy_auto extends LinearOpMode {
         }
     }
 
-    private void pushGlyph () throws InterruptedException {
-        encoderDrive(6, 0.3, 1);/*
-        drive(-0.23, -0.23);
-        sleep(500);
-        drive(0.23, 0.23);
-        sleep(600);
-        driveStop();*/
-        //imuTurn(45, "RIGHT");
-    }
-
     public void deliverExtraGlyph(String Key) throws InterruptedException {
-        imuTurn(-190, "LEFT");
+        imuTurn(-180, "LEFT");
         glyphLifter("DOWN");
         grabbers(lGlyphSRelease, rGlyphSRelease);
         sleep(200);
@@ -479,16 +469,16 @@ public class legacy_auto extends LinearOpMode {
         encoderDrive(37, 0.3, 1);
         switch (Key) {
             case "KeyLeft":
-                imuTurn(-170, "LEFT");
-                break;
-            case "KeyCenter":
                 imuTurn(-180, "LEFT");
                 break;
+            case "KeyCenter":
+                imuTurn(175, "RIGHT");
+                break;
             case "KeyRight":
-                imuTurn(170, "RIGHT");
+                imuTurn(160, "RIGHT");
                 break;
             default:
-                imuTurn(-170, "LEFT");
+                imuTurn(175, "RIGHT");
                 break;
         }
         sleep(100);
@@ -497,6 +487,7 @@ public class legacy_auto extends LinearOpMode {
         driveStop();
         glyphLifter("DOWN");
         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+        encoderDrive(4, 0.3, 1);
     }
 
     private void bumpJewel(String alliance, String jewel) throws InterruptedException {
@@ -806,11 +797,9 @@ public class legacy_auto extends LinearOpMode {
         glyphLifter("UP");
         driveOffStone(alliance);
         deliverGlyph(alliance, stone, cryptoKey);
-        pushGlyph();
 
         if(getMoreGlyphs == "Yes") {
             deliverExtraGlyph(cryptoKey);
-            pushGlyph();
         }
 
         initForTeleop();    //Because initializing in teleop moves servos before teleop begins, this
