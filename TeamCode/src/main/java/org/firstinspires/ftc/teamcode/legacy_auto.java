@@ -334,6 +334,7 @@ public class legacy_auto extends LinearOpMode {
         driveStop();
     }
 
+    // Used to get off stone. Should be easy fix...
     public void driveOffStone(String Alliance) throws InterruptedException {
         if(alliance == "red") {
             encoderDrive(24, 0.23, 1);
@@ -343,14 +344,15 @@ public class legacy_auto extends LinearOpMode {
         }
     }
 
+    // "driveToColumn" and "placeGlyph" are replaced with "deliverGlyph" in order to shorten code
     private void deliverGlyph (String alliance, String stone, String cryptoKey) throws InterruptedException {
         switch (alliance + stone) {
             case ("blueleft") :
                 switch (cryptoKey) {
                     default :
                     case ("KeyLeft") :
-                        moveSliders(RIGHT, 2600);
-                        encoderDrive(-8, 0.23, -1);
+                        moveSliders(RIGHT, 2600);                  // Haven't really touched this
+                        encoderDrive(-8, 0.23, -1);                // as Jake was working on it.
                         driveStop();
                         glyphLifter("DOWN");
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
@@ -365,13 +367,13 @@ public class legacy_auto extends LinearOpMode {
             case ("blueright") :
                 switch (cryptoKey) {
                     case ("KeyLeft") :
-                        encoderDrive(-4.5, 0.23, -1);
-                        imuTurn(-90, "LEFT");
+                        encoderDrive(-4.5, 0.23, -1);                       // Drive in front of desired cryptobox
+                        imuTurn(-90, "LEFT");                               // Turn to desired cryptobox
+                        sleep(200);                                         // Just a sleep to keep Legacy from accidentally shifting left
+                        encoderDrive(-7, 0.23, -1);                         // Drive into column
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);   // "Dropping Glyph..."
                         sleep(200);
-                        encoderDrive(-7, 0.23, -1);
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
-                        sleep(200);
-                        encoderDrive(6, 0.3, 1);
+                        encoderDrive(6, 0.3, 1);                            // Drive backward
                         break;
                     case ("KeyCenter") :
                         encoderDrive(-12, 0.23, -1);
@@ -457,6 +459,7 @@ public class legacy_auto extends LinearOpMode {
         }
     }
 
+    // Used to get a brand new glyph load from the center pile. NOTE: Not found in master.state yet
     public void deliverExtraGlyph(String Key) throws InterruptedException {
         imuTurn(-180, "LEFT");
         glyphLifter("DOWN");
