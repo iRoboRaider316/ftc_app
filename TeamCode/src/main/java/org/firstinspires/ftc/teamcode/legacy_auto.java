@@ -48,7 +48,7 @@ public class legacy_auto extends LinearOpMode {
     private double hitLeft = 0;      //jewelHitS knock left jewel variable
     private double hitRight = 1;     //jewelHitS knocks right jewel variable
 
-    private double lGlyphSRelease = 1;               //Glyph arms will initialize in the open position.
+    private double lGlyphSRelease = 0.8;               //Glyph arms will initialize in the open position.
     private double rGlyphSRelease = 0;
     private double lGlyphSGrasp = 0;              //After testing, these positions were optimal for grasping the glyphs.
     private double rGlyphSGrasp = 1;
@@ -134,11 +134,10 @@ public class legacy_auto extends LinearOpMode {
     private void glyphLifter(String direction) {
         if(direction == "UP") {
             glyphLiftM.setPower(1);
-            sleep(400);
-        } else if (direction == "DOWN") {
+        } else {
             glyphLiftM.setPower(-0.5);
-            sleep(300);
         }
+        sleep(400);
         glyphLiftM.setPower(0);
     }
 
@@ -335,10 +334,11 @@ public class legacy_auto extends LinearOpMode {
         driveStop();
     }
 
+    // Used to get off stone. Should be easy fix...
     public void driveOffStone(String Alliance) throws InterruptedException {
         if(alliance == "red") {
             encoderDrive(24, 0.23, 1);
-            sleep(500);
+            sleep(200);
         } else if(alliance == "blue") {
             encoderDrive(-25, 0.23, -1);
         }
@@ -379,21 +379,63 @@ public class legacy_auto extends LinearOpMode {
                 break;
             case ("blueright") :
                 switch (cryptoKey) {
-                    default : case ("KeyCenter") :
-                        break;
                     case ("KeyLeft") :
+                        encoderDrive(-4.5, 0.23, -1);                       // Drive in front of desired cryptobox
+                        imuTurn(-90, "LEFT");                               // Turn to desired cryptobox
+                        sleep(200);                                         // Just a sleep to keep Legacy from accidentally shifting left
+                        encoderDrive(-7, 0.23, -1);                         // Drive into column
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);   // "Dropping Glyph..."
+                        sleep(200);
+                        encoderDrive(6, 0.3, 1);                            // Drive backward
+                        break;
+                    default: case ("KeyCenter") :
+                        encoderDrive(-12, 0.23, -1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        encoderDrive(-7, 0.23, -1);
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                     case ("KeyRight") :
+                        encoderDrive(-19, 0.23, -1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        encoderDrive(-7, 0.23, -1);
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                 }
                 break;
             case ("redleft") :
                 switch (cryptoKey) {
-                    default : case ("KeyCenter") :
-                        break;
                     case ("KeyLeft") :
+                        encoderDrive(19, 0.23, 1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        encoderDrive(-7, 0.23, -1);
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        encoderDrive(6, 0.3, 1);
+                        break;
+                    default: case ("KeyCenter") :
+                        encoderDrive(10, 0.23, 1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        encoderDrive(-7, 0.23, -1);
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                     case ("KeyRight") :
+                        encoderDrive(3, 0.23, 1);
+                        imuTurn(-90, "LEFT");
+                        sleep(200);
+                        encoderDrive(-7, 0.23, -1);
+                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        sleep(200);
+                        encoderDrive(6, 0.3, 1);
                         break;
                 }
                 break;
@@ -429,6 +471,40 @@ public class legacy_auto extends LinearOpMode {
                 }
                 break;
         }
+    }
+
+    // Used to get a brand new glyph load from the center pile. NOTE: Not found in master.state yet
+    public void deliverExtraGlyph(String Key) throws InterruptedException {
+        imuTurn(-180, "LEFT");
+        glyphLifter("DOWN");
+        grabbers(lGlyphSRelease, rGlyphSRelease);
+        sleep(200);
+        encoderDrive(-38, 0.3, -1);
+        grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        glyphLifter("UP");
+        glyphLifter("UP");
+        encoderDrive(37, 0.3, 1);
+        switch (Key) {
+            case "KeyLeft":
+                imuTurn(-180, "LEFT");
+                break;
+            case "KeyCenter":
+                imuTurn(175, "RIGHT");
+                break;
+            case "KeyRight":
+                imuTurn(160, "RIGHT");
+                break;
+            default:
+                imuTurn(175, "RIGHT");
+                break;
+        }
+        sleep(100);
+        drive(-0.3, -0.3);
+        sleep(500);
+        driveStop();
+        glyphLifter("DOWN");
+        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+        encoderDrive(4, 0.3, 1);
     }
 
     private void bumpJewelShort(String alliance, String jewel) throws InterruptedException {
@@ -488,22 +564,6 @@ public class legacy_auto extends LinearOpMode {
         drive(0.23, 0.23);
         sleep(600);
         driveStop();
-    }
-
-    private void grabRelic() {
-        new Thread(new Runnable() {
-            public void run() {
-                //
-                // Relic Grabber Code Here
-                //
-
-                /* //Use this to sleep in subthreads
-		        try {
-		            Thread.sleep(1000);
-		        } catch(InterruptedException ie) {}
-		        */
-            }
-        }).start();
     }
 
     @Override
@@ -702,7 +762,9 @@ public class legacy_auto extends LinearOpMode {
         deliverGlyph(alliance, stone, cryptoKey);       //Deliver the glyph.
         pushGlyph();                                    //Push the glyph better inside the cryptobox.
 
-
+        if(getMoreGlyphs == "Yes") {
+            deliverExtraGlyph(cryptoKey);
+        }
 
         initForTeleop();    //Because initializing in teleop moves servos before teleop begins, this
         sleep(1000);        //function allows us to initialize legally in the correct position.
