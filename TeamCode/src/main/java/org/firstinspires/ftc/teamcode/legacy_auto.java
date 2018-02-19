@@ -344,239 +344,6 @@ public class legacy_auto extends LinearOpMode {
         }
     }
 
-//    public void driveToColumn(String Alliance, String Stone) throws InterruptedException {
-//        switch(Alliance + Stone) {
-//            case "redleft":
-//                encoderDrive(12, 0.23, 1);
-//                imuTurn(-90, "LEFT");
-//                break;
-//            case "redright":
-//                imuTurn(90, "RIGHT");
-//                encoderDrive(12, 0.23, -1);
-//                imuTurn(90, "RIGHT");
-//                break;
-//            case "blueleft":
-//                imuTurn(90, "RIGHT");
-//                encoderDrive(-11, 0.23, -1);
-//                imuTurn(-90, "LEFT");
-//                break;
-//            case "blueright":
-//                encoderDrive(-12, 0.23, -1);
-//                imuTurn(-90, "LEFT");
-//                break;
-//        }
-//    }
-//
-//    public void placeGlyph(String Alliance, String Stone, String Key) throws InterruptedException {
-//        switch(Alliance + Stone) {
-//            case "redleft":
-//                switch (Key) {
-//                    case "KeyLeft":
-//                        imuTurn(-22, "LEFT");
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    case "KeyCenter":
-//                        moveSliders(LEFT, 200);
-//                        drive(-0.23, -0.23);
-//                        sleep(900);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    case "KeyRight":
-//                        imuTurn(14, "RIGHT");
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    default:
-//                        imuTurn(-22, "LEFT");
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                }
-//                break;
-//            case "redright":
-//                switch (Key) {
-//                    case "KeyLeft":
-//                        imuTurn(-13, "LEFT");
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    case "KeyCenter":
-//                        drive(-0.23, -0.23);
-//                        sleep(700);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    case "KeyRight":
-//                        imuTurn(16, "RIGHT");
-//                        moveSliders(RIGHT, 200);
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    default:
-//                        imuTurn(-13, "LEFT");
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                }
-//                break;
-//            case "blueleft":
-//                switch (Key) {
-//                    case "KeyLeft":
-//                        imuTurn(-20, "LEFT");
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    case "KeyCenter":
-//                        moveSliders(RIGHT, 200);
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    case "KeyRight":
-//                        imuTurn(14, "RIGHT");
-//                        moveSliders(LEFT, 200);
-//                        sleep(200);
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    default:
-//                        imuTurn(-20, "LEFT");
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                }
-//                break;
-//            case "blueright":
-//                switch (Key) {
-//                    case "KeyLeft":
-//                        imuTurn(-15, "LEFT");
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    case "KeyCenter":
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    case "KeyRight":
-//                        imuTurn(14, "RIGHT");
-//                        sleep(200);
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                    default:
-//                        drive(-0.23, -0.23);
-//                        sleep(1000);
-//                        driveStop();
-//                        grabbers(lGlyphSRelease, rGlyphSRelease);
-//                        break;
-//                }
-//                break;
-//        }
-//    }
-//
-//    private void bumpJewel(String alliance, String jewel) throws InterruptedException {
-//        if (alliance == "blue" && jewel == "RED_BLUE") {
-//            jewelExtendS.setPosition(extendArm);
-//            sleep(750);
-//            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitLeft);
-//            } else { jewelHitS.setPosition(hitRight); }
-//            sleep(500);
-//            jewelHitS.setPosition(hitCenter);
-//            sleep(500);
-//            jewelExtendS.setPosition(retractArm);
-//            sleep(500);
-//        } else if (alliance == "blue" && jewel == "BLUE_RED") {
-//            jewelExtendS.setPosition(extendArm);
-//            sleep(750);
-//            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitRight);
-//            } else { jewelHitS.setPosition(hitLeft); };
-//            sleep(500);
-//            jewelHitS.setPosition(hitCenter);
-//            sleep(500);
-//            jewelExtendS.setPosition(retractArm);
-//            sleep(500);
-//        } else if (alliance == "red" && jewel == "RED_BLUE") {
-//            jewelExtendS.setPosition(extendArm);
-//            sleep(750);
-//            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitRight);
-//            } else { jewelHitS.setPosition(hitLeft); };
-//            sleep(500);
-//            jewelHitS.setPosition(hitCenter);
-//            sleep(500);
-//            jewelExtendS.setPosition(retractArm);
-//            sleep(500);
-//        } else if (alliance == "red" && jewel == "BLUE_RED") {
-//            jewelExtendS.setPosition(extendArm);
-//            sleep(750);
-//            if (jewelBumpType == "correct") {jewelHitS.setPosition(hitLeft);
-//            } else { jewelHitS.setPosition(hitRight); }
-//            sleep(500);
-//            jewelHitS.setPosition(hitCenter);
-//            sleep(500);
-//            jewelExtendS.setPosition(retractArm);
-//            sleep(500);
-//        } else {
-//            if (jewelOrder == "UNKNOWN") {
-//                telemetry.addData("Problem with 'jewelOrder'", "  ;-;");
-//                telemetry.update();
-//                sleep(3000);
-//            } else {
-//                telemetry.addData("Problem with 'alliance'", "  ;-;");
-//            }
-//        }
-//    }
-
-    private void bumpJewelShort(String alliance, String jewel) throws InterruptedException {
-        double knockVal =
-                    jewelBumpType == "correct" ? (
-                    ((alliance == "blue" && jewel == "RED_BLUE") || (alliance == "red"  && jewel == "BLUE_RED")) ? 0 :
-                    ((alliance == "red"  && jewel == "RED_BLUE") || (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5) :
-                    jewelBumpType == "wrong" ? (
-                    ((alliance == "blue" && jewel == "BLUE_RED") || (alliance == "red"  && jewel == "RED_BLUE")) ? 0 :
-                    ((alliance == "red"  && jewel == "BLUE_RED") || (alliance == "blue" && jewel == "RED_BLUE")) ? 1 : 0.5) : 0.5;
-        if(knockVal != 0.5) {
-            jewelExtendS.setPosition(extendArm);
-            sleep(750);
-            jewelHitS.setPosition(knockVal);
-            sleep(500);
-            jewelHitS.setPosition(hitCenter);
-            sleep(500);
-            jewelExtendS.setPosition(retractArm);
-            sleep(500);
-        } else {
-            telemetry.addData("Problem with alliance or jewelOrder", "    ;-;");
-            telemetry.update();
-            sleep(3000);
-        }
-    }
-
     private void deliverGlyph (String alliance, String stone, String cryptoKey) throws InterruptedException {
         switch (alliance + stone) {         //Switch case with all four balancing stones. Ian's code should
             case ("blueleft") :             //fit in with the blueright and redleft switch cases.
@@ -664,17 +431,28 @@ public class legacy_auto extends LinearOpMode {
         }
     }
 
-    private void pushGlyph () throws InterruptedException {
-        drive(0.23, 0.23);                      //This function pushes the glyph inside the cryptobox once
-        sleep(600);                             //it has already been delivered.
-        driveStop();
-        grabbers(lGlyphSGrasp, rGlyphSGrasp);
-        drive(-0.23, -0.23);
-        sleep(600);
-        driveStop();
-        drive(0.23, 0.23);
-        sleep(600);
-        driveStop();
+    private void bumpJewelShort(String alliance, String jewel) throws InterruptedException {
+        double knockVal =
+                    jewelBumpType == "correct" ? (
+                    ((alliance == "blue" && jewel == "RED_BLUE") || (alliance == "red"  && jewel == "BLUE_RED")) ? 0 :
+                    ((alliance == "red"  && jewel == "RED_BLUE") || (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5) :
+                    jewelBumpType == "wrong" ? (
+                    ((alliance == "blue" && jewel == "BLUE_RED") || (alliance == "red"  && jewel == "RED_BLUE")) ? 0 :
+                    ((alliance == "red"  && jewel == "BLUE_RED") || (alliance == "blue" && jewel == "RED_BLUE")) ? 1 : 0.5) : 0.5;
+        if(knockVal != 0.5) {
+            jewelExtendS.setPosition(extendArm);
+            sleep(750);
+            jewelHitS.setPosition(knockVal);
+            sleep(500);
+            jewelHitS.setPosition(hitCenter);
+            sleep(500);
+            jewelExtendS.setPosition(retractArm);
+            sleep(500);
+        } else {
+            telemetry.addData("Problem with alliance or jewelOrder", "    ;-;");
+            telemetry.update();
+            sleep(3000);
+        }
     }
 
     private String activateVuforia () throws InterruptedException {
@@ -697,6 +475,19 @@ public class legacy_auto extends LinearOpMode {
 
         this.vuforia.close();
         return vufkey;
+    }
+
+    private void pushGlyph () throws InterruptedException {
+        drive(0.23, 0.23);                      //This function pushes the glyph inside the cryptobox once
+        sleep(600);                             //it has already been delivered.
+        driveStop();
+        grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        drive(-0.23, -0.23);
+        sleep(600);
+        driveStop();
+        drive(0.23, 0.23);
+        sleep(600);
+        driveStop();
     }
 
     private void grabRelic() {
