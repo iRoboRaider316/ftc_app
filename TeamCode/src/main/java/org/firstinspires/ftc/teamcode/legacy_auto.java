@@ -376,6 +376,7 @@ public class legacy_auto extends LinearOpMode {
                         sleep(200);
                         break;
                 }
+                pushGlyph();
                 break;
             case ("blueright") :
                 switch (cryptoKey) {
@@ -469,6 +470,7 @@ public class legacy_auto extends LinearOpMode {
                         sleep(200);
                         break;
                 }
+                pushGlyph();
                 break;
         }
     }
@@ -760,7 +762,7 @@ public class legacy_auto extends LinearOpMode {
 
         driveOffStone(alliance);                        //Drive off the balancing stone.
         deliverGlyph(alliance, stone, cryptoKey);       //Deliver the glyph.
-        pushGlyph();                                    //Push the glyph better inside the cryptobox.
+
 
         if(getMoreGlyphs == "Yes") {
             deliverExtraGlyph(cryptoKey);
