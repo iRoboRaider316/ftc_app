@@ -381,7 +381,7 @@ public class legacy_auto extends LinearOpMode {
             case ("blueright") :
                 switch (cryptoKey) {
                     case ("KeyLeft") :
-                        encoderDrive(-4.5, 0.23, -1);                       // Drive in front of desired cryptobox
+                        encoderDrive(-4, 0.23, -1);                         // Drive in front of desired cryptobox
                         imuTurn(-90, "LEFT");                               // Turn to desired cryptobox
                         sleep(200);                                         // Just a sleep to keep Legacy from accidentally shifting left
                         encoderDrive(-7, 0.23, -1);                         // Drive into column
@@ -430,7 +430,7 @@ public class legacy_auto extends LinearOpMode {
                         encoderDrive(6, 0.3, 1);
                         break;
                     case ("KeyRight") :
-                        encoderDrive(3, 0.23, 1);
+                        encoderDrive(2.5, 0.23, 1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
                         encoderDrive(-7, 0.23, -1);
@@ -485,7 +485,7 @@ public class legacy_auto extends LinearOpMode {
         grabbers(lGlyphSGrasp, rGlyphSGrasp);
         glyphLifter("UP");
         glyphLifter("UP");
-        encoderDrive(37, 0.3, 1);
+        encoderDrive(30, 0.3, 1);
         switch (Key) {
             case "KeyLeft":
                 imuTurn(-180, "LEFT");
@@ -502,7 +502,7 @@ public class legacy_auto extends LinearOpMode {
         }
         sleep(100);
         drive(-0.3, -0.3);
-        sleep(500);
+        sleep(1000);
         driveStop();
         glyphLifter("DOWN");
         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
