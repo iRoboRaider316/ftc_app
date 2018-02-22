@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+
 /**
  * Created by jrahm on 6/14/17.
  */
@@ -17,6 +19,7 @@ public class legacy_teleop extends OpMode {
     public DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, glyphLiftM;  //Left front drive, right front drive, left back drive, right back drive.
     public Servo lGlyphS, rGlyphS, jewelExtendS, jewelHitS;
     public CRServo glyphSlideS;
+    DigitalChannel sensorDigitalMagnetic;
 
     private double lServoArmInit = 0.65;                     //Glyph arms will initialize in the open position./
     private double rServoArmInit = 0.4;
@@ -36,6 +39,10 @@ public class legacy_teleop extends OpMode {
     private double hitLeft = 0;      //jewelHitS Hit left jewel variable
     private double hitPLeft = .25;   //Protects arm from falling in case of power outages.
     private double hitRight = 1;     //jewelHitS Hits right jewel variable
+
+    enum SlippyState {
+        Idle, LookingMagnet, FoundMagnet                    //These are the different states that the
+    }
 
     public void init () {
 
@@ -69,7 +76,13 @@ public class legacy_teleop extends OpMode {
         rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         glyphLiftM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        sensorDigitalMagnetic = hardwareMap.get(DigitalChannel.class, "SensorDigitalMagnetic");
+        sensorDigitalMagnetic.setMode(DigitalChannel.Mode.INPUT);
     }
+
+    private SlippyState slippystate = SlippyState.Idle;
+
     public void loop() {
         if(gamepad1.right_bumper) {
             speedFactor = 1;
@@ -137,20 +150,70 @@ public class legacy_teleop extends OpMode {
             rGlyphS.setPosition(rServoArmAlmostGrasp);
         }
 
-        if (gamepad1.left_trigger > 0.1) {     //If left trigger is pushed, set power to full forward.
-            glyphSlideS.setDirection(DcMotorSimple.Direction.FORWARD);
-            glyphSlideS.setPower(1);
-        } else if (gamepad1.right_trigger > 0.1) {  //If right trigger is pushed, set power to full forward.0
-            glyphSlideS.setDirection(DcMotorSimple.Direction.REVERSE);
-            glyphSlideS.setPower(1);
-        }  else if (gamepad2.right_trigger > 0.1) {  //If right trigger is pushed, set power to full forward.0
-            glyphSlideS.setDirection(DcMotorSimple.Direction.REVERSE);
-            glyphSlideS.setPower(1);
-        } else if (gamepad2.left_trigger > 0.1) {  //If right trigger is pushed, set power to full forward.0
-            glyphSlideS.setDirection(DcMotorSimple.Direction.FORWARD);
-            glyphSlideS.setPower(1);
-        } else {
-            glyphSlideS.setPower(0);            //Otherwise, set power to 0 (stationary).
+//        if (gamepad1.left_trigger > 0.1) {     //If left trigger is pushed, set power to full forward.
+//            glyphSlideS.setDirection(DcMotorSimple.Direction.FORWARD);
+//            glyphSlideS.setPower(1);
+//        } else if (gamepad1.right_trigger > 0.1) {  //If right trigger is pushed, set power to full forward.0
+//            glyphSlideS.setDirection(DcMotorSimple.Direction.REVERSE);
+//            glyphSlideS.setPower(1);
+//        }  else if (gamepad2.right_trigger > 0.1) {  //If right trigger is pushed, set power to full forward.0
+//            glyphSlideS.setDirection(DcMotorSimple.Direction.REVERSE);
+//            glyphSlideS.setPower(1);
+//        } else if (gamepad2.left_trigger > 0.1) {  //If right trigger is pushed, set power to full forward.0
+//            glyphSlideS.setDirection(DcMotorSimple.Direction.FORWARD);
+//            glyphSlideS.setPower(1);
+//        } else {
+//            glyphSlideS.setPower(0);            //Otherwise, set power to 0 (stationary).
+//        }
+        switch (slippystate){
+            case Idle:              //The Idle case is the default case
+                if ((gamepad2.right_trigger < 0.1 && gamepad2.left_trigger > 0.1) || gamepad1.right_trigger < 0.1 && gamepad1.left_trigger > 0.1){
+                    glyphSlideS.setDirection(DcMotorSimple.Direction.FORWARD);
+                    glyphSlideS.setPower(1);
+                    //If the right trigger is pressed, the timing belt moves to the right
+                }
+                else if ((gamepad2.right_trigger > 0.1 && gamepad2.left_trigger < 0.1) || gamepad1.right_trigger > 0.1 && gamepad1.left_trigger < 0.1) {
+                    glyphSlideS.setDirection(DcMotorSimple.Direction.REVERSE);
+                    glyphSlideS.setPower(1);
+                    //If the left trigger is pressed, the timing belt moves to the left
+                }
+                else if ((gamepad2.right_trigger > 0.1 && gamepad2.left_trigger > 0.1) || gamepad1.y) {
+                    if (glyphSlideS.getDirection() == DcMotorSimple.Direction.FORWARD) {
+                        glyphSlideS.setDirection(DcMotorSimple.Direction.REVERSE);
+                        //if both triggers (operator) or the y button (driver) is pressed, the timing
+                        // belt moves the opposite direction of whatever direction it last moved
+                    } else {
+                        glyphSlideS.setDirection(DcMotorSimple.Direction.FORWARD);
+                    }
+                    slippystate = slippystate.LookingMagnet;
+                    //if both triggers (operator) or the y button (driver) is pressed, then switch to
+                    //the Looking case
+                }
+                else {
+                    glyphSlideS.setPower(0);
+                }
+                break;
+
+            case LookingMagnet:    //The timing belt is moving until the magnetic sensor is triggered
+                glyphSlideS.setPower(1);
+                if (!sensorDigitalMagnetic.getState()) {
+                    slippystate = slippystate.FoundMagnet;
+                    //If the sensor is triggered, switch to Found case
+                }
+                if ((gamepad2.right_trigger > 0.1) !=(gamepad2.left_trigger >0.1) || gamepad1.y) {
+                    glyphSlideS.setPower(0);
+                    slippystate = slippystate.Idle;
+                    //if either triggers (operator) or the y button (driver) is pressed, stop
+                    //searching for the sensor and return to Idle case
+                }
+                break;
+
+            case FoundMagnet:
+                glyphSlideS.setPower(0);
+                slippystate = slippystate.Idle;
+                //Once the magnetic sensor has been triggered, don't move the timing belt and return
+                //to Idle case
+                break;
         }
     }
 }
