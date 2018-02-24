@@ -481,11 +481,11 @@ public class legacy_auto extends LinearOpMode {
         glyphLifter("DOWN");
         grabbers(lGlyphSRelease, rGlyphSRelease);
         sleep(200);
-        encoderDrive(-38, 0.3, -1);
+        encoderDrive(-31, 0.3, -1);
         grabbers(lGlyphSGrasp, rGlyphSGrasp);
         glyphLifter("UP");
         glyphLifter("UP");
-        encoderDrive(30, 0.3, 1);
+        encoderDrive(23, 0.3, 1);
         switch (Key) {
             case "KeyLeft":
                 imuTurn(-180, "LEFT");
