@@ -150,21 +150,6 @@ public class legacy_teleop extends OpMode {
             rGlyphS.setPosition(rServoArmAlmostGrasp);
         }
 
-//        if (gamepad1.left_trigger > 0.1) {     //If left trigger is pushed, set power to full forward.
-//            glyphSlideS.setDirection(DcMotorSimple.Direction.FORWARD);
-//            glyphSlideS.setPower(1);
-//        } else if (gamepad1.right_trigger > 0.1) {  //If right trigger is pushed, set power to full forward.0
-//            glyphSlideS.setDirection(DcMotorSimple.Direction.REVERSE);
-//            glyphSlideS.setPower(1);
-//        }  else if (gamepad2.right_trigger > 0.1) {  //If right trigger is pushed, set power to full forward.0
-//            glyphSlideS.setDirection(DcMotorSimple.Direction.REVERSE);
-//            glyphSlideS.setPower(1);
-//        } else if (gamepad2.left_trigger > 0.1) {  //If right trigger is pushed, set power to full forward.0
-//            glyphSlideS.setDirection(DcMotorSimple.Direction.FORWARD);
-//            glyphSlideS.setPower(1);
-//        } else {
-//            glyphSlideS.setPower(0);            //Otherwise, set power to 0 (stationary).
-//        }
         switch (slippystate){
             case Idle:              //The Idle case is the default case
                 if ((gamepad2.right_trigger < 0.1 && gamepad2.left_trigger > 0.1) || gamepad1.right_trigger < 0.1 && gamepad1.left_trigger > 0.1){
