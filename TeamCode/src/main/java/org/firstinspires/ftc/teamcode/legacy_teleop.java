@@ -67,7 +67,6 @@ public class legacy_teleop extends OpMode {
         jewelExtendS = hardwareMap.servo.get("jewelExtendS");   //Hub 3 Servo 0
         jewelExtendS.setPosition(retractArm);
         jewelHitS = hardwareMap.servo.get("jewelHitS");     //Hub 2 Servo 4
-        jewelHitS.setPosition(hitPLeft);
         relicTurn = hardwareMap.dcMotor.get("relicTurnM");       //Relic Turn Motor, Hub 2, Port 0
         relicTurn.setPower(0);
         relicExtend = hardwareMap.dcMotor.get("relicExtendM");   //Relic Extend Motor, Hub 2, port 1 20
@@ -89,6 +88,11 @@ public class legacy_teleop extends OpMode {
     @Override
     public void start() {
         runtime.reset();
+        lGlyphS.setPosition(0.65);
+        rGlyphS.setPosition(0.4);
+
+        jewelExtendS.setPosition(0);
+        jewelHitS.setPosition(0.25);
     }
 
     public void loop() {

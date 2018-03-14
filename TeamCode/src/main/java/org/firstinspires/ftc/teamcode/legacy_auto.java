@@ -48,7 +48,7 @@ public class legacy_auto extends LinearOpMode {
     private ElapsedTime gyroTimer = new ElapsedTime();
     private ElapsedTime vutimer = new ElapsedTime();
 
-    private double extendArm  = 0.69;
+    private double extendArm  = 0.66;
     private double retractArm = 0;
     private double hitCenter  = .5;
 
@@ -429,7 +429,7 @@ public class legacy_auto extends LinearOpMode {
                         break;
                     case ("KeyRight") :
                         encoderDrive(2.5, 0.23, 1);
-                        imuTurn(-90, "LEFT");
+                        imuTurn(-88, "LEFT");
                         sleep(200);
                         encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
@@ -459,13 +459,13 @@ public class legacy_auto extends LinearOpMode {
                         encoderDrive(4, 0.3, 1);
                         break;
                     case ("KeyRight") :
-                        imuTurn(170, "RIGHT");
+                        imuTurn(168, "RIGHT");
                         sleep(100);
                         drive(-0.3, -0.3);
                         sleep(1000);
                         driveStop();
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
-                        encoderDrive(4, 0.3, 1);
+                        encoderDrive(5, 0.3, 1);
                         break;
                 }
                 break;
@@ -479,10 +479,10 @@ public class legacy_auto extends LinearOpMode {
     public void deliverExtraGlyph(String Key) throws InterruptedException {
         switch(alliance + stone) {                      // Prep for diving into the pile
             case "redright":                            // Different turns depending on where we run
-                imuCryptoTurn(110, -20, 50, "LEFT", Key);
+                imuCryptoTurn(110, -20, -15, "LEFT", Key);
                 break;
             case "blueleft":
-                imuCryptoTurn(105, -5, -25, "RIGHT", Key);
+                imuCryptoTurn(105, -5, -20, "RIGHT", Key);
                 break;
             default:
                 imuTurn(-180, "LEFT");
@@ -494,7 +494,7 @@ public class legacy_auto extends LinearOpMode {
         switch(alliance + stone) {                      // Prep for diving into the pile
             case "redright":
                 if(Key == "KeyRight") {
-                    encoderDrive(-25, 0.4, -1);
+                    encoderDrive(-27, 0.4, -1);
                     imuTurn(-40, "LEFT");
                     encoderDrive(-35, 0.4, -1);
                 } else encoderDrive(-60, 0.4, -1);
@@ -523,8 +523,8 @@ public class legacy_auto extends LinearOpMode {
             case "redright":
                 if(Key == "KeyRight") {
                     encoderDrive(33, 0.3, 1);
-                    imuTurn(40, "RIGHT");
-                    encoderDrive(23, 0.3, 1);
+                    imuTurn(30, "RIGHT");
+                    encoderDrive(17, 0.3, 1);
                     imuTurn(-30, "LEFT");
                 } else encoderDrive(52, 0.3, 1);                          // good! Now back up
                 imuCryptoTurn(135, -10, 5, "RIGHT", Key);
@@ -546,6 +546,7 @@ public class legacy_auto extends LinearOpMode {
         }
         sleep(100);
         encoderDrive(-7, 0.23, -1);
+        sleep(200);
         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);   // RELEASE!!!
         encoderDrive(4, 0.23, 1);                            // Back up and end method
     }
@@ -586,8 +587,7 @@ public class legacy_auto extends LinearOpMode {
                     jewelBumpType == "wrong" ? (
                     ((alliance == "blue" && jewel == "BLUE_RED") || (alliance == "red"  && jewel == "RED_BLUE")) ? 0 :
                     ((alliance == "red"  && jewel == "BLUE_RED") || (alliance == "blue" && jewel == "RED_BLUE")) ? 1 : 0.5) : 0.5;
-        if(jewelExtendS != null && jewelHitS != null) {
-            if(knockVal != 0.5) {
+        if(knockVal != 0.5) {
                 jewelExtendS.setPosition(extendArm);
                 sleep(750);
                 jewelHitS.setPosition(knockVal);
@@ -596,13 +596,8 @@ public class legacy_auto extends LinearOpMode {
                 sleep(500);
                 jewelExtendS.setPosition(retractArm);
                 sleep(500);
-            } else {
-                telemetry.addData("Problem with alliance or jewelOrder", "    ;-;");
-                telemetry.update();
-                sleep(2250);
-            }
         } else {
-            telemetry.addData("Jewel bumper not initialized", "    ;-;");
+            telemetry.addData("Problem with alliance or jewelOrder", "    ;-;");
             telemetry.update();
             sleep(2250);
         }
@@ -657,7 +652,7 @@ public class legacy_auto extends LinearOpMode {
         parameters_IMU.loggingEnabled = true;
         parameters_IMU.loggingTag = "IMU";
         parameters_IMU.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = hardwareMap.get(BNO055IMU.class, "imu3");
         imu.initialize(parameters_IMU);
 
         telemetry.addData("Status", "Initialized");
@@ -695,8 +690,6 @@ public class legacy_auto extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.addData("Selection", "X for Extra Glyph Load, B for no Extra Load");        // Do we want an extra glyph load?
         telemetry.update();
-        if((alliance == "blue" && stone == "right") ||
-                (alliance == "red" && stone == "left")) {
             while (getMoreGlyphs == "") {
                 if (gamepad1.x) {
                     getMoreGlyphs = "Yes";
@@ -707,7 +700,7 @@ public class legacy_auto extends LinearOpMode {
                     break;
                 }
             }
-        }
+
 
         sleep(500);
         telemetry.addData("Status", "Initialized");
