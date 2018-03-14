@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -27,60 +28,68 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
-@Autonomous(name = "legacy_auto", group = "LinearOpMode")
+@Autonomous(name = "legacy_auto_SuperGlyph", group = "LinearOpMode")
 
-public class legacy_auto extends LinearOpMode {
+public class legacy_auto_X extends LinearOpMode {
 
-    //============================VARIABLES + CONSTANTS==============
+    //============================VARIABLES + CONSTANTS=============================================
 
-    private DcMotor lfDriveM, lbDriveM, rfDriveM, rbDriveM, glyphLiftM, relicTurnM;
-    private Servo   lGlyphS,  rGlyphS,  jewelExtendS, jewelHitS;
-    private CRServo glyphSlideS;
-    private DcMotorSimple.Direction LEFT  = DcMotorSimple.Direction.FORWARD; // Glyph Slider Directions
-    private DcMotorSimple.Direction RIGHT = DcMotorSimple.Direction.REVERSE;
+    public DcMotor lfDriveM, lbDriveM, rfDriveM, rbDriveM, glyphLiftM;
+    public Servo lGlyphS, rGlyphS, jewelExtendS, jewelHitS;
+    public CRServo glyphSlideS;
+    public TouchSensor touch;
 
-    private ClosableVuforiaLocalizer vuforia;    // The Vuforia camera
-    private JewelDetector jewelDetector = null;
-    private BNO055IMU imu;               // IMU Gyro sensor inside of REV Hub
-    private Orientation angles;          // variables of the IMU that get the rotation of the robot
-
-    private ElapsedTime runtime = new ElapsedTime();
-    private ElapsedTime gyroTimer = new ElapsedTime();
-    private ElapsedTime vutimer = new ElapsedTime();
-
-    private double extendArm  = 0.69;
+    private double extendArm = .55;
     private double retractArm = 0;
-    private double hitCenter  = .5;
 
-    private double lGlyphSRelease     = 0.8;//Glyph arms will initialize in the open position.
-    private double rGlyphSRelease     = 0;  //Servos have been "reprogrammed" so we can use
-    private double lGlyphSGrasp       = 0;  //values so much like 0 and 1
-    private double rGlyphSGrasp       = 1;
+    private double hitCenter = .5;   //jewelHitS returns to center variable
+    private double hitPLeft = .25;   //Protects arm from falling in case of power outages.
+    private double hitLeft = 0;      //jewelHitS knock left jewel variable
+    private double hitRight = 1;     //jewelHitS knocks right jewel variable
+
+    private double lGlyphSRelease = 0.8;               //Glyph arms will initialize in the open position.
+    private double rGlyphSRelease = 0;
+    private double lGlyphSGrasp = 0;              //After testing, these positions were optimal for grasping the glyphs.
+    private double rGlyphSGrasp = 1;
     private double lGlyphSAlmostGrasp = 0.5;
     private double rGlyphSAlmostGrasp = 0.6;
 
+    DcMotorSimple.Direction FORWARD = DcMotorSimple.Direction.FORWARD;
+    DcMotorSimple.Direction BACKWARD = DcMotorSimple.Direction.REVERSE;
+    DcMotorSimple.Direction LEFT = DcMotorSimple.Direction.FORWARD;
+    DcMotorSimple.Direction RIGHT = DcMotorSimple.Direction.REVERSE;
+
+    ClosableVuforiaLocalizer vuforia;    // The Vuforia camera
+    BNO055IMU imu;               // IMU Gyro sensor inside of REV Hub
+    Orientation angles;          // variables of the IMU that get the rotation of the robot
+
+    private ElapsedTime runtime = new ElapsedTime();
+    private ElapsedTime detecttime = new ElapsedTime();
+    private ElapsedTime gyroTimer = new ElapsedTime();
+    private JewelDetector jewelDetector = null;
+
     private String alliance = "";
     private String jewelOrder = "";
+    private String lastOrder = "";
+    private String lastKey = "";
+    private String vufKey = "";
     private String jewelBumpType = "";
     private String stone = "";
     private String getMoreGlyphs = "";
-    String vuforiaLicenseKey = "Ae3H91v/////AAAAGT+4TPU5r02VnQxesioVLr0qQzNtgdYskxP7aL6/" +
+
+    String vuforiaLicenseKey = "Ae3H91v/////AAAAGT+4TPU5r02VnQxesioVLr0qQzNtgdYskxP7aL6/" +     // Yay, random Vuforia license key!
             "yt9VozCBUcQrSjwec5opfpOWEuc55kDXNNSRJjLAnjGPeaku9j4nOfe7tWxio/xj/uNdPX7fEHD0j5b" +
             "5M1OgX/bkWoUV6pUTAsKj4GaaAKIf76vnX36boqJ7BaMJNuhkYhoQJWdVqwFOC4veNcABzJRw4mQmfO" +
             "3dfPvNVjxDl8kgdBEQOZRi9kFDy9w3cTLatSGZne3IvyaYYd8uckzPnQb5Mgel3ORjar/84qO+GBmG2" +
             "vDhmiv+vkY4gbCtS0em5LM+7CIMuZa5vO9GmtqXyNsoCp9zpPlgZHc1OJ7javiI5jAzWEKCPjZcmLAkSs7k+amw";
 
+    private ElapsedTime vutimer = new ElapsedTime();
 
-    /** This method takes one value: The List of trackables Vuforia should recognize
-     *  to see the cryptokey. Once we begin searching, the phone will continuously
-     *  look for a cryptokey, and once the phone sees it, a String value will be returned
-     *  that corresponds to the cryptokey. If we can’t see the cryptokey after 3 seconds,
-     *  the method will return a value of “Unknown”, and the default case will be selected. */
     public String decryptKey(VuforiaTrackable cryptokeys) {
-        String key = "";
+        String key = lastKey;
         vutimer.reset();
         RelicRecoveryVuMark vuMark;
-        while (isStarted()) {
+        while (!isStarted()) {
             vuMark = RelicRecoveryVuMark.from(cryptokeys);
 
             if (vuMark == RelicRecoveryVuMark.LEFT) {       //Store which cryptokey is found and
@@ -95,7 +104,7 @@ public class legacy_auto extends LinearOpMode {
                 key = "KeyRight";
                 telemetry.addData("Spotted Key", "Right!");
                 telemetry.update();
-            } else {
+            } else  {
                 key = "KeyUnknown";
                 telemetry.addData("Spotted Key", "Unknown");
                 telemetry.update();
@@ -109,7 +118,18 @@ public class legacy_auto extends LinearOpMode {
 
     // =======================================METHODS===============================================
 
-    private void drive(double leftSpeed, double rightSpeed){
+    public <T> T hardwareMapper7129(Class<? extends T> classType, String deviceName) {
+        try {
+            return hardwareMap.get(classType, deviceName);
+        } catch (IllegalArgumentException exc) {
+            telemetry.addData("WARNING", "failed to init " + deviceName + ", but moving on...");
+            telemetry.update();
+            sleep(2000);
+            return null;
+        }
+    }
+
+    private void drive(double leftSpeed, double rightSpeed) {
         lfDriveM.setPower(leftSpeed);
         lbDriveM.setPower(leftSpeed);
         rfDriveM.setPower(rightSpeed);
@@ -143,11 +163,18 @@ public class legacy_auto extends LinearOpMode {
         glyphSlideS.setPower(0);
     }
 
-    private void setMotorMode(DcMotor.RunMode mode) {
-        rfDriveM.setMode(mode);
-        rbDriveM.setMode(mode);
-        lfDriveM.setMode(mode);
-        lbDriveM.setMode(mode);
+    private void useEncoders(){
+        rfDriveM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rbDriveM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lfDriveM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lbDriveM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    private void resetEncoders(){
+        lfDriveM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lbDriveM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rfDriveM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rbDriveM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     private void initForTeleop () {
@@ -160,9 +187,7 @@ public class legacy_auto extends LinearOpMode {
 
     }
 
-    /** This method takes three values: Distance, Power, and Direction.
-     *  The distance is converted to encoder ticks, and the robot drives that
-     *  amount of distance in a straight line. */
+    // This is the Drive Method
     private void encoderDrive(double distance, double speed, int direction) throws InterruptedException {
         int ENCODER_CPR = 1120; // Encoder counts per Revolution
         double gearRatio = 1.75; // [Gear Ratio]:1
@@ -170,8 +195,9 @@ public class legacy_auto extends LinearOpMode {
         double distanceToDrive = distance / (circumference * gearRatio); // Number of rotations to drive
         double COUNTS = ENCODER_CPR * distanceToDrive; // Number of encoder counts to drive
 
-        setMotorMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        setMotorMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        resetEncoders();
+        useEncoders();
+
         rfDriveM.setTargetPosition(rfDriveM.getCurrentPosition() + (int) COUNTS);
         lfDriveM.setTargetPosition(lfDriveM.getCurrentPosition() + (int) COUNTS);
 
@@ -223,7 +249,8 @@ public class legacy_auto extends LinearOpMode {
     }
 
     /**
-     * This method takes two values: Heading and Turn Direction. It then takes the heading, adds or subtracts 360 to stay in the gyro’s range, divides the heading by 8/9 (to keep the robot from driving too far over), and the robot turns around in a circle until it reaches its desired heading. If the robot gets stuck turning, the gyro turn will safely abort and move on to the next line of code.
+     * Perform a turn with the IMU inside our REV Hub. For degreesToTurn, positive is clockwise,
+     * and negative is counterclockwise. angles.firstAngle is used for currentRotation.
      * NOTE: angles.firstAngle is flipped on the number line because the REV Hub is upside-down
      */
 
@@ -274,7 +301,7 @@ public class legacy_auto extends LinearOpMode {
         if (direction == "RIGHT") {
             while (shouldKeepTurning2(headingList)) {
                 updateIMU();
-                drive(-0.25, 0.25);
+                drive(-0.23, 0.23);
                 telemetry.addData("Gyro", -angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
                 telemetry.update();
@@ -298,7 +325,7 @@ public class legacy_auto extends LinearOpMode {
         } else {
             while (shouldKeepTurning2(headingList)) {
                 updateIMU();
-                drive(0.25, -0.25);
+                drive(0.23, -0.23);
                 telemetry.addData("Gyro", -angles.firstAngle);
                 telemetry.addData("Target", targetHeading);
                 telemetry.update();
@@ -322,101 +349,88 @@ public class legacy_auto extends LinearOpMode {
         driveStop();
     }
 
-    public void imuCryptoTurn(int degreesToTurn, int rightOffset, int leftOffset, String direction, String key) throws InterruptedException {
-        int directionModifier = direction == "LEFT" ? -1 : 1;
-        switch(key) {
-            case "KeyLeft":
-                imuTurn((degreesToTurn + leftOffset)*directionModifier, direction);
-                break;
-            default: case "KeyCenter":
-                imuTurn(degreesToTurn*directionModifier, direction);
-                break;
-            case "KeyRight":
-                imuTurn((degreesToTurn + rightOffset)*directionModifier, direction);
-                break;
-        }
-    }
-
+    // Used to get off stone. Should be easy fix...
     public void driveOffStone(String Alliance) throws InterruptedException {
         if(alliance == "red") {
-            relicTurnM.setPower(-0.15);
             encoderDrive(24, 0.23, 1);
-            relicTurnM.setPower(0);
             sleep(200);
         } else if(alliance == "blue") {
             encoderDrive(-25, 0.23, -1);
         }
     }
 
-    /** This method takes three values: Alliance, Balancing Stone, and Cryptokey,
-     * and the robot places the initial glyph in the specified column.
-     * We chose the center column as default, for in the event that we miss,
-     * the glyph has a chance to land in one of the side columns.*/
     private void deliverGlyph (String alliance, String stone, String cryptoKey) throws InterruptedException {
         switch (alliance + stone) {         //Switch case with all four balancing stones. Ian's code should
             case ("blueleft") :             //fit in with the blueright and redleft switch cases.
                 switch (cryptoKey) {
                     default : case ("KeyCenter") :
-                        imuTurn(25, "RIGHT");
+                        imuTurn(35, "RIGHT");
+                        driveStop();
                         encoderDrive(-13, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
-                        encoderDrive(6, 0.3, 1);                            // Drive backward
                         break;
                     case ("KeyLeft") :
-                        imuTurn(10, "RIGHT");
+                        imuTurn(15, "RIGHT");
+                        driveStop();
                         encoderDrive(-10, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
-                        encoderDrive(6, 0.3, 1);                            // Drive backward
                         break;
                     case ("KeyRight") :
-                        imuTurn(40, "RIGHT");
+                        imuTurn(46, "RIGHT");
+                        driveStop();
                         encoderDrive(-17, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
-                        encoderDrive(6, 0.3, 1);                            // Drive backward
                         break;
                 }
+                pushGlyph();
                 break;
             case ("blueright") :
                 switch (cryptoKey) {
                     case ("KeyLeft") :
-                        encoderDrive(-3, 0.23, -1);                         // Drive in front of desired cryptobox
+                        encoderDrive(-4, 0.23, -1);                         // Drive in front of desired cryptobox
                         imuTurn(-90, "LEFT");                               // Turn to desired cryptobox
                         sleep(200);                                         // Just a sleep to keep Legacy from accidentally shifting left
                         encoderDrive(-7, 0.23, -1);                         // Drive into column
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);   // "Dropping Glyph..."
                         sleep(200);
-                        encoderDrive(6, 0.3, 1);                            // Drive backward
+                        encoderDrive(7, 0.23, 1);                            // Drive backward
                         break;
                     default: case ("KeyCenter") :
-                        encoderDrive(-13, 0.23, -1);
+                        encoderDrive(-12, 0.23, -1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
                         encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
-                        encoderDrive(6, 0.3, 1);
+                        encoderDrive(7, 0.23, 1);
                         break;
                     case ("KeyRight") :
-                        encoderDrive(-20, 0.23, -1);
+                        encoderDrive(-17, 0.23, -1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
                         encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
-                        encoderDrive(6, 0.3, 1);
+                        encoderDrive(7, 0.23, 1);
                         break;
                 }
                 break;
             case ("redleft") :
                 switch (cryptoKey) {
                     case ("KeyLeft") :
-                        encoderDrive(18, 0.23, 1);
+                        encoderDrive(19, 0.23, 1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
                         encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
-                        encoderDrive(6, 0.3, 1);
+                        encoderDrive(7, 0.23, 1);
                         break;
                     default: case ("KeyCenter") :
                         encoderDrive(10, 0.23, 1);
@@ -425,7 +439,7 @@ public class legacy_auto extends LinearOpMode {
                         encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
-                        encoderDrive(6, 0.3, 1);
+                        encoderDrive(7, 0.23, 1);
                         break;
                     case ("KeyRight") :
                         encoderDrive(2.5, 0.23, 1);
@@ -434,55 +448,73 @@ public class legacy_auto extends LinearOpMode {
                         encoderDrive(-7, 0.23, -1);
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
                         sleep(200);
-                        encoderDrive(6, 0.3, 1);
+                        encoderDrive(7, 0.23, 1);
                         break;
                 }
                 break;
             case ("redright") :
                 switch (cryptoKey) {
                     default : case ("KeyCenter") :
-                        imuTurn(148, "RIGHT");
-                        sleep(100);
-                        drive(-0.3, -0.3);
-                        sleep(1000);
+                        imuTurn(145, "RIGHT");
                         driveStop();
+                        encoderDrive(-13, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
-                        encoderDrive(4, 0.3, 1);
+                        sleep(200);
                         break;
                     case ("KeyLeft") :
                         imuTurn(134, "RIGHT");
-                        sleep(100);
-                        drive(-0.3, -0.3);
-                        sleep(1000);
                         driveStop();
+                        encoderDrive(-17, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
-                        encoderDrive(4, 0.3, 1);
+                        sleep(200);
                         break;
                     case ("KeyRight") :
                         imuTurn(170, "RIGHT");
-                        sleep(100);
-                        drive(-0.3, -0.3);
-                        sleep(1000);
                         driveStop();
+                        encoderDrive(-10, 0.23, -1);
+                        sleep(400);
+                        glyphLifter("DOWN");
                         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
-                        encoderDrive(4, 0.3, 1);
+                        sleep(200);
                         break;
                 }
+                pushGlyph();
                 break;
         }
     }
 
-    /** This method takes one value: Cryptokey, and the robot drives into the glyph pile,
-     * grabs a glyph, and places it in a cryptokey column, no matter what stone we start on.
-     * We chose the center column as default, for in the event that we miss,
-     * the glyph has a chance to land in one of the side columns. */
+    // Used to get a brand new glyph load from the center pile.
     public void deliverExtraGlyph(String Key) throws InterruptedException {
         switch(alliance + stone) {                      // Prep for diving into the pile
-            case "redright":                            // Different turns depending on where we run
-                imuCryptoTurn(110, -20, 50, "LEFT", Key);
+            case "redright":                            // Different turns depending on where we
+                switch (Key) {                          // are on the field
+                    case "KeyLeft":
+                        imuTurn(-80, "LEFT");
+                        break;
+                    default : case "KeyCenter":
+                        imuTurn(-90, "LEFT");
+                        break;
+                    case "KeyRight":
+                        imuTurn(-120, "LEFT");
+                        break;
+                }
                 break;
             case "blueleft":
-                imuCryptoTurn(105, -5, -25, "RIGHT", Key);
+                switch (Key) {
+                    case "KeyLeft":
+                        imuTurn(120, "RIGHT");
+                        break;
+                    default : case "KeyCenter":
+                        imuTurn(90, "RIGHT");
+                        break;
+                    case "KeyRight":
+                        imuTurn(80, "RIGHT");
+                        break;
+                }
                 break;
             default:
                 imuTurn(-180, "LEFT");
@@ -491,25 +523,8 @@ public class legacy_auto extends LinearOpMode {
 
         glyphLifter("DOWN");
         grabbers(lGlyphSAlmostGrasp, rGlyphSRelease);
-        switch(alliance + stone) {                      // Prep for diving into the pile
-            case "redright":
-                if(Key == "KeyRight") {
-                    encoderDrive(-25, 0.4, -1);
-                    imuTurn(-40, "LEFT");
-                    encoderDrive(-35, 0.4, -1);
-                } else encoderDrive(-60, 0.4, -1);
-                break;
-            case "blueleft":
-                if(Key == "KeyLeft") {
-                    encoderDrive(-25, 0.4, -1);
-                    imuTurn(40, "RIGHT");
-                    encoderDrive(-35, 0.4, -1);
-                } else encoderDrive(-60, 0.4, -1);                         // CHAAAAAAAAAAAARRGE!!!!
-                break;
-            default:
-                encoderDrive(-31, 0.4, -1);                         // CHAAAAAAAAAAAARRGE!!!!
-                break;
-        }
+        sleep(200);
+        encoderDrive(-31, 0.4, -1);                         // CHAAAAAAAAAAAARRGE!!!!
         moveSliders(RIGHT, 1000);                           // Set up left side of glyph
         encoderDrive(2, 0.3, 1);                            // Prep for setting up other side
         grabbers(lGlyphSRelease, rGlyphSAlmostGrasp);
@@ -519,39 +534,51 @@ public class legacy_auto extends LinearOpMode {
         grabbers(lGlyphSGrasp, rGlyphSGrasp);               // GRAB!!!
         glyphLifter("UP");                                  // lift it up...
         glyphLifter("UP");                                  // more...
-        switch(alliance + stone) {
-            case "redright":
-                if(Key == "KeyRight") {
-                    encoderDrive(33, 0.3, 1);
-                    imuTurn(40, "RIGHT");
-                    encoderDrive(23, 0.3, 1);
-                    imuTurn(-30, "LEFT");
-                } else encoderDrive(52, 0.3, 1);                          // good! Now back up
-                imuCryptoTurn(135, -10, 5, "RIGHT", Key);
+        encoderDrive(23, 0.23, 1);                          // good! Now back up
+        switch (Key) {                                      // Turn to cryptobox
+            case "KeyLeft":
+                imuTurn(-180, "LEFT");
                 break;
-            case "blueleft":
-                if(Key == "KeyLeft") {
-                    encoderDrive(33, 0.3, 1);
-                    imuTurn(-40, "LEFT");
-                    encoderDrive(23, 0.3, 1);
-                    imuTurn(30, "RIGHT");
-                } else encoderDrive(52, 0.3, 1);                          // good! Now back up
-                imuCryptoTurn(135, -5, 5, "LEFT", Key);
+            default : case "KeyCenter":
+                imuTurn(175, "RIGHT");
                 break;
-            default:
-                encoderDrive(23, 0.3, 1);                          // good! Now back up
-                imuCryptoTurn(180, -6, 10, "RIGHT", Key);
-                encoderDrive(-5, 0.3, -1);                         // drive up a bit
+            case "KeyRight":
+                imuTurn(165, "RIGHT");
                 break;
         }
         sleep(100);
-        encoderDrive(-7, 0.23, -1);
+        drive(-0.4, -0.4);                                  // Drive into cryptobox
+        sleep(800);
+        driveStop();
+        glyphLifter("DOWN");                                // set glyph load down...
         grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);   // RELEASE!!!
-        encoderDrive(4, 0.23, 1);                            // Back up and end method
+        encoderDrive(4, 0.4, 1);                            // Back up and end method
     }
 
-    /** Code to run when we begin searching for the cryptokey.
-     * See the decryptKey method at the end of the variables and constants, close to the top */
+    private void bumpJewelShort(String alliance, String jewel) throws InterruptedException {
+        double knockVal =
+                    jewelBumpType == "correct" ? (
+                    ((alliance == "blue" && jewel == "RED_BLUE") || (alliance == "red"  && jewel == "BLUE_RED")) ? 0 :
+                    ((alliance == "red"  && jewel == "RED_BLUE") || (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5) :
+                    jewelBumpType == "wrong" ? (
+                    ((alliance == "blue" && jewel == "BLUE_RED") || (alliance == "red"  && jewel == "RED_BLUE")) ? 0 :
+                    ((alliance == "red"  && jewel == "BLUE_RED") || (alliance == "blue" && jewel == "RED_BLUE")) ? 1 : 0.5) : 0.5;
+        if(knockVal != 0.5) {
+            jewelExtendS.setPosition(extendArm);
+            sleep(750);
+            jewelHitS.setPosition(knockVal);
+            sleep(500);
+            jewelHitS.setPosition(hitCenter);
+            sleep(500);
+            jewelExtendS.setPosition(retractArm);
+            sleep(500);
+        } else {
+            telemetry.addData("Problem with alliance or jewelOrder", "    ;-;");
+            telemetry.update();
+            sleep(3000);
+        }
+    }
+
     private String activateVuforia () throws InterruptedException {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName()); // Get the camera!
         VuforiaLocalizer.Parameters parameters_Vuf = new VuforiaLocalizer.Parameters(cameraMonitorViewId);  // Prepare the parameters
@@ -564,48 +591,46 @@ public class legacy_auto extends LinearOpMode {
         Targets.setName("Targets");
 
         Cryptokey.activate();
-        telemetry.addData("Searching for Key", "...");
-        telemetry.update();
-        String vufkey = decryptKey(Targets);
-        telemetry.addData("Key Found", vufkey);
-        telemetry.update();
+        String key = decryptKey(Targets);
 
         this.vuforia.close();
-        return vufkey;
+        return key;
     }
 
-    /** This method takes two parameters into account: Alliance and the Order of the Jewels.
-     * Once DogeCV determines the order and autonomous starts,
-     * the jewel arm will lower and hit a certain jewel, dependent on which alliance is selected,
-     * what order the jewels are in, and which jewel we want to bump */
-    private void bumpJewelShort(String alliance, String jewel) throws InterruptedException {
-        double knockVal =
-                    jewelBumpType == "correct" ? (
-                    ((alliance == "blue" && jewel == "RED_BLUE") || (alliance == "red"  && jewel == "BLUE_RED")) ? 0 :
-                    ((alliance == "red"  && jewel == "RED_BLUE") || (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5) :
-                    jewelBumpType == "wrong" ? (
-                    ((alliance == "blue" && jewel == "BLUE_RED") || (alliance == "red"  && jewel == "RED_BLUE")) ? 0 :
-                    ((alliance == "red"  && jewel == "BLUE_RED") || (alliance == "blue" && jewel == "RED_BLUE")) ? 1 : 0.5) : 0.5;
-        if(jewelExtendS != null && jewelHitS != null) {
-            if(knockVal != 0.5) {
-                jewelExtendS.setPosition(extendArm);
-                sleep(750);
-                jewelHitS.setPosition(knockVal);
-                sleep(500);
-                jewelHitS.setPosition(hitCenter);
-                sleep(500);
-                jewelExtendS.setPosition(retractArm);
-                sleep(500);
-            } else {
-                telemetry.addData("Problem with alliance or jewelOrder", "    ;-;");
-                telemetry.update();
-                sleep(2250);
-            }
-        } else {
-            telemetry.addData("Jewel bumper not initialized", "    ;-;");
-            telemetry.update();
-            sleep(2250);
+    private String activateDogeCV () throws InterruptedException {
+        jewelDetector = new JewelDetector();
+        jewelDetector.init(hardwareMap.appContext, CameraViewDisplay.getInstance());
+
+        //Jewel Detector Settings (using recommendations from creators of DogeCV)
+        jewelDetector.areaWeight = 0.005;
+        jewelDetector.detectionMode = JewelDetector.JewelDetectionMode.MAX_AREA;
+        jewelDetector.debugContours = true;
+        jewelDetector.maxDiffrence = 15;
+        jewelDetector.ratioWeight = 30;
+        jewelDetector.minArea = 700;
+
+        jewelDetector.enable();
+
+        while(jewelOrder == "" || jewelOrder == "UNKNOWN") {
+            jewelOrder = jewelDetector.getLastOrder().toString(); //Store the jewel order for use later on.
         }
+
+        jewelDetector.disable(); //Once we have the jewel order, disable OpenCV so we can activate Vuforia.
+        jewelDetector = null;
+        return jewelOrder;
+    }
+
+    private void pushGlyph () throws InterruptedException {
+        drive(0.23, 0.23);                      //This function pushes the glyph inside the cryptobox once
+        sleep(600);                             //it has already been delivered.
+        driveStop();
+        grabbers(lGlyphSGrasp, rGlyphSGrasp);
+        drive(-0.23, -0.23);
+        sleep(600);
+        driveStop();
+        drive(0.23, 0.23);
+        sleep(600);
+        driveStop();
     }
 
     @Override
@@ -613,43 +638,45 @@ public class legacy_auto extends LinearOpMode {
 
         // ===================================INIT==================================================
 
-        // Drive motors
-        lfDriveM = hardwareMap.dcMotor.get("lfDriveM"); //Hub 3 Port 2
-        lbDriveM = hardwareMap.dcMotor.get("lbDriveM"); //Hub 3 Port 3
-        rfDriveM = hardwareMap.dcMotor.get("rfDriveM"); //Hub 3 Port 0
-        rbDriveM = hardwareMap.dcMotor.get("rbDriveM"); //Hub 3 Port 1
-        lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
-        lbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
+        //Drive motors
+        lfDriveM = hardwareMapper7129(DcMotor.class, "lfDriveM"); //Hub 3 Port 2
+        lfDriveM.setPower(0);
+        lbDriveM = hardwareMapper7129(DcMotor.class, "lbDriveM"); //Hub 3 Port 3
+        lbDriveM.setPower(0);
+        rfDriveM = hardwareMapper7129(DcMotor.class, "rfDriveM"); //Hub 3 Port 0
+        rfDriveM.setPower(0);
+        rbDriveM = hardwareMapper7129(DcMotor.class, "rbDriveM"); //Hub 3 Port 1
+        rbDriveM.setPower(0);
+
+        //Lifting glypher motor
+        glyphLiftM = hardwareMapper7129(DcMotor.class, "glyphLiftM"); //Hub 2 Port 0
+        glyphLiftM.setPower(0);
+        glyphLiftM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        //Glypher left-to-right motor
+        glyphSlideS = hardwareMapper7129(CRServo.class, "glyphSlideS"); //Hub 3 Servo 1
+        glyphSlideS.setPower(0);
+
+        // Touch sensor on grabber
+        touch = hardwareMapper7129(TouchSensor.class, "touch");
+
+        lGlyphS = hardwareMapper7129(Servo.class, "lGlyphS"); //Hub 3 Servo 3
+        rGlyphS = hardwareMapper7129(Servo.class, "rGlyphS"); //Hub 3 Servo 5
+        grabbers(lGlyphSRelease, rGlyphSRelease);
+
+        // Jewel Knocker
+        jewelExtendS = hardwareMapper7129(Servo.class, "jewelExtendS"); //Hub 3 Servo 0
+        jewelExtendS.setPosition(retractArm);
+        jewelHitS = hardwareMapper7129(Servo.class, "jewelHitS"); //Hub 2 Servo 4
+        jewelHitS.setPosition(hitCenter);
+
+        rfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
+        rbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
         lfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        driveStop();
 
-        // Lifting glypher motor
-        glyphLiftM = hardwareMap.dcMotor.get("glyphLiftM"); //Hub 2 Port 0
-        glyphLiftM.setPower(0);
-        glyphLiftM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        // Glypher left-to-right motor
-        glyphSlideS = hardwareMap.crservo.get("glyphSlideS"); //Hub 3 Servo 1
-        glyphSlideS.setPower(0);
-
-        // Glyph Grabber Arms
-        lGlyphS = hardwareMap.servo.get("lGlyphS"); //Hub 3 Servo 3
-        rGlyphS = hardwareMap.servo.get("rGlyphS"); //Hub 3 Servo 5
-        grabbers(lGlyphSRelease, rGlyphSRelease);
-
-        // Jewel Knocker
-        jewelExtendS = hardwareMap.servo.get("jewelExtendS"); //Hub 3 Servo 0
-        jewelExtendS.setPosition(retractArm);
-        jewelHitS = hardwareMap.servo.get("jewelHitS"); //Hub 2 Servo 4
-        jewelHitS.setPosition(hitCenter);
-
-        // Relic Pivot (initialized so the relic manipulator stays in Legacy when we move)
-        relicTurnM = hardwareMap.dcMotor.get("relicTurnM");
-
-        // IMU Gyro within REV Hub
         BNO055IMU.Parameters parameters_IMU = new BNO055IMU.Parameters();
         parameters_IMU.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         parameters_IMU.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
@@ -657,7 +684,7 @@ public class legacy_auto extends LinearOpMode {
         parameters_IMU.loggingEnabled = true;
         parameters_IMU.loggingTag = "IMU";
         parameters_IMU.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = hardwareMapper7129(BNO055IMU.class, "imu");
         imu.initialize(parameters_IMU);
 
         telemetry.addData("Status", "Initialized");
@@ -694,9 +721,9 @@ public class legacy_auto extends LinearOpMode {
         sleep(500);
         telemetry.addData("Status", "Initialized");
         telemetry.addData("Selection", "X for Extra Glyph Load, B for no Extra Load");        // Do we want an extra glyph load?
-        telemetry.update();
+        telemetry.update();                                                                   // Only for Blue Right or Red Left stone
         if((alliance == "blue" && stone == "right") ||
-                (alliance == "red" && stone == "left")) {
+           (alliance == "red" && stone == "left")) {
             while (getMoreGlyphs == "") {
                 if (gamepad1.x) {
                     getMoreGlyphs = "Yes";
@@ -711,7 +738,7 @@ public class legacy_auto extends LinearOpMode {
 
         sleep(500);
         telemetry.addData("Status", "Initialized");
-        telemetry.addData("Selection", "X for Correct Jewel, B for Wrong Jewel, Y for No Jewel");        // How do we knock the jewel?
+        telemetry.addData("Selection", "X for Correct Jewel, B for Wrong Jewel, Y for No Jewel");        // Which side are you on?
         telemetry.update();
         while (jewelBumpType == "" && !isStopRequested()) {
             if (gamepad1.x) {
@@ -726,7 +753,6 @@ public class legacy_auto extends LinearOpMode {
             }
         }
 
-        // Now we display the result
         while(!gamepad1.a && !isStopRequested()) {
             switch(alliance + stone) {
                 case "redleft":
@@ -755,27 +781,21 @@ public class legacy_auto extends LinearOpMode {
             }
         }
 
-        sleep(500);
+        telemetry.addData("Getting Jewel Order and Cryptokey...   ", "");
+        telemetry.update();
 
-        // Prepare OpenCV for Jewel Detection
-        jewelDetector = new JewelDetector();
-        jewelDetector.init(hardwareMap.appContext, CameraViewDisplay.getInstance());
-
-        //Jewel Detector Settings (using recommendations from creators of DogeCV)
-        jewelDetector.areaWeight = 0.005;
-        jewelDetector.detectionMode = JewelDetector.JewelDetectionMode.MAX_AREA;
-        jewelDetector.debugContours = true;
-        jewelDetector.maxDiffrence = 15;
-        jewelDetector.ratioWeight = 30;
-        jewelDetector.minArea = 700;
-        jewelDetector.enable();
-
-        // Start and Continue Jewel Detection until we hit "PLAY"
-        while (!isStarted()) { //Track the jewel order until init ends.
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Current Order", "Jewel Order: " + jewelDetector.getCurrentOrder().toString()); // Current Result
-            telemetry.addData("Last Order", "Jewel Order: " + jewelDetector.getLastOrder().toString()); // Last Known Result
-            telemetry.update();
+        String jewels = "";
+        while (!isStarted()) { //Track the jewel order and Cryptokey until init ends.
+            if(detecttime.seconds() > 5) {
+                telemetry.addData("Updating Jewel Order and Cryptokey...   ", "");
+                telemetry.update();
+                jewels = activateDogeCV();
+                vufKey = activateVuforia();           //Look for the cryptokey
+                telemetry.addData("Vuforia Image", vufKey);
+                telemetry.addData("Jewel Order", jewels);
+                telemetry.update();
+                detecttime.reset();
+            }
             if(isStopRequested()) {
                 break;
             }
@@ -783,31 +803,24 @@ public class legacy_auto extends LinearOpMode {
 
         waitForStart();
 
-        // Shut down OpenCV and let the fun begin!
-        jewelOrder = jewelDetector.getLastOrder().toString(); //Store the jewel order for use later on.
-        jewelDetector.disable();
-        jewelDetector = null;
-        telemetry.addData("Jewel Order", jewelOrder);
-        telemetry.update();
-
 //  ====================================== AUTONOMOUS ==============================================
 
-        if(jewelBumpType != "none") {
-            bumpJewelShort(alliance, jewelOrder);
-        }
-        String cryptoKey = activateVuforia();           //Obtain the cryptokey and display it
-        telemetry.addData("Cryptokey", cryptoKey);
+        /*if(jewelBumpType != "none") {                   //Detect jewel
+            bumpJewelShort(alliance, jewels);
+        }*/
+        sleep(2000);
+        telemetry.addData("Cryptokey", vufKey);
         telemetry.update();
-        imu.startAccelerationIntegration(new Position(), new Velocity(), 1000); // Activate IMU
+        imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
         grabbers(lGlyphSGrasp, rGlyphSGrasp);           //Grab the glyph in front of the robot.
         glyphLifter("UP");                              //Lift the glypher slightly.
 
         driveOffStone(alliance);                        //Drive off the balancing stone.
-        deliverGlyph(alliance, stone, cryptoKey);       //Deliver the glyph.
+        deliverGlyph(alliance, stone, vufKey);          //Deliver the glyph.
 
         if(getMoreGlyphs == "Yes") {
-            deliverExtraGlyph(cryptoKey);
+            deliverExtraGlyph(vufKey);
         }
 
         initForTeleop();    //Because initializing in teleop moves servos before teleop begins, this
