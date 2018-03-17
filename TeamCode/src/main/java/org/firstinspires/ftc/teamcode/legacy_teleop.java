@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 /**
  * Created by A horde of cheezy puffs TM on 6/14/17.
  */
-@TeleOp (name="realLegacy",group="Opmode")
+@TeleOp (name="legacy_teleop",group="Opmode")
 public class legacy_teleop extends OpMode {
     public DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, glyphLiftM, relicTurn, relicExtend;  //Left front drive, right front drive, left back drive, right back drive.
     public Servo lGlyphS, rGlyphS, jewelExtendS, jewelHitS, relicGrabber, relicLower;

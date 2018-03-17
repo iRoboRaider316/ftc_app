@@ -48,8 +48,8 @@ public class legacy_auto extends LinearOpMode {
     private ElapsedTime gyroTimer = new ElapsedTime();
     private ElapsedTime vutimer = new ElapsedTime();
 
-    private double extendArm  = 0.66;
-    private double retractArm = 0;
+    private double extendArm  = 0.65;
+    private double retractArm = 0.1;
     private double hitCenter  = .5;
 
     private double lGlyphSRelease     = 0.8;//Glyph arms will initialize in the open position.
@@ -450,7 +450,7 @@ public class legacy_auto extends LinearOpMode {
                         encoderDrive(4, 0.3, 1);
                         break;
                     case ("KeyLeft") :
-                        imuTurn(134, "RIGHT");
+                        imuTurn(130, "RIGHT");
                         sleep(100);
                         drive(-0.3, -0.3);
                         sleep(1000);
