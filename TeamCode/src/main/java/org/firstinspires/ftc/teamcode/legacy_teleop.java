@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
  * Created by jrahm on 6/14/17.
  */
 @TeleOp (name="legacy_teleop",group="Opmode")
+@Disabled
 public class legacy_teleop extends OpMode {
 
     public DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, glyphLiftM;  //Left front drive, right front drive, left back drive, right back drive.

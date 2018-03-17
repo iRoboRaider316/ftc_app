@@ -37,7 +37,7 @@ public class legacy_auto extends LinearOpMode {
     //============================VARIABLES + CONSTANTS=============================================
 
     public DcMotor lfDriveM, lbDriveM, rfDriveM, rbDriveM, glyphLiftM;
-    public Servo lGlyphS, rGlyphS, jewelExtendS, jewelHitS;
+    public Servo lGlyphS, rGlyphS, jewelExtendS, jewelHitS, relicGrabberS;
     public CRServo glyphSlideS;
 
     private double extendArm = .55;
@@ -169,6 +169,8 @@ public class legacy_auto extends LinearOpMode {
 
         jewelExtendS.setPosition(0);
         jewelHitS.setPosition(0.25);
+
+        relicGrabberS.setPosition(1);
 
     }
 
@@ -602,6 +604,8 @@ public class legacy_auto extends LinearOpMode {
         jewelHitS = hardwareMap.servo.get("jewelHitS"); //Hub 2 Servo 4
         jewelHitS.setPosition(hitCenter);
 
+        relicGrabberS = hardwareMap.servo.get("relicGrabberS");
+
         lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
         lbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
         lfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -616,7 +620,7 @@ public class legacy_auto extends LinearOpMode {
         parameters_IMU.loggingEnabled = true;
         parameters_IMU.loggingTag = "IMU";
         parameters_IMU.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = hardwareMap.get(BNO055IMU.class, "imu3");
         imu.initialize(parameters_IMU);
 
         telemetry.addData("Status", "Initialized");
