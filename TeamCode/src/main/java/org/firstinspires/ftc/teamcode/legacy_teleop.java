@@ -46,6 +46,10 @@ public class legacy_teleop extends OpMode {
     enum SlippyState {
         Idle, LookingMagnet, FoundMagnet                    //These are the different states that the
     }
+
+    private DcMotorSimple.Direction LEFT  = DcMotorSimple.Direction.FORWARD; // Glyph Slider Directions
+    private DcMotorSimple.Direction RIGHT = DcMotorSimple.Direction.REVERSE;
+
     public void init () {
         lfDriveM = hardwareMap.dcMotor.get("lfDriveM");       //Left front drive, Hub 1, port 2
         lfDriveM.setPower(0);
