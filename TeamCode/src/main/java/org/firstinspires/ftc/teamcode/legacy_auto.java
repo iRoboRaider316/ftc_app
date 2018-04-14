@@ -613,8 +613,8 @@ public class legacy_auto extends LinearOpMode {
         lbDriveM = hardwareMap.dcMotor.get("lbDriveM"); //Hub 3 Port 3
         rfDriveM = hardwareMap.dcMotor.get("rfDriveM"); //Hub 3 Port 0
         rbDriveM = hardwareMap.dcMotor.get("rbDriveM"); //Hub 3 Port 1
-        lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
-        lbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
+        lfDriveM.setDirection(DcMotor.Direction.REVERSE);      //Reverse the left side of the drive
+        lbDriveM.setDirection(DcMotor.Direction.REVERSE);      //train for intuitive human interface
         lfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
