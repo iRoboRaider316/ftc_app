@@ -33,11 +33,12 @@ public class legacy_auto extends LinearOpMode {
 
     //============================VARIABLES + CONSTANTS==============
 
-    private DcMotor lfDriveM, lbDriveM, rfDriveM, rbDriveM, glyphLiftM, relicTurnM;
-    private Servo   lGlyphS,  rGlyphS,  jewelExtendS, jewelHitS;
-    private CRServo glyphSlideS;
+    private DcMotor lfDriveM, lbDriveM, rfDriveM, rbDriveM, glyphLiftM, relicTurnM, relicExtendM;
+    private Servo   ltGlyphS,  rtGlyphS, lbGlyphS,  rbGlyphS, jewelExtendS, jewelHitS, relicLiftS, relicGrabberS;
+    private CRServo glyphSlideS, flipS;
     private DcMotorSimple.Direction LEFT  = DcMotorSimple.Direction.FORWARD; // Glyph Slider Directions
     private DcMotorSimple.Direction RIGHT = DcMotorSimple.Direction.REVERSE;
+    private DcMotorSimple.Direction FLIP_DIR = DcMotorSimple.Direction.REVERSE;
 
     private ClosableVuforiaLocalizer vuforia;    // The Vuforia camera
     private JewelDetector jewelDetector = null;
@@ -47,23 +48,45 @@ public class legacy_auto extends LinearOpMode {
     private ElapsedTime runtime = new ElapsedTime();
     private ElapsedTime gyroTimer = new ElapsedTime();
     private ElapsedTime vutimer = new ElapsedTime();
+    private ElapsedTime encodertimer = new ElapsedTime();
 
-    private double extendArm  = 0.65;
+    private double extendArm  = 0.55;
     private double retractArm = 0.1;
     private double hitCenter  = .5;
 
-    private double lGlyphSRelease     = 0.8;//Glyph arms will initialize in the open position.
-    private double rGlyphSRelease     = 0;  //Servos have been "reprogrammed" so we can use
-    private double lGlyphSGrasp       = 0;  //values so much like 0 and 1
-    private double rGlyphSGrasp       = 1;
-    private double lGlyphSAlmostGrasp = 0.5;
-    private double rGlyphSAlmostGrasp = 0.6;
+    private double lbGlyphSRelease     = 0.8;//Glyph arms will initialize in the open position.
+    private double rbGlyphSRelease     = 0;  //Servos have been "reprogrammed" so we can use
+    private double lbGlyphSGrasp       = 0;  //values so much like 0 and 1
+    private double rbGlyphSGrasp       = 1;
+    private double ltGlyphSRelease     = 0;
+    private double rtGlyphSRelease     = 1;
+    private double ltGlyphSGrasp       = 1;
+    private double rtGlyphSGrasp       = 0;
+    private double ltGlyphSAlmostGrasp = 0.4;
+    private double rtGlyphSAlmostGrasp = 0.6;
+    private double lbGlyphSAlmostGrasp = 0.6;
+    private double rbGlyphSAlmostGrasp = 0.4;
+
+    private boolean relicGrabbed = false;
+    private boolean pictographScanned = false;
+
+    private int selection;
+    private int setAlliance;
+    private int setBumpType;
+    private int setStone;
+    private int setMoreGlyphs;
+
+    private String[] allianceList = {"blue", "red"};
+    private String[] jewelBumpTypeList = {"correct", "wrong", "none"};
+    private String[] stoneList = {"left", "right"};
+    private String[] getMoreGlyphsList = {"Yes", "No"};
 
     private String alliance = "";
     private String jewelOrder = "";
     private String jewelBumpType = "";
     private String stone = "";
     private String getMoreGlyphs = "";
+    private String cryptokey;
     String vuforiaLicenseKey = "Ae3H91v/////AAAAGT+4TPU5r02VnQxesioVLr0qQzNtgdYskxP7aL6/" +
             "yt9VozCBUcQrSjwec5opfpOWEuc55kDXNNSRJjLAnjGPeaku9j4nOfe7tWxio/xj/uNdPX7fEHD0j5b" +
             "5M1OgX/bkWoUV6pUTAsKj4GaaAKIf76vnX36boqJ7BaMJNuhkYhoQJWdVqwFOC4veNcABzJRw4mQmfO" +
@@ -120,9 +143,23 @@ public class legacy_auto extends LinearOpMode {
         drive(0, 0);
     }
 
-    public void grabbers(double lPos, double rPos) {
-        lGlyphS.setPosition(lPos);
-        rGlyphS.setPosition(rPos);
+    public void grabbers(String sets, double... positions) {        // Yay, Varargs!
+        switch(sets) {
+            case "Top":
+                ltGlyphS.setPosition(positions[0]); // Use the 1st position for left top glyph arm
+                rtGlyphS.setPosition(positions[1]); // Use the 2st position for right top glyph arm
+                break;
+            case "Bottom":
+                lbGlyphS.setPosition(positions[0]); // Use the 1st position for left bot. glyph arm
+                rbGlyphS.setPosition(positions[1]); // Use the 2st position for right bot. glyph arm
+                break;
+            default:
+                ltGlyphS.setPosition(positions[0]); // Use the 1st position for left top glyph arm
+                rtGlyphS.setPosition(positions[1]); // Use the 2st position for right top glyph arm
+                lbGlyphS.setPosition(positions[2]); // Use the 3rd position for left bot. glyph arm
+                rbGlyphS.setPosition(positions[3]); // Use the 4th position for right bot. glyph arm
+                break;
+        }
         sleep(500);
     }
 
@@ -136,11 +173,13 @@ public class legacy_auto extends LinearOpMode {
         glyphLiftM.setPower(0);
     }
 
-    private void moveSliders(DcMotorSimple.Direction Dir, int time) {
+    private void moveSliders(DcMotorSimple.Direction Dir, int... time) {
         glyphSlideS.setDirection(Dir);
         glyphSlideS.setPower(1);
-        sleep(time);
-        glyphSlideS.setPower(0);
+        if(time.length > 0) {
+            sleep(time[0]);
+            glyphSlideS.setPower(0);
+        }
     }
 
     private void setMotorMode(DcMotor.RunMode mode) {
@@ -152,8 +191,10 @@ public class legacy_auto extends LinearOpMode {
 
     private void initForTeleop () {
 
-        lGlyphS.setPosition(0.65);
-        rGlyphS.setPosition(0.4);
+        ltGlyphS.setPosition(0.65);
+        rtGlyphS.setPosition(0.65);
+        lbGlyphS.setPosition(0.4);
+        rbGlyphS.setPosition(0.4);
 
         jewelExtendS.setPosition(0);
         jewelHitS.setPosition(0.25);
@@ -244,7 +285,7 @@ public class legacy_auto extends LinearOpMode {
          * separates -180 from 180. Adding or subtracting the degreesToTurn by 360 here isn't
          * always necessary, however, so we skip this operation in those cases */
         targetHeading += targetHeading > 180 ? -360 :
-                         targetHeading < -180 ? 360 : 0;
+                targetHeading < -180 ? 360 : 0;
 
         /* In case you don't know what this is (it isn't widely used in FTC Robot programs, I
          * don't think), it's called an Array, and they're used to store a list of variables in
@@ -253,10 +294,10 @@ public class legacy_auto extends LinearOpMode {
          * We will use them to determine if we are in range of where we want Legacy to turn
          */
         int[] headingList = {targetHeading - 2,
-                             targetHeading - 1,
-                             targetHeading,
-                             targetHeading + 1,
-                             targetHeading + 2};
+                targetHeading - 1,
+                targetHeading,
+                targetHeading + 1,
+                targetHeading + 2};
 
         /* As you can probably see here, the values in an array are mutable, which works very well
          * in cases like this, where are target heading values might be above or below where our
@@ -264,7 +305,7 @@ public class legacy_auto extends LinearOpMode {
          */
         for(int i = 0; i < headingList.length; i++) {
             headingList[i] += headingList[i] < -180 ? 360 :
-                              headingList[i] > 180 ? -360 : 0;
+                    headingList[i] > 180 ? -360 : 0;
         }
 
         // Finally, we reset the Gyro timer and begin our turn!
@@ -294,7 +335,7 @@ public class legacy_auto extends LinearOpMode {
                     break;
                 }
             }
-        // LEFT TURN
+            // LEFT TURN
         } else {
             while (shouldKeepTurning2(headingList)) {
                 updateIMU();
@@ -359,19 +400,19 @@ public class legacy_auto extends LinearOpMode {
                     default : case ("KeyCenter") :
                         imuTurn(25, "RIGHT");
                         encoderDrive(-13, 0.23, -1);
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);
                         encoderDrive(6, 0.3, 1);                            // Drive backward
                         break;
                     case ("KeyLeft") :
-                        imuTurn(10, "RIGHT");
+                        imuTurn(13, "RIGHT");
                         encoderDrive(-10, 0.23, -1);
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);
                         encoderDrive(6, 0.3, 1);                            // Drive backward
                         break;
                     case ("KeyRight") :
-                        imuTurn(40, "RIGHT");
+                        imuTurn(42, "RIGHT");
                         encoderDrive(-17, 0.23, -1);
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);
                         encoderDrive(6, 0.3, 1);                            // Drive backward
                         break;
                 }
@@ -379,20 +420,20 @@ public class legacy_auto extends LinearOpMode {
             case ("blueright") :
                 switch (cryptoKey) {
                     case ("KeyLeft") :
-                        encoderDrive(-3, 0.23, -1);                         // Drive in front of desired cryptobox
+                        encoderDrive(-5, 0.23, -1);                         // Drive in front of desired cryptobox
                         imuTurn(-90, "LEFT");                               // Turn to desired cryptobox
                         sleep(200);                                         // Just a sleep to keep Legacy from accidentally shifting left
                         encoderDrive(-7, 0.23, -1);                         // Drive into column
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);   // "Dropping Glyph..."
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);   // "Dropping Glyph..."
                         sleep(200);
                         encoderDrive(6, 0.3, 1);                            // Drive backward
                         break;
                     default: case ("KeyCenter") :
-                        encoderDrive(-13, 0.23, -1);
+                        encoderDrive(-12, 0.23, -1);
                         imuTurn(-90, "LEFT");
                         sleep(200);
                         encoderDrive(-7, 0.23, -1);
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);
                         sleep(200);
                         encoderDrive(6, 0.3, 1);
                         break;
@@ -401,7 +442,7 @@ public class legacy_auto extends LinearOpMode {
                         imuTurn(-90, "LEFT");
                         sleep(200);
                         encoderDrive(-7, 0.23, -1);
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);
                         sleep(200);
                         encoderDrive(6, 0.3, 1);
                         break;
@@ -414,7 +455,7 @@ public class legacy_auto extends LinearOpMode {
                         imuTurn(-90, "LEFT");
                         sleep(200);
                         encoderDrive(-7, 0.23, -1);
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);
                         sleep(200);
                         encoderDrive(6, 0.3, 1);
                         break;
@@ -423,7 +464,7 @@ public class legacy_auto extends LinearOpMode {
                         imuTurn(-90, "LEFT");
                         sleep(200);
                         encoderDrive(-7, 0.23, -1);
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);
                         sleep(200);
                         encoderDrive(6, 0.3, 1);
                         break;
@@ -432,7 +473,7 @@ public class legacy_auto extends LinearOpMode {
                         imuTurn(-88, "LEFT");
                         sleep(200);
                         encoderDrive(-7, 0.23, -1);
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);
                         sleep(200);
                         encoderDrive(6, 0.3, 1);
                         break;
@@ -446,7 +487,7 @@ public class legacy_auto extends LinearOpMode {
                         drive(-0.3, -0.3);
                         sleep(1000);
                         driveStop();
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);
                         encoderDrive(4, 0.3, 1);
                         break;
                     case ("KeyLeft") :
@@ -455,7 +496,7 @@ public class legacy_auto extends LinearOpMode {
                         drive(-0.3, -0.3);
                         sleep(1000);
                         driveStop();
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);
                         encoderDrive(4, 0.3, 1);
                         break;
                     case ("KeyRight") :
@@ -464,7 +505,7 @@ public class legacy_auto extends LinearOpMode {
                         drive(-0.3, -0.3);
                         sleep(1000);
                         driveStop();
-                        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);
+                        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);
                         encoderDrive(5, 0.3, 1);
                         break;
                 }
@@ -490,7 +531,7 @@ public class legacy_auto extends LinearOpMode {
         }
 
         glyphLifter("DOWN");
-        grabbers(lGlyphSAlmostGrasp, rGlyphSRelease);
+        grabbers("Both", ltGlyphSAlmostGrasp, rtGlyphSRelease, lbGlyphSAlmostGrasp, rbGlyphSRelease);
         switch(alliance + stone) {                      // Prep for diving into the pile
             case "redright":
                 if(Key == "KeyRight") {
@@ -512,11 +553,11 @@ public class legacy_auto extends LinearOpMode {
         }
         moveSliders(RIGHT, 1000);                           // Set up left side of glyph
         encoderDrive(2, 0.3, 1);                            // Prep for setting up other side
-        grabbers(lGlyphSRelease, rGlyphSAlmostGrasp);
+        grabbers("Both", ltGlyphSRelease, rtGlyphSAlmostGrasp, lbGlyphSRelease, rbGlyphSAlmostGrasp);
         moveSliders(RIGHT, 300);
         encoderDrive(-2, 0.3, -1);
         moveSliders(LEFT, 1000);                            // Set up right side of glyph
-        grabbers(lGlyphSGrasp, rGlyphSGrasp);               // GRAB!!!
+        grabbers("Both", ltGlyphSGrasp, rtGlyphSGrasp, lbGlyphSGrasp, rbGlyphSGrasp);// GRAB!!!
         glyphLifter("UP");                                  // lift it up...
         glyphLifter("UP");                                  // more...
         switch(alliance + stone) {
@@ -547,7 +588,7 @@ public class legacy_auto extends LinearOpMode {
         sleep(100);
         encoderDrive(-7, 0.23, -1);
         sleep(200);
-        grabbers(lGlyphSAlmostGrasp, rGlyphSAlmostGrasp);   // RELEASE!!!
+        grabbers("Both", ltGlyphSAlmostGrasp, rtGlyphSAlmostGrasp, lbGlyphSAlmostGrasp, rbGlyphSAlmostGrasp);   // RELEASE!!!
         encoderDrive(4, 0.23, 1);                            // Back up and end method
     }
 
@@ -581,21 +622,21 @@ public class legacy_auto extends LinearOpMode {
      * what order the jewels are in, and which jewel we want to bump */
     private void bumpJewelShort(String alliance, String jewel) throws InterruptedException {
         double knockVal =
-                    jewelBumpType == "correct" ? (
-                    ((alliance == "blue" && jewel == "RED_BLUE") || (alliance == "red"  && jewel == "BLUE_RED")) ? 0 :
-                    ((alliance == "red"  && jewel == "RED_BLUE") || (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5) :
-                    jewelBumpType == "wrong" ? (
-                    ((alliance == "blue" && jewel == "BLUE_RED") || (alliance == "red"  && jewel == "RED_BLUE")) ? 0 :
-                    ((alliance == "red"  && jewel == "BLUE_RED") || (alliance == "blue" && jewel == "RED_BLUE")) ? 1 : 0.5) : 0.5;
+                jewelBumpType == "correct" ? (
+                        ((alliance == "blue" && jewel == "RED_BLUE") || (alliance == "red"  && jewel == "BLUE_RED")) ? 0 :
+                                ((alliance == "red"  && jewel == "RED_BLUE") || (alliance == "blue" && jewel == "BLUE_RED")) ? 1 : 0.5) :
+                        jewelBumpType == "wrong" ? (
+                                ((alliance == "blue" && jewel == "BLUE_RED") || (alliance == "red"  && jewel == "RED_BLUE")) ? 0 :
+                                        ((alliance == "red"  && jewel == "BLUE_RED") || (alliance == "blue" && jewel == "RED_BLUE")) ? 1 : 0.5) : 0.5;
         if(knockVal != 0.5) {
-                jewelExtendS.setPosition(extendArm);
-                sleep(750);
-                jewelHitS.setPosition(knockVal);
-                sleep(500);
-                jewelHitS.setPosition(hitCenter);
-                sleep(500);
-                jewelExtendS.setPosition(retractArm);
-                sleep(500);
+            jewelExtendS.setPosition(extendArm);
+            sleep(750);
+            jewelHitS.setPosition(knockVal);
+            sleep(500);
+            jewelHitS.setPosition(hitCenter);
+            sleep(500);
+            jewelExtendS.setPosition(retractArm);
+            sleep(500);
         } else {
             telemetry.addData("Problem with alliance or jewelOrder", "    ;-;");
             telemetry.update();
@@ -613,8 +654,8 @@ public class legacy_auto extends LinearOpMode {
         lbDriveM = hardwareMap.dcMotor.get("lbDriveM"); //Hub 3 Port 3
         rfDriveM = hardwareMap.dcMotor.get("rfDriveM"); //Hub 3 Port 0
         rbDriveM = hardwareMap.dcMotor.get("rbDriveM"); //Hub 3 Port 1
-        lfDriveM.setDirection(DcMotor.Direction.REVERSE);      //Reverse the left side of the drive
-        lbDriveM.setDirection(DcMotor.Direction.REVERSE);      //train for intuitive human interface
+        lfDriveM.setDirection(DcMotor.Direction.REVERSE);       //Reverse the left side of the drive
+        lbDriveM.setDirection(DcMotor.Direction.REVERSE);       //train for intuitive human interface
         lfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -631,9 +672,11 @@ public class legacy_auto extends LinearOpMode {
         glyphSlideS.setPower(0);
 
         // Glyph Grabber Arms
-        lGlyphS = hardwareMap.servo.get("lGlyphS"); //Hub 3 Servo 3
-        rGlyphS = hardwareMap.servo.get("rGlyphS"); //Hub 3 Servo 5
-        grabbers(lGlyphSRelease, rGlyphSRelease);
+        ltGlyphS = hardwareMap.servo.get("LTGlyphS"); //Hub 3 Servo 3
+        rtGlyphS = hardwareMap.servo.get("RTGlyphS"); //Hub 3 Servo 5
+        lbGlyphS = hardwareMap.servo.get("LBGlyphS"); //Hub 3 Servo 3
+        rbGlyphS = hardwareMap.servo.get("RBGlyphS"); //Hub 3 Servo 5
+        grabbers("Both", ltGlyphSRelease, rtGlyphSRelease, lbGlyphSRelease, rbGlyphSRelease);   // RELEASE!!!
 
         // Jewel Knocker
         jewelExtendS = hardwareMap.servo.get("jewelExtendS"); //Hub 3 Servo 0
@@ -655,99 +698,85 @@ public class legacy_auto extends LinearOpMode {
         imu = hardwareMap.get(BNO055IMU.class, "imu3");
         imu.initialize(parameters_IMU);
 
-        telemetry.addData("Status", "Initialized");
-
         // =======================BEGIN SELECTION===================================================
-        telemetry.addData("Selection", "X for Blue, B for Red");        // Which alliance are you on?
-        telemetry.update();
-        while (alliance == "" && !isStopRequested()) {
-            if (gamepad1.x) {
-                alliance = "blue";
-            } else if (gamepad1.b) {
-                alliance = "red";
-            }
-            if (isStopRequested()) {
-                break;
-            }
-        }
-
-        sleep(500);
-        telemetry.addData("Status", "Initialized");
-        telemetry.addData("Selection", "X for Left Stone, B for Right Stone");        // Which side are you on?
-        telemetry.update();
-        while (stone == "" && !isStopRequested()) {
-            if (gamepad1.x) {
-                stone = "left";
-            } else if (gamepad1.b) {
-                stone = "right";
-            }
-            if (isStopRequested()) {
-                break;
-            }
-        }
-
-        sleep(500);
-        telemetry.addData("Status", "Initialized");
-        telemetry.addData("Selection", "X for Extra Glyph Load, B for no Extra Load");        // Do we want an extra glyph load?
-        telemetry.update();
-            while (getMoreGlyphs == "") {
-                if (gamepad1.x) {
-                    getMoreGlyphs = "Yes";
-                } else if (gamepad1.b) {
-                    getMoreGlyphs = "No";
-                }
-                if (isStopRequested()) {
-                    break;
-                }
-            }
-
-
-        sleep(500);
-        telemetry.addData("Status", "Initialized");
-        telemetry.addData("Selection", "X for Correct Jewel, B for Wrong Jewel, Y for No Jewel");        // How do we knock the jewel?
-        telemetry.update();
-        while (jewelBumpType == "" && !isStopRequested()) {
-            if (gamepad1.x) {
-                jewelBumpType = "correct";
-            } else if (gamepad1.b) {
-                jewelBumpType = "wrong";
-            } else if(gamepad1.y) {
-                jewelBumpType = "none";
-            }
-            if (isStopRequested()) {
-                break;
-            }
-        }
-
-        // Now we display the result
-        while(!gamepad1.a && !isStopRequested()) {
-            switch(alliance + stone) {
-                case "redleft":
-                    telemetry.addData("Alliance", "Red");
-                    telemetry.addData("Stone", "Left");
-                    break;
-                case "redright":
-                    telemetry.addData("Alliance", "Red");
-                    telemetry.addData("Stone", "Right");
-                    break;
-                case "blueleft":
-                    telemetry.addData("Alliance", "Blue");
-                    telemetry.addData("Stone", "Left");
-                    break;
-                case "blueright":
-                    telemetry.addData("Alliance", "Blue");
-                    telemetry.addData("Stone", "Right");
-                    break;
-            }
-            telemetry.addData("Jewel Hit Type", jewelBumpType);
-            telemetry.addData("Extra Glyph Load?", getMoreGlyphs);
+        /* Custom List-style selection for autonomous. This way we can easily adjust
+        * an incorrect value without having to restart the program */
+        while(!gamepad1.a && !isStarted()) {
+            String[] selector = {"   ", "   ", "   ", "   "};
+            selector[selection] = "-> ";
+            telemetry.addData("Alliance", selector[0] + allianceList[setAlliance]);
+            telemetry.addData("Stone", selector[1] + stoneList[setStone]);
+            telemetry.addData("Jewel Hit Type", selector[2] + jewelBumpTypeList[setBumpType]);
+            telemetry.addData("Extra Glyph Load?", selector[3] + getMoreGlyphsList[setMoreGlyphs]);
+            telemetry.addData("Use the Dpad buttons to set your autonomous program", "");
             telemetry.addData("Press A if this is ok", "");
             telemetry.update();
             if (isStopRequested()) {
                 break;
             }
+            if(gamepad1.dpad_down && selection < 3) {
+                selection++;
+                sleep(250);
+            } else if(gamepad1.dpad_up && selection > 0) {
+                selection--;
+                sleep(250);
+            }
+
+            if(gamepad1.dpad_right) {
+                switch (selection) {
+                    case 0:
+                        if(setAlliance < allianceList.length - 1) {
+                            setAlliance++;
+                        }
+                        break;
+                    case 1:
+                        if(setStone < stoneList.length - 1) {
+                            setStone++;
+                        }
+                        break;
+                    case 2:
+                        if(setBumpType < jewelBumpTypeList.length - 1) {
+                            setBumpType++;
+                        }
+                        break;
+                    case 3:
+                        if(setMoreGlyphs < getMoreGlyphsList.length - 1) {
+                            setMoreGlyphs++;
+                        }
+                        break;
+                }
+                sleep(250);
+            } else if(gamepad1.dpad_left) {
+                switch (selection) {
+                    case 0:
+                        if(setAlliance > 0) {
+                            setAlliance--;
+                        }
+                        break;
+                    case 1:
+                        if(setStone > 0) {
+                            setStone--;
+                        }
+                        break;
+                    case 2:
+                        if(setBumpType > 0) {
+                            setBumpType--;
+                        }
+                        break;
+                    case 3:
+                        if(setMoreGlyphs > 0) {
+                            setMoreGlyphs--;
+                        }
+                        break;
+                }
+                sleep(250);
+            }
         }
 
+        alliance = allianceList[setAlliance];
+        stone = stoneList[setStone];
+        jewelBumpType = jewelBumpTypeList[setBumpType];
+        getMoreGlyphs = getMoreGlyphsList[setMoreGlyphs];
         sleep(500);
 
         // Prepare OpenCV for Jewel Detection
@@ -793,7 +822,7 @@ public class legacy_auto extends LinearOpMode {
         telemetry.update();
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000); // Activate IMU
 
-        grabbers(lGlyphSGrasp, rGlyphSGrasp);           //Grab the glyph in front of the robot.
+        grabbers("Both", ltGlyphSGrasp, rtGlyphSGrasp, lbGlyphSGrasp, rbGlyphSGrasp); //Grab the glyph in front of the robot.
         glyphLifter("UP");                              //Lift the glypher slightly.
 
         driveOffStone(alliance);                        //Drive off the balancing stone.
