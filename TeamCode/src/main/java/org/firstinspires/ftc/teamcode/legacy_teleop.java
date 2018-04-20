@@ -14,17 +14,21 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
  */
 @TeleOp (name="legacy_teleop",group="Opmode")
 public class legacy_teleop extends OpMode {
-    public DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, glyphLiftM, relicTurn, relicExtend;  //Left front drive, right front drive, left back drive, right back drive.
-    public Servo lGlyphS, rGlyphS, jewelExtendS, jewelHitS, relicGrabber, relicLower;
-    public CRServo glyphSlideS;
-    DigitalChannel sensorDigitalMagnetic;
-    ElapsedTime runtime = new ElapsedTime();
-    private double lServoArmInit = 0.65;                     //Glyph arms will initialize in the open position./
-    private double rServoArmInit = 0.4;
-    private double lServoArmGrasp = 0;                    //After testing, these positions were optimal for grasping the glyphs.
-    private double rServoArmGrasp = 1;
-    private double lServoArmAlmostGrasp = 0.5;
-    private double rServoArmAlmostGrasp = 0.6;
+    private DcMotor lfDriveM, rfDriveM, lbDriveM, rbDriveM, glyphLiftM, relicTurnM, relicExtendM;  //Left front drive, right front drive, left back drive, right back drive.
+    private Servo ltGlyphS, rtGlyphS, lbGlyphS, rbGlyphS, jewelExtendS, jewelHitS, relicGrabberS, relicLowerS;
+    private CRServo glyphSlideS, flipS;
+    private DigitalChannel sensorDigitalMagnetic;
+    private ElapsedTime runtime = new ElapsedTime();
+    private boolean topajar = true;
+    private boolean bottomajar = true;
+    private boolean bothajar = false;
+    private boolean flipUp = true;
+    private boolean both = false;
+    private int bothToggle = 0;
+    private boolean top = false;
+    private int topToggle = 0;
+    private boolean bottom = false;
+    private int bottomToggle = 0;
     private double relicGrab = 1;
     private double relicRelease = 0;
     private double relicDown = 0.9;
@@ -43,12 +47,17 @@ public class legacy_teleop extends OpMode {
     private double hitPLeft = .25;   //Protects arm from falling in case of power outages.
     private double hitRight = 1;     //jewelHitS Hits right jewel variable
     boolean first = false;
-    enum SlippyState {
-        Idle, LookingMagnet, FoundMagnet                    //These are the different states that the
-    }
-
-    private DcMotorSimple.Direction LEFT  = DcMotorSimple.Direction.FORWARD; // Glyph Slider Directions
-    private DcMotorSimple.Direction RIGHT = DcMotorSimple.Direction.REVERSE;
+    ElapsedTime flipper = new ElapsedTime();
+    private enum SlippyState { Idle, LookingMagnet, FoundMagnet }
+    private enum BothGlyphs { Idle, grab, open, ajar }
+    private enum TopGlyphs { Idle, grab, open, ajar }
+    private enum BottomGlyphs { Idle, grab, open, ajar }
+    private enum FlippiBoi { Idle, Goingup, Goingdown }
+    private SlippyState slippystate = SlippyState.Idle;
+    private BothGlyphs bothglyphs = BothGlyphs.Idle;
+    private TopGlyphs topglyphs = TopGlyphs.Idle;
+    private BottomGlyphs bottomglyphs = BottomGlyphs.Idle;
+    private FlippiBoi flippiboi = FlippiBoi.Idle;
 
     public void init () {
         lfDriveM = hardwareMap.dcMotor.get("lfDriveM");       //Left front drive, Hub 1, port 2
@@ -62,23 +71,25 @@ public class legacy_teleop extends OpMode {
         rbDriveM.setPower(0);
         glyphLiftM = hardwareMap.dcMotor.get("glyphLiftM");   //Lift motor, Hub 2, port 3
         glyphLiftM.setPower(0);
-        lGlyphS = hardwareMap.servo.get("lGlyphS");     //Left servo arm, Hub 1, port 2
-        lGlyphS.setPosition(lServoArmInit);
-        rGlyphS = hardwareMap.servo.get("rGlyphS");     //Right servo arm, Hub 2, port 1
-        rGlyphS.setPosition(rServoArmInit);
+        ltGlyphS = hardwareMap.servo.get("LTGlyphS");     //Left servo arm, Hub 1, port 2
+        rtGlyphS = hardwareMap.servo.get("RTGlyphS");     //Right servo arm, Hub 2, port 1
+        lbGlyphS = hardwareMap.servo.get("LBGlyphS");     //Left servo arm, Hub 1, port 2
+        rbGlyphS = hardwareMap.servo.get("RBGlyphS");     //Right servo arm, Hub 2, port 1
         glyphSlideS = hardwareMap.crservo.get("glyphSlideS");
         glyphSlideS.setPower(0);
+        flipS = hardwareMap.crservo.get("flipS");
+        flipS.setPower(0);
         jewelExtendS = hardwareMap.servo.get("jewelExtendS");   //Hub 3 Servo 0
         jewelExtendS.setPosition(retractArm);
         jewelHitS = hardwareMap.servo.get("jewelHitS");     //Hub 2 Servo 4
-        relicTurn = hardwareMap.dcMotor.get("relicTurnM");       //Relic Turn Motor, Hub 2, Port 0
-        relicTurn.setPower(0);
-        relicExtend = hardwareMap.dcMotor.get("relicExtendM");   //Relic Extend Motor, Hub 2, port 1 20
-        relicExtend.setPower(0);
-        relicGrabber = hardwareMap.servo.get("relicGrabberS");
-        relicLower = hardwareMap.servo.get("relicLiftS");
-        relicTurn.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        relicExtend.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        relicTurnM = hardwareMap.dcMotor.get("relicTurnM");       //Relic Turn Motor, Hub 2, Port 0
+        relicTurnM.setPower(0);
+        relicExtendM = hardwareMap.dcMotor.get("relicExtendM");   //Relic Extend Motor, Hub 2, port 1 20
+        relicExtendM.setPower(0);
+        relicGrabberS = hardwareMap.servo.get("relicGrabberS");
+        relicLowerS = hardwareMap.servo.get("relicLiftS");
+        relicTurnM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        relicExtendM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         lbDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rfDriveM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -87,19 +98,27 @@ public class legacy_teleop extends OpMode {
         sensorDigitalMagnetic = hardwareMap.get(DigitalChannel.class, "SensorDigitalMagnetic");
         sensorDigitalMagnetic.setMode(DigitalChannel.Mode.INPUT);
     }
-    private SlippyState slippystate = SlippyState.Idle;
 
     @Override
     public void start() {
         runtime.reset();
-        lGlyphS.setPosition(0.65);
-        rGlyphS.setPosition(0.4);
+
+        ltGlyphS.setPosition(0.7);
+        rtGlyphS.setPosition(0.3);
+        lbGlyphS.setPosition(0.3);
+        rbGlyphS.setPosition(0.7);
 
         jewelExtendS.setPosition(0);
         jewelHitS.setPosition(0.25);
     }
 
     public void loop() {
+        // Set some variables for use in Glyph Grabbing
+        boolean aUp = !gamepad2.a;
+        boolean bUp = !gamepad2.b;
+        boolean xUp = !gamepad2.x;
+        boolean yUp = !gamepad2.y;
+
         if(gamepad1.right_bumper) {
             speedFactor = 1;
         } else {
@@ -136,74 +155,62 @@ public class legacy_teleop extends OpMode {
             gamepad1.left_stick_y = gamepad1.right_stick_y;
         }
 ///OPERATOR CODE
-        relicExtend.setPower(-gamepad2.right_stick_y);
-        relicTurn.setPower(-gamepad2.left_stick_x/5);
-        if (gamepad2.left_stick_x == 0 && !first) {
-            relicTurn.setPower(-0.1);
+        relicExtendM.setPower(-gamepad2.right_stick_y);
+        relicTurnM.setPower(-gamepad2.left_stick_x/5);
+        if (gamepad2.left_stick_x >= 0) {
             first = true;
         }
-//        if (gamepad2.left_bumper) {
-//            relicLower.setPosition(relicRaise);
-//        }
-//        else if (gamepad2.right_bumper) {
-//            relicLower.setPosition(relicDown);
-//        }
-//        if (gamepad2.y) {
-//            relicGrabber.setPosition(relicGrab);
-//        }
-//        else if (gamepad2.a) {
-//            relicGrabber.setPosition(relicRelease);
-//        }
+
         if (gamepad2.dpad_right) {
-            relicGrabber.setPosition(relicSlow1);
+            relicGrabberS.setPosition(relicSlow1);
         } else if (gamepad2.dpad_left) {
-            relicGrabber.setPosition(relicSlow2);
+            relicGrabberS.setPosition(relicSlow2);
         }
 
         if (gamepad2.right_trigger > 0.01 && gamepad2.y){
-            relicGrabber.setPosition(gamepad2.right_trigger);
+            relicGrabberS.setPosition(gamepad2.right_trigger);
         }
         if(gamepad2.left_trigger > 0.01 && gamepad2.y){
-            relicLower.setPosition(gamepad2.left_trigger);
+            relicLowerS.setPosition(gamepad2.left_trigger);
         }
         if (gamepad2.right_bumper && relicToggle == "inOn") {
             relicToggle = "outOff";
         } else if (relicToggle == "outOff" && !gamepad2.right_bumper) {
             relicToggle = "outOn";
-            relicGrabber.setPosition(relicRelease);
+            relicGrabberS.setPosition(relicRelease);
         } else if (gamepad2.right_bumper && relicToggle == "outOn") {
             relicToggle = "inOff";
         } else if (relicToggle == "inOff" && !gamepad2.right_bumper) {
             relicToggle = "inOn";
-            relicGrabber.setPosition(relicGrab);
+            relicGrabberS.setPosition(relicGrab);
         }
 
         if (gamepad2.left_bumper && relicArmToggle == "inOn") {
             relicArmToggle = "outOff";
         } else if (relicArmToggle == "outOff" && !gamepad2.left_bumper) {
             relicArmToggle = "outOn";
-            relicLower.setPosition(relicDown);
+            relicLowerS.setPosition(relicDown);
         } else if (gamepad2.left_bumper && relicArmToggle == "outOn") {
             relicArmToggle = "inOff";
         } else if (relicArmToggle == "inOff" && !gamepad2.left_bumper) {
             relicArmToggle = "inOn";
-            relicLower.setPosition(relicRaise);
+            relicLowerS.setPosition(relicRaise);
         }
 
         if (gamepad2.dpad_up) {
-            if(relicLower.getPosition() == relicDown && relicDown > 0) {
+            if(relicLowerS.getPosition() == relicDown && relicDown > 0) {
                 relicDown -= 0.01;
-                relicLower.setPosition(relicDown);
+                relicLowerS.setPosition(relicDown);
                 try { Thread.sleep(100); }
                 catch (InterruptedException exc) { Thread.currentThread().interrupt(); }
-            } else if(relicLower.getPosition() != relicDown) glyphLiftM.setPower(1);
+            } else if(relicLowerS.getPosition() != relicDown) glyphLiftM.setPower(1);
         } else if (gamepad2.dpad_down) {
-            if(relicLower.getPosition() == relicDown && relicDown < 1) {
+            if(relicLowerS.getPosition() == relicDown && relicDown < 1) {
                 relicDown += 0.01;
-                relicLower.setPosition(relicDown);
+                relicLowerS.setPosition(relicDown);
                 try { Thread.sleep(100); }
                 catch (InterruptedException exc) { Thread.currentThread().interrupt(); }
-            } else if(relicLower.getPosition() != relicDown) glyphLiftM.setPower(-1);
+            } else if(relicLowerS.getPosition() != relicDown) glyphLiftM.setPower(-1);
         } else {
             glyphLiftM.setPower(0);
         }
@@ -216,19 +223,169 @@ public class legacy_teleop extends OpMode {
             glyphLiftM.setPower(0);
         }
 
-        if (gamepad2.b) { //hitting the "b" button on Gamepad 2 will cause the glypher servos to grasp the glyph
-            lGlyphS.setPosition(lServoArmGrasp);
-            rGlyphS.setPosition(rServoArmGrasp);
+        // ----------- Glyph Grab System (Both sets) -----------
+        if(!gamepad2.b && !bUp){
+            both = true;
         }
-        if (gamepad2.x) { //hitting the "x" button on Gamepad 2 will cause the glypher servos to return to their original position
-            lGlyphS.setPosition(lServoArmInit);
-            rGlyphS.setPosition(rServoArmInit);
+        else if(gamepad2.x || gamepad2.y || gamepad2.a){
+            both = false;
+            bothToggle = 0;
         }
-        if (gamepad2.y) {   //hitting the "y" button on Gamepad 2 will cause the glypher servos to expand slightly larger than grasping the glyphs.
-            lGlyphS.setPosition(lServoArmAlmostGrasp);
-            rGlyphS.setPosition(rServoArmAlmostGrasp);
+        if (!gamepad2.b && both && !bUp){
+            if (bothToggle == 0){
+                bothToggle = 1;
+            } else if (bothToggle == 1 && !bothajar){
+                bothToggle = 2;
+                bothajar = true;
+            } else if (bothToggle == 1 && bothajar){
+                bothToggle = 0;
+                bothajar = false;
+            } else if (bothToggle == 2){
+                bothToggle = 1;
+            }
+            telemetry.addData("Toggle State", bothToggle);
+            telemetry.update();
+            if (bothToggle > 2) bothToggle = 0;
+            bothglyphs = bothToggle == 0 ? BothGlyphs.open :
+                         bothToggle == 1 ? BothGlyphs.ajar : BothGlyphs.grab;
+
+            // Now power the servos!
+            switch (bothglyphs){
+                case ajar:
+                    ltGlyphS.setPosition(0.7);
+                    rtGlyphS.setPosition(0.3);
+                    lbGlyphS.setPosition(0.3);
+                    rbGlyphS.setPosition(0.7);
+                    break;
+                case grab:
+                    ltGlyphS.setPosition(0);
+                    rtGlyphS.setPosition(1);
+                    lbGlyphS.setPosition(1);
+                    rbGlyphS.setPosition(0);
+                    break;
+                case open:
+                    ltGlyphS.setPosition(1);
+                    rtGlyphS.setPosition(0);
+                    lbGlyphS.setPosition(0);
+                    rbGlyphS.setPosition(1);
+                    break;
+            }
         }
 
+        // ----------- Glyph Grab System (Top set only) -----------
+        if((!gamepad2.y && !yUp)){
+            top = true;
+        } else if(gamepad2.x || gamepad2.b || gamepad2.a){
+            top = false;
+            topToggle = 0;
+        }
+        if (!gamepad2.y && !yUp && top){
+            if (topToggle == 0){
+                topToggle = 1;
+            } else if (topToggle == 1 && !topajar){
+                topToggle = 2;
+                topajar = true;
+            } else if (topToggle == 1 && topajar){
+                topToggle = 0;
+                topajar = false;
+            } else if (topToggle == 2){
+                topToggle = 1;
+            }
+            if (topToggle > 2) {
+                topToggle = 0;
+            }
+
+            if (topToggle > 2) topToggle = 0;
+            topglyphs = topToggle == 0 ? TopGlyphs.open :
+                        topToggle == 1 ? TopGlyphs.ajar : TopGlyphs.grab;
+
+            // Now power the servos!
+            switch (topglyphs){
+                case ajar:
+                    ltGlyphS.setPosition(0.7);
+                    rtGlyphS.setPosition(0.3);
+                    break;
+                case grab:
+                    ltGlyphS.setPosition(1);
+                    rtGlyphS.setPosition(0);
+                    break;
+                case open:
+                    ltGlyphS.setPosition(0);
+                    rtGlyphS.setPosition(1);
+                    break;
+            }
+        }
+
+        // ----------- Glyph Grab System (Bottom set only) -----------
+        if(!gamepad2.a && !aUp){
+            bottom = true;
+            //bottomToggle = 0;
+        } else if(gamepad2.x || gamepad2.b || gamepad2.y){
+            bottom = false;
+            bottomToggle = 0;
+        }
+        if (!gamepad2.a && !aUp && bottom){
+            if (bottomToggle == 0){
+                bottomToggle = 1;
+            } else if (bottomToggle == 1 && !bottomajar){
+                bottomToggle = 2;
+                bottomajar = true;
+            } else if (bottomToggle == 1 && bottomajar){
+                bottomToggle = 0;
+                bottomajar = false;
+            } else if (bottomToggle == 2){
+                bottomToggle = 1;
+            }
+
+            if (bottomToggle > 2) bothToggle = 0;
+            bottomglyphs = bottomToggle == 0 ? BottomGlyphs.open :
+                           bottomToggle == 1 ? BottomGlyphs.ajar : BottomGlyphs.grab;
+
+            // Now power the servos!
+            switch (bottomglyphs){
+                case ajar:
+                    lbGlyphS.setPosition(0.3);
+                    rbGlyphS.setPosition(0.7);
+                    break;
+                case grab:
+                    lbGlyphS.setPosition(1);
+                    rbGlyphS.setPosition(0);
+                    break;
+                case open:
+                    lbGlyphS.setPosition(0);
+                    rbGlyphS.setPosition(1);
+                    break;
+            }
+
+        }
+
+        // ----------- Glyph Flipper System -----------
+        if (!gamepad2.x && !xUp && flipUp){
+            flipper.reset();
+            flipUp = false;
+            flippiboi = FlippiBoi.Goingup;
+        } else if (!gamepad2.x && !xUp && !flipUp){
+            flipper.reset();
+            flipUp = true;
+            flippiboi = FlippiBoi.Goingdown;
+        } else if (flipper.milliseconds() > 1000){
+            flippiboi = FlippiBoi.Idle;
+        }
+        switch (flippiboi){
+            case Idle:
+                flipS.setPower(0);
+                break;
+            case Goingdown:
+                flipS.setDirection(DcMotorSimple.Direction.FORWARD);
+                flipS.setPower(1);
+                break;
+            case Goingup:
+                flipS.setDirection(DcMotorSimple.Direction.REVERSE);
+                flipS.setPower(1);
+                break;
+        }
+
+        // ----------- Glyph Slider System -----------
         switch (slippystate){
             case Idle:              //The Idle case is the default case
                 if ((gamepad2.right_trigger < 0.1 && gamepad2.left_trigger > 0.1) || gamepad1.right_trigger < 0.1 && gamepad1.left_trigger > 0.1){
@@ -249,7 +406,7 @@ public class legacy_teleop extends OpMode {
                     } else {
                         glyphSlideS.setDirection(DcMotorSimple.Direction.FORWARD);
                     }
-                    slippystate = slippystate.LookingMagnet;
+                    slippystate = SlippyState.FoundMagnet;
                     //if both triggers (operator) or the y button (driver) is pressed, then switch to
                     //the Looking case
                 }
@@ -260,19 +417,19 @@ public class legacy_teleop extends OpMode {
             case LookingMagnet:    //The timing belt is moving until the magnetic sensor is triggered
                 glyphSlideS.setPower(1);
                 if (!sensorDigitalMagnetic.getState()) {
-                    slippystate = slippystate.FoundMagnet;
+                    slippystate = SlippyState.FoundMagnet;
                     //If the sensor is triggered, switch to Found case
                 }
                 if ((gamepad2.right_trigger > 0.1) !=(gamepad2.left_trigger >0.1) || gamepad1.y) {
                     glyphSlideS.setPower(0);
-                    slippystate = slippystate.Idle;
+                    slippystate = SlippyState.Idle;
                     //if either triggers (operator) or the y button (driver) is pressed, stop
                     //searching for the sensor and return to Idle case
                 }
                 break;
             case FoundMagnet:
                 glyphSlideS.setPower(0);
-                slippystate = slippystate.Idle;
+                slippystate = SlippyState.Idle;
                 //Once the magnetic sensor has been triggered, don't move the timing belt and return
                 //to Idle case
                 break;
