@@ -3,17 +3,17 @@ package org.firstinspires.ftc.teamcode;
 //import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
-import java.util.Arrays;
 
 //import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -69,15 +69,9 @@ public class AtlasClass {
         parameters_IMU.loggingEnabled = true;                               // Log the data? Yes
         parameters_IMU.loggingTag = "IMU";                                  // Pretty straightforward
         parameters_IMU.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator(); // Pretty straightforward
-        imu = hardwareMap.get(BNO055IMU.class, "imu");           // Now we init the IMU
+        imu = hardwareMap.get(BNO055IMU.class, "imu3");           // Now we init the IMU
         imu.initialize(parameters_IMU);
 
-    }
-
-    // This method checks for
-    public boolean shouldKeepTurning2(int[] listOfHeadings) {
-        int[] headings = Arrays.copyOfRange(listOfHeadings, 18, 22);
-        return Arrays.asList(headings).contains((int)-angles.firstAngle);
     }
 
     /**
@@ -86,74 +80,31 @@ public class AtlasClass {
      * NOTE: angles.firstAngle is flipped on the number line because the REV Hub is upside-down
      */
 
-    public void imuTurn2(double degreesToTurn, String direction) throws InterruptedException {
+    public void imuTurn(double degreesToTurn, LinearOpMode op) throws InterruptedException {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        double currentHeading = -angles.firstAngle + 180;
+        double targetHeading = degreesToTurn + currentHeading;
 
-        /* For us, the IMU has had us turn just a bit more than what we intend. The operation
-         * below accounts for this by dividing the current degreesToTurn value by 8/9.
-         */
-        degreesToTurn = (degreesToTurn * 8) / 9;
+        targetHeading += targetHeading > 360 ? -360 :
+                         targetHeading <   0 ?  360 : 0;
 
-        // Now we define our variables
-        int targetHeading = (int)degreesToTurn - (int)angles.firstAngle;
+        while (Math.abs(degreesToTurn) > 2) {
+            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            currentHeading = -angles.firstAngle + 180;
+            degreesToTurn = targetHeading - currentHeading;
 
-        /* These operations account for when the robot would cross the IMU rotation line, which
-         * separates -180 from 180. Adding or subtracting the degreesToTurn by 360 here isn't
-         * always necessary, however, so we skip this operation in those cases */
-        targetHeading += targetHeading > 180 ? -360 :
-                targetHeading < -180 ? 360 : 0;
-
-        /* In case you don't know what this is (it isn't widely used in FTC Robot programs, I
-         * don't think), it's called an Array, and they're used to store a list of variables in
-         * Java programs.
-         * This array stores 5 heading variables that are very close or equal to our target heading.
-         * We will use them to determine if we are in range of where we want Legacy to turn
-         */
-        int[] headingList = new int[40];
-        for(int i = -(headingList.length / 2); i < headingList.length / 2; i++) {
-            headingList[i + 20] = targetHeading + i;
-        }
-
-        /* As you can probably see here, the values in an array are mutable, which works very well
-         * in cases like this, where are target heading values might be above or below where our
-         * IMU can read.
-         */
-        for(int i = 0; i < headingList.length; i++) {
-            headingList[i] += headingList[i] < -180 ? 360 : headingList[i] > 180 ? -360 : 0;
-        }
-
-        // RIGHT TURN
-        if (direction == "RIGHT") {
-            while (shouldKeepTurning2(headingList)) {
-                angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-                if(Arrays.asList(headingList).contains((int)-angles.firstAngle)) {
-                    rfDrive.setPower(-0.25);
-                    rbDrive.setPower(-0.25);
-                    lfDrive.setPower(0.25);
-                    lbDrive.setPower(0.25);
-                } else {
-                    rfDrive.setPower(-0.4);
-                    rbDrive.setPower(-0.4);
-                    lfDrive.setPower(0.4);
-                    lbDrive.setPower(0.4);
-                }
-            }
+            double power = Range.clip(Math.signum(degreesToTurn) * (0.25 + (Math.abs(degreesToTurn) / 360)), -1, 1);
+            op.telemetry.addData("DegreesToTurn", degreesToTurn);
+            op.telemetry.addData("currentHeading", currentHeading);
+            op.telemetry.addData("targetHeading", targetHeading);
+            op.telemetry.addData("POWA", power);
+            System.out.println("DegreesToTurn: " + degreesToTurn + " -- currentHeading: " + currentHeading + " -- POWA: " + power);
+            op.telemetry.update();
+            rfDrive.setPower(power);
+            rbDrive.setPower(power);
+            lfDrive.setPower(power);
+            lbDrive.setPower(power);
             // LEFT TURN
-        } else {
-            while (shouldKeepTurning2(headingList)) {
-                angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-                if(Arrays.asList(headingList).contains((int)-angles.firstAngle)) {
-                    rfDrive.setPower(0.25);
-                    rbDrive.setPower(0.25);
-                    lfDrive.setPower(-0.25);
-                    lbDrive.setPower(-0.25);
-                } else {
-                    rfDrive.setPower(0.4);
-                    rbDrive.setPower(0.4);
-                    lfDrive.setPower(-0.4);
-                    lbDrive.setPower(-0.4);
-                }
-            }
         }
         rfDrive.setPower(0);
         rbDrive.setPower(0);
