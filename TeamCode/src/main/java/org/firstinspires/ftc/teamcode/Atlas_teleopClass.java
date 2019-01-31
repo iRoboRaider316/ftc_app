@@ -1,24 +1,28 @@
 package org.firstinspires.ftc.teamcode;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name="Teleop", group="Opmode")
-
+@TeleOp(name="Cheerios Teleop (Real Deal)", group="Opmode")
 public class Atlas_teleopClass extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-        //Inset config file
         AtlasClass base = new AtlasClass(hardwareMap);
-        //Declare controller buttons
-
-
+        base.initTeleop();
         waitForStart();
 
         while (opModeIsActive()) {
-            //Update controller inputs
+            base.updateDriveTrain();
+            base.updateLiftM();
+            base.updateExtendM();
+            base.updateCollectFlipperM();
+            base.updateCollectSpinnerM();
 
-
-
+            telemetry.addData("Status Updates", "Brought to you by Gucci Gang :)");
+            telemetry.addData(" - target", base.target);
+            telemetry.addData(" - current pos", base.liftM.getCurrentPosition());
+            telemetry.addData(" - first", base.first);
+            telemetry.update();
         }
     }
 }
