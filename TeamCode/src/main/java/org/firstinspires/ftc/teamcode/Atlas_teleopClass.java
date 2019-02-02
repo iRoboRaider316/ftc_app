@@ -7,8 +7,10 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 public class Atlas_teleopClass extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-        AtlasClass base = new AtlasClass(hardwareMap);
-        base.initTeleop();
+        AtlasClass base = new AtlasClass(hardwareMap, telemetry, gamepad1, gamepad2);
+
+        telemetry.addData("", "Successfully Initialized!");
+        telemetry.update();
         waitForStart();
 
         while (opModeIsActive()) {

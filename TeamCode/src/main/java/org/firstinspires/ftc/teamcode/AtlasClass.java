@@ -12,11 +12,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -33,6 +35,7 @@ import static android.net.NetworkInfo.DetailedState.IDLE;
 public class AtlasClass extends LinearOpMode {
 
     public DcMotor lf, rf, lb, rb;
+    boolean initing;
     double rightX;
     double angle;
     double angleTest[] = new double[10];
@@ -60,7 +63,7 @@ public class AtlasClass extends LinearOpMode {
     private ElapsedTime repeaterLiftStages = new ElapsedTime(); // of a redstone current at the cost of time. (U can delete this if u want, Jamoomoo :} )
 
     // Autonomous Exclusive Variables
-    public GoldAlignDetector detector;
+    GoldAlignDetector detector;
     int pos = 0;
     boolean side, marker, two;
     String goldPosition;
@@ -79,7 +82,11 @@ public class AtlasClass extends LinearOpMode {
     private LiftStage currentStage = LiftStage.IDLE;
 
 
-    AtlasClass(HardwareMap hardwareMap) throws InterruptedException {
+    AtlasClass(HardwareMap hardwareMap, Telemetry telemetry, Gamepad driver, Gamepad operator) throws InterruptedException {
+
+        this.telemetry = telemetry;
+        this.gamepad1 = driver;
+        this.gamepad2 = operator;
         rb = hardwareMap.dcMotor.get("rb");
         rb.setPower(0);
         rb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -103,6 +110,8 @@ public class AtlasClass extends LinearOpMode {
         liftM = hardwareMap.dcMotor.get("liftM");
         liftM.setPower(0);
         liftM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        liftM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         extendM = hardwareMap.dcMotor.get("extendM");
         extendM.setPower(0);
@@ -132,17 +141,15 @@ public class AtlasClass extends LinearOpMode {
         imu.initialize(parameters_IMU);
     }
 
-    public void initAuto(){
+    public void initAuto(HardwareMap hardwareMap){
         pos = 0;
 
         telemetry.addData("Status", "DogeCV 2018.0 - Gold Align Example");
 
-        // Set up detector
-        detector = new GoldAlignDetector(); // Create detector
+        detector = new GoldAlignDetector();
         detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance()); // Initialize it with the app context and camera
         detector.useDefaults(); // Set detector to use default settings
 
-        // Optional tuning
         detector.alignSize = 100; // How wide (in pixels) is the range in which the gold object will be aligned. (Represented by green bars in the preview)
         detector.alignPosOffset = 200; // How far from center frame to offset this alignment zone.
         detector.downscale = 0.4; // How much to downscale the input frames
@@ -156,22 +163,9 @@ public class AtlasClass extends LinearOpMode {
 
         goldAligned = detector.getAligned();
         goldFound = detector.isFound();
-
         //gyroHeadingStorage.setHeading(angles.firstAngle);
 
         //s1 = angles.firstAngle;
-    }
-
-    public void initTeleop() {
-        liftM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        liftM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        color = hardwareMap.get(ColorSensor.class, "color");
-
-        telemetry.addData("", "Successfully Initialized!");
-
-        liftM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        liftM.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        telemetry.update();
     }
 
     /* =================================================================
@@ -488,7 +482,7 @@ public class AtlasClass extends LinearOpMode {
         }
     }
 
-    public void vision(){
+    /*public void vision(){
         detector.enable(); // Start the detector!
 
 
@@ -520,7 +514,7 @@ public class AtlasClass extends LinearOpMode {
         telemetry.addData("pos:", pos);
         telemetry.update();
 
-    }
+    }*/
 
 
 
@@ -722,7 +716,7 @@ public class AtlasClass extends LinearOpMode {
         lb.setPower(0);
     }
 
-    public void selection() {
+    public void selection(LinearOpMode opMode) {
 
         telemetry.addData("Press B ", "for depot side");
         telemetry.addData("Press X ", "for crater side");
@@ -749,7 +743,7 @@ public class AtlasClass extends LinearOpMode {
             telemetry.addData("Press B ", "for two block");
             telemetry.addData("Press X ", "for one");
             telemetry.update();
-            while (!opModeIsActive() && !gamepad1.a) {
+            while (!opMode.opModeIsActive() && !gamepad1.a) {
                 if (gamepad1.b) {
                     telemetry.addData("Two ", "block");
                     telemetry.addData("press A to ", "move on");
@@ -768,7 +762,7 @@ public class AtlasClass extends LinearOpMode {
             telemetry.addData("Press B ", "for marker");
             telemetry.addData("Press X ", "for no marker");
             telemetry.update();
-            while (!opModeIsActive() && !gamepad1.a) {
+            while (!opMode.opModeIsActive() && !gamepad1.a) {
                 if (gamepad1.b) {
                     telemetry.addData("Yes ", "marker");
                     telemetry.addData("press A to ", "move on");
@@ -784,10 +778,8 @@ public class AtlasClass extends LinearOpMode {
             }
         }
 
-        telemetry.addData("Press ","Dpad up for more wait");
-        telemetry.addData("Press ","Dpad down for not more wait");
         telemetry.update();
-        while(!opModeIsActive()){
+        while(!opMode.opModeIsActive()){
             if(gamepad1.dpad_up){
                 wait = wait + 1000;
                 sleep(300);
@@ -802,7 +794,10 @@ public class AtlasClass extends LinearOpMode {
 
             }
 
-            telemetry.addData("Waiting for:", wait);
+            telemetry.addData("Press ","Dpad up for more wait");
+            telemetry.addData("Press ","Dpad down for not more wait");
+            telemetry.addData("Press ","Play to start going!");
+            telemetry.addData("Waiting for", wait);
             telemetry.update();
         }
     }
@@ -1075,7 +1070,7 @@ public class AtlasClass extends LinearOpMode {
     public void updateCollectFlipperM() {
         if     (gamepad2.dpad_down)   collectFlipperM.setPower(-0.6);
         else if(gamepad2.dpad_up)     collectFlipperM.setPower(0.6);
-        else                          collectFlipperM.setPower(0);
+        else                              collectFlipperM.setPower(0);
     }
 
     public void updateLiftM() {

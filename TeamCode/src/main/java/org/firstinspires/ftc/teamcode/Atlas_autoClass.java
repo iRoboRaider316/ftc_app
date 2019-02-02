@@ -1,23 +1,27 @@
 package org.firstinspires.ftc.teamcode;
+import com.disnodeteam.dogecv.CameraViewDisplay;
+import com.disnodeteam.dogecv.DogeCV;
+import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 
-@Autonomous(name="AutonomousREEE", group="OpmodesdaLUL")
+@Autonomous(name="Cheerios Auto (Real Deal)", group="OpMode")
 
 public class Atlas_autoClass extends LinearOpMode {
 
 
     public void runOpMode() throws InterruptedException {
 
-        AtlasClass base = new AtlasClass(hardwareMap);
-        base.initAuto();
-        base.selection();
-        waitForStart();
-        base.detector.enable(); // Start the detector!
+        AtlasClass base = new AtlasClass(hardwareMap, telemetry, gamepad1, gamepad2);
+        base.initAuto(hardwareMap);
 
+        base.selection(this);
+        waitForStart();
+
+        base.detector.enable(); // Start the detector!
         sleep(2000);
         base.goldAligned = base.detector.getAligned();
         base.goldFound = base.detector.isFound();
