@@ -20,7 +20,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 public class CharonTeleOp extends LinearOpMode {
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() {
         CharonBase charon = new CharonBase(this);
         telemetry.addData("Initialized Successfully!", "");
         telemetry.update();

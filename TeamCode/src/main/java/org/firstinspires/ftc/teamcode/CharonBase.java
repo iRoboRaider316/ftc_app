@@ -33,7 +33,7 @@ import static android.net.NetworkInfo.DetailedState.IDLE;
 @Autonomous(name="snedHelpBOYS", group="Opmode")
 @Disabled
 
-class CharonBase extends LinearOpMode {
+public class CharonBase extends LinearOpMode {
 
     //================== ROBOT DEVICES ====================
     private GoldAlignDetector detector;     // Phone Camera
@@ -56,9 +56,8 @@ class CharonBase extends LinearOpMode {
     private ElapsedTime repeaterLiftIdler = new ElapsedTime();
 
     //================= VARIABLES ===============
-    int wait = 0;
-    private int redMargin = 160;
-    int goldPos;
+            int wait = 0;
+            int goldPos;
     private int count = 0;
     private int tQ = 1;
     private int tP = -1;
@@ -69,6 +68,7 @@ class CharonBase extends LinearOpMode {
     private double speed;
     private double rightX;
     private double sum;
+    private double hopperPowerScale = 1;
 
             boolean side, marker, two, follow;
     private boolean goldAligned = false;
@@ -78,10 +78,14 @@ class CharonBase extends LinearOpMode {
 
     String goldPosition;
 
+    // ================ CONSTANTS ============
+    private int antiCatchPoint = -1250;
+    private int redMargin = 160;
+
     private enum LiftStage { IDLE, LIFTING, SLOWING, STOP }
     private LiftStage currentStage = LiftStage.IDLE;
 
-    CharonBase(LinearOpMode opMode) throws InterruptedException {
+    CharonBase(LinearOpMode opMode) {
 
         this.hardwareMap = opMode.hardwareMap;
         this.telemetry = opMode.telemetry;
@@ -115,6 +119,8 @@ class CharonBase extends LinearOpMode {
         extendM = hardwareMap.dcMotor.get("extendM");
         extendM.setPower(0);
         extendM.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        extendM.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        extendM.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         collectSpinnerM = hardwareMap.dcMotor.get("collectSpinnerM");
         collectSpinnerM.setPower(0);
@@ -175,6 +181,21 @@ class CharonBase extends LinearOpMode {
         goldFound = detector.isFound();
     }
 
+    private void setDrive(double power) {
+        setDriveSides(power, power);
+    }
+
+    private void setDriveSides(double lPower, double rPower) {
+        setDriveMotors(lPower, rPower, lPower, rPower);
+    }
+
+    private void setDriveMotors(double lfPower, double rfPower, double lbPower, double rbPower) {
+        lf.setPower(lfPower);
+        rf.setPower(-rfPower);
+        lb.setPower(lbPower);
+        rb.setPower(-rbPower);
+    }
+
     /* =================================================================
     *                   AUTONOMOUS EXCLUSIVE METHODS
     *  =================================================================*/
@@ -184,28 +205,26 @@ class CharonBase extends LinearOpMode {
         if (goldPos == 0){
             imuTurn(-30);
             encoderDriveForward(36, 0.5, 0.5);
+
             imuTurn(70);
             encoderDriveForward(20, -0.5, 0.5);
             imuTurn(-90);
             encoderDriveForward(30, -0.5, 0.5);
-
             encoderDriveRight(5, 0.5, -0.5);
             scoreMarker();
+
             encoderDriveForward(45, -0.5, -0.5);
-
             encoderDriveRight(16, 0.5, -0.5);
-
             encoderDriveForward(30, -0.5, -0.5);
 
         }
 
         else if (goldPos == 1){
             encoderDriveForward(54, 0, 0.5);
-            imuTurn(-45);
 
+            imuTurn(-45);
             encoderDriveForward(30, -0.5, 0.5);
             encoderDriveRight(6, 0.5, -0.5);
-
             scoreMarker();
 
             encoderDriveForward(45, -0.5, -0.5);
@@ -225,60 +244,46 @@ class CharonBase extends LinearOpMode {
         else if(goldPos == 2){
             imuTurn(30);
             encoderDriveForward(47, -0.5, 0.5);
+
             imuTurn(-75);
             encoderDriveForward(10, -0.5, 0.5);
-
             encoderDriveRight(7, 0.5, -0.5);
-
             encoderDriveForward(20, 0.5, 0.5);
-
             scoreMarker();
 
             encoderDriveForward(45, -0.5, -0.5);
-
             encoderDriveRight(16, 0.5, -0.5);
-
             imuTurn(40);
-
             encoderDriveRight(44, 0, -0.5);
-
             imuTurn(-55);
-
             encoderDriveForward(20, -0.5, -0.5);
-
         }
         dumpS.setPosition(1);
         sleep(1000);
-
-
-
-
     }
 
      void toBlockPark(){
         if (goldPos == 0){
             imuTurn(-40);
             encoderDriveForward(38, 0.5, 0.5);
+
             imuTurn(80);
             encoderDriveForward(20, -0.5, 0.5);
             imuTurn(-90);
             encoderDriveForward(30, -0.5, 0.5);
-
             encoderDriveRight(5, 0.5, -0.5);
             scoreMarker();
-            encoderDriveForward(70, -0.5, -0.5);
 
+            encoderDriveForward(70, -0.5, -0.5);
         }
         else if (goldPos == 1){
             imuTurn(-15);
             encoderDriveForward(54, 0, 0.5);
-            imuTurn(-35);
 
+            imuTurn(-35);
             driveTime(5000, -0.5, 0.5);
             driveTime(1000, 0.5, -0.5);
-
             scoreMarker();
-
 
             encoderDriveForward(72, -0.5, -0.5);
         }
@@ -286,25 +291,17 @@ class CharonBase extends LinearOpMode {
         else if(goldPos == 2){
             imuTurn(20);
             encoderDriveForward(47, -0.5, 0.5);
+
             imuTurn(-65);
             driveTime(3000, -0.5, 0.5);
-
             driveTime(7000, 0.5, -0.5);
-
-
             encoderDriveForward(20, 0.5, 0.5);
-
-
             scoreMarker();
 
             encoderDriveForward(70, -0.5, -0.5);
         }
         dumpS.setPosition(1);
         sleep(1000);
-
-
-
-
     }
 
      void toBlockCraterPark(){
@@ -324,40 +321,25 @@ class CharonBase extends LinearOpMode {
         }
         dumpS.setPosition(1);
         sleep(1000);
-
     }
 
      void toBlockCraterMarker(){
-
         encoderDriveForward(12, 0, 0.5);
         imuTurn(-90);
         encoderDriveForward(48, 1, 0);
         imuTurn(-45);
         driveTime(2000, 0.5, 0.5);
-
         driveTime(1000, -0.5, -0.5);
-
         sleep(500);
         encoderDriveForward(42, 0.8, -0.8);
-
         scoreMarker();
 
         encoderDriveForward(40, -0.8, 0.8);
-
         imuTurn(55);
 
-        if (goldPos == 0){
-            encoderDriveForward(17, -0.5, 0);
-
-        }
-
-        else if (goldPos == 1){
-            encoderDriveForward(40, -0.5, 0);
-        }
-
-        else if(goldPos == 2){
-            encoderDriveForward(58, -0.5, 0);
-        }
+        if      (goldPos == 0) encoderDriveForward(17, -0.5, 0);
+        else if (goldPos == 1) encoderDriveForward(40, -0.5, 0);
+        else if (goldPos == 2) encoderDriveForward(58, -0.5, 0);
 
         imuTurn(-85);
         encoderDriveForward(23, 0, 0.5);
@@ -366,16 +348,13 @@ class CharonBase extends LinearOpMode {
     }
 
     void followPartner(){
-
         if (goldPos == 0){
             imuTurn(-50);
             encoderDriveForward(28, 0.5, 0.5);
             sleep(100);
             encoderDriveRight(6, -0.5, -0.5);
             imuTurn(-45);
-
             encoderDriveForward(26, 0.5, 0);
-
         }
 
         else if (goldPos == 1){
@@ -385,7 +364,6 @@ class CharonBase extends LinearOpMode {
             encoderDriveRight(11, 0, -0.5);
             imuTurn(-80);
             encoderDriveForward(38, 0.5, 0);
-
         }
 
         else if(goldPos == 2){
@@ -402,35 +380,26 @@ class CharonBase extends LinearOpMode {
 
         if (goldPos == 0){
             encoderDriveRight(6, -0.5, 0);
-
             imuTurn(-25);
             encoderDriveForward(44, 0.5, 0);
             imuTurn(70);
             encoderDriveForward(20, 0, 0.5);
-
             scoreMarker();
-
         }
 
         else if (goldPos == 1){
             encoderDriveForward(40, 0.5, 0);
-
             scoreMarker();
-
         }
 
         else if(goldPos == 2){
             encoderDriveRight(8, -0.5, 0);
-
             imuTurn(30);
             encoderDriveForward(40, 0.5, 0);
             imuTurn(-80);
             encoderDriveForward(20, 0.5, 0.5);
-
             encoderDriveRight(12, -0.5, -0.5);
-
             encoderDriveRight(26, 0.5, -0.5);
-
             scoreMarker();
         }
     }
@@ -439,76 +408,43 @@ class CharonBase extends LinearOpMode {
         if (goldPos == 0){
             imuTurn(-40);
             encoderDriveForward(53, 0, 0.5);
+
             imuTurn(80);
             encoderDriveRight(20, -0.5, 0.5);
             scoreMarker();
+
             dumpS.setPosition(1);
             encoderDriveRight(8, 0.5, 0.5);
-
             encoderDriveForward(75, 0.5, -0.5);
         } else if (goldPos == 1){
             imuTurn(-10);
             encoderDriveForward(56, 0, 0.5);
+
             imuTurn(50);
             encoderDriveRight(24, 0.5, 0.5);
             scoreMarker();
+
             dumpS.setPosition(1);
             encoderDriveRight(8, 0.5, 0.5);
-
             encoderDriveForward(80, 0.5, -0.5);
         } else if(goldPos == 2){
             imuTurn(20);
             encoderDriveForward(40, 0, 0.5);
+
             imuTurn(25);
             encoderDriveRight(66, 0.7, 0.7);
             encoderDriveForward(5, 0.5, -0.5);
             scoreMarker();
+
             dumpS.setPosition(1);
             encoderDriveRight(8, 0.5, 0.5);
-
             encoderDriveRight(85, 0.5, -0.5);
         }
         dumpS.setPosition(1);
         sleep(1000);
     }
 
-    /*void vision(){
-        detector.enable(); // Start the detector!
-
-
-        sleep(2000);
-        goldAligned = detector.getAligned();
-        goldFound = detector.isFound();
-
-        detector.disable();
-
-
-        if (goldFound) { // gold is center or right
-            if (goldAligned) { // gold is right
-                goldPosition = "right";
-                pos = 2;
-            }
-            else { // gold is center
-                goldPosition = "center";
-                pos = 1;
-            }
-        }
-        else { // gold is left
-            goldPosition = "left";
-            pos = 0;
-        }
-        telemetry.addData("Gold Position: ", "" + goldPosition);
-        //telemetry.update();
-
-
-        telemetry.addData("pos:", pos);
-        telemetry.update();
-
-    }*/
-
-
     //never actually run this, just threw it in so that we can call this a linear opMode for telemetry data and controller inputs
-
     @Override
     public void runOpMode() {
     }
@@ -525,26 +461,8 @@ class CharonBase extends LinearOpMode {
         lock.setPower(0);
         sleep(600);
         clampR.setPower(1);
-//      while(liftM.getCurrentPosition() < 410 && timerDehang.milliseconds() < 2000){
-//      if(timerDehang.milliseconds() > 300){
-//         clampR.setPower(0);
-//      }
-//      liftM.setPower(1);
-//}
+
         timerDehang.reset();
-
-//        while (timerDehang.milliseconds() < 2000){
-//            //if below the threshold, go up
-//            if(color.red() < redMargin) liftM.setPower(-0.9);
-//            //if above the threshold, fall down
-//            else if (color.red() < redMargin)
-//                if (color.red() > redMargin) liftM.setPower(0.1);
-//            //if at the threshold, stay stationary
-//                else
-//                    liftM.setPower(-0.25);
-//
-//        }
-
         while(timerDehang.milliseconds() < 2000 && liftStager.red() < redMargin && !isStopRequested()){
             liftM.setPower(-0.8);
         }
@@ -555,7 +473,6 @@ class CharonBase extends LinearOpMode {
     }
 
     private void scoreMarker(){
-
         collectHopperM.setPower(0.4);
         sleep(400);
         collectHopperM.setPower(-0.4);
@@ -566,7 +483,6 @@ class CharonBase extends LinearOpMode {
         collectSpinnerM.setPower(0);
         collectHopperM.setPower(0);
         dumpS.setPosition(1);
-
     }
 
     void encoderDriveForward(int distance, double x, double y){ //Distance in inches, x and y as direction values, both between 1- and 1
@@ -594,10 +510,10 @@ class CharonBase extends LinearOpMode {
             //Spinning value.  This code drives striaght so it is always zero
             rightX = 0;
             //set motor speeds
-            lf.setPower((speed * (Math.sin(angle)) + rightX));
-            rf.setPower(-(speed * (Math.cos(angle))) - rightX);
-            lb.setPower((speed * (Math.cos(angle)) + rightX));
-            rb.setPower(-(speed * (Math.sin(angle))) - rightX);
+            setDriveMotors( (speed * (Math.sin(angle))  + rightX),
+                           -(speed * (Math.cos(angle))) - rightX,
+                            (speed * (Math.cos(angle))  + rightX),
+                           -(speed * (Math.sin(angle))) - rightX);
             //telemetry data for troubleshooting
             telemetry.addData("current pos",rf.getCurrentPosition());
             telemetry.addData("current pos",rb.getCurrentPosition());
@@ -606,11 +522,7 @@ class CharonBase extends LinearOpMode {
             telemetry.update();
         }
         //exit loop and stop motors
-        rf.setPower(0);
-        lf.setPower(0);
-        rb.setPower(0);
-        lb.setPower(0);
-
+        setDrive(0);
     }
 
     void encoderDriveRight(int distance, double x, double y){
@@ -618,8 +530,6 @@ class CharonBase extends LinearOpMode {
         lf.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rb.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lb.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-
 
         rf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rb.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -636,10 +546,10 @@ class CharonBase extends LinearOpMode {
             angle = angle + angles.firstAngle;
             rightX = 0;
 
-            lf.setPower((speed * (Math.sin(angle)) + rightX));
-            rf.setPower(-(speed * (Math.cos(angle))) - rightX);
-            lb.setPower((speed * (Math.cos(angle)) + rightX));
-            rb.setPower(-(speed * (Math.sin(angle))) - rightX);
+            setDriveMotors( (speed * (Math.sin(angle))  + rightX),
+                           -(speed * (Math.cos(angle))) - rightX,
+                            (speed * (Math.cos(angle))  + rightX),
+                           -(speed * (Math.sin(angle))) - rightX);
 
             telemetry.addData("current pos",rf.getCurrentPosition());
             telemetry.addData("current pos",rb.getCurrentPosition());
@@ -647,10 +557,7 @@ class CharonBase extends LinearOpMode {
             telemetry.addData("current pos",lb.getCurrentPosition());
             telemetry.update();
         }
-        rf.setPower(-0);
-        lf.setPower(-0);
-        rb.setPower(0);
-        lb.setPower(0);
+        setDrive(0);
 
     }
 
@@ -659,8 +566,6 @@ class CharonBase extends LinearOpMode {
         lf.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rb.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lb.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-
 
         rf.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rb.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -677,10 +582,10 @@ class CharonBase extends LinearOpMode {
             angle = angle + angles.firstAngle;
             rightX = 0;
 
-            lf.setPower((speed * (Math.sin(angle)) + rightX));
-            rf.setPower(-(speed * (Math.cos(angle))) - rightX);
-            lb.setPower((speed * (Math.cos(angle)) + rightX));
-            rb.setPower(-(speed * (Math.sin(angle))) - rightX);
+            setDriveMotors( (speed * (Math.sin(angle))  + rightX),
+                           -(speed * (Math.cos(angle))) - rightX,
+                            (speed * (Math.cos(angle))  + rightX),
+                           -(speed * (Math.sin(angle))) - rightX);
 
             telemetry.addData("current pos",rf.getCurrentPosition());
             telemetry.addData("current pos",rb.getCurrentPosition());
@@ -688,10 +593,7 @@ class CharonBase extends LinearOpMode {
             telemetry.addData("current pos",lb.getCurrentPosition());
             telemetry.update();
         }
-        rf.setPower(-0);
-        lf.setPower(-0);
-        rb.setPower(0);
-        lb.setPower(0);
+        setDrive(0);
 
     }
 
@@ -701,7 +603,7 @@ class CharonBase extends LinearOpMode {
         double targetHeading = degreesToTurn + currentHeading;
 
         targetHeading += targetHeading > 360 ? -360 :
-                targetHeading <   0 ?  360 : 0;
+                         targetHeading <   0 ?  360 : 0;
 
         while (Math.abs(degreesToTurn) > 2) {
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
@@ -709,22 +611,9 @@ class CharonBase extends LinearOpMode {
             degreesToTurn = targetHeading - currentHeading;
 
             double power = Range.clip(Math.signum(degreesToTurn) * (0.25 + (Math.abs(degreesToTurn) / 360)), -1, 1);
-//            op.telemetry.addData("DegreesToTurn", degreesToTurn);
-//            op.telemetry.addData("currentHeading", currentHeading);
-//            op.telemetry.addData("targetHeading", targetHeading);
-//            op.telemetry.addData("POWA", power);
-//            System.out.println("DegreesToTurn: " + degreesToTurn + " -- currentHeading: " + currentHeading + " -- POWA: " + power);
-//            op.telemetry.update();
-            rf.setPower(power);
-            rb.setPower(power);
-            lf.setPower(power);
-            lb.setPower(power);
-            // LEFT TURN
+            setDriveSides(power, -power);
         }
-        rf.setPower(0);
-        rb.setPower(0);
-        lf.setPower(0);
-        lb.setPower(0);
+        setDrive(0);
     }
 
     void selection(LinearOpMode opMode) {
@@ -849,9 +738,22 @@ class CharonBase extends LinearOpMode {
     }
 
     void updateCollectHopperM() {
-        if     (gamepad2.dpad_down)   collectHopperM.setPower(tQ*0.8);
-        else if(gamepad2.dpad_up)     collectHopperM.setPower(tP*0.8);
-        else                          collectHopperM.setPower(0);
+        if(extendM.getCurrentPosition() < antiCatchPoint) hopperPowerScale = 0.3;
+        else                                              hopperPowerScale = 1;
+
+        // Only give power scaling when powered upward so we can still lower to collect efficiently.
+        // We need to check for experimental power swap so we can effectively power scale in the
+        // right direction.
+        if(tQ == 1) {
+            if     (gamepad2.dpad_down)   collectHopperM.setPower(tQ*0.8*hopperPowerScale);
+            else if(gamepad2.dpad_up)     collectHopperM.setPower(tP*0.8);
+            else                          collectHopperM.setPower(0);
+        }
+        else {
+            if     (gamepad2.dpad_down)   collectHopperM.setPower(tQ*0.8);
+            else if(gamepad2.dpad_up)     collectHopperM.setPower(tP*0.8*hopperPowerScale);
+            else                          collectHopperM.setPower(0);
+        }
     }
 
     void updateDumpS() {
@@ -917,8 +819,6 @@ class CharonBase extends LinearOpMode {
             else {
                 liftM.setPower(gamepad2.left_stick_y);
             }
-            telemetry.addData("Lift Idler", repeaterLiftIdler);
-            telemetry.update();
         }
     }
 
@@ -973,7 +873,9 @@ class CharonBase extends LinearOpMode {
         telemetry.addData("Lift Staging", repeaterLiftStages.milliseconds());
         telemetry.addData("gp1 Bumper", gamepad1.right_bumper);
         telemetry.addData("gp2 Bumper", gamepad2.right_bumper);
+        telemetry.addData("Extend Pos", extendM.getCurrentPosition());
+        telemetry.addData("Hopper Scale", hopperPowerScale);
+        telemetry.addData("Lift Idler", repeaterLiftIdler);
         telemetry.update();
     }
-
 }

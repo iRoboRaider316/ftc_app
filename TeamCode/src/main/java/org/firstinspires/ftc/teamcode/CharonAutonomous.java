@@ -24,7 +24,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 public class CharonAutonomous extends LinearOpMode {
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() {
         CharonBase charon = new CharonBase(this);
         charon.initAuto(hardwareMap);
         charon.selection(this);
