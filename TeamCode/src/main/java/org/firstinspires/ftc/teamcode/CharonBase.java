@@ -79,7 +79,8 @@ public class CharonBase extends LinearOpMode {
     String goldPosition;
 
     // ================ CONSTANTS ============
-    private int antiCatchPoint = -1250;
+    private int antiCatchMin = -250;
+    private int antiCatchMax = -460;
     private int redMargin = 160;
 
     private enum LiftStage { IDLE, LIFTING, SLOWING, STOP }
@@ -738,7 +739,8 @@ public class CharonBase extends LinearOpMode {
     }
 
     void updateCollectHopperM() {
-        if(extendM.getCurrentPosition() < antiCatchPoint) hopperPowerScale = 0.3;
+        if(extendM.getCurrentPosition() < antiCatchMin &&
+           extendM.getCurrentPosition() > antiCatchMax)   hopperPowerScale = 0.3;
         else                                              hopperPowerScale = 1;
 
         // Only give power scaling when powered upward so we can still lower to collect efficiently.
